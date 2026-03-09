@@ -9,9 +9,9 @@
         #sidebar { width: 350px; overflow-y: auto; background: #fff; border-right: 2px solid #d3c4a9; z-index: 1000; }
         #map { flex: 1; }
         .sidebar-header { padding: 20px; background: #8b4513; color: white; }
-        .list-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; }
+        .list-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
         .list-item:hover { background: #fdf5e6; }
-        .list-img { width: 100%; height: auto; border-radius: 4px; margin-top: 8px; border: 1px solid #ddd; background: #eee; }
+        .list-img { width: 100%; height: auto; border-radius: 4px; margin-top: 8px; border: 1px solid #ddd; }
         .popup-card { width: 250px; }
         .popup-img { width: 100%; height: auto; border-radius: 4px; margin-top: 8px; }
         .year-tag { display: inline-block; background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-top: 4px; }
@@ -36,6 +36,7 @@
     L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', { attribution: '国土地理院' }).addTo(map);
 
     async function loadArchive() {
+        // スプレッドシートをCSVとして取得
         const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
         const response = await fetch(url);
         const csv = await response.text();
@@ -44,33 +45,30 @@
         listContainer.innerHTML = '';
 
         rows.forEach(row => {
+            // カンマ区切りで列を分割
             const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
             
-            const rawIdField = cols[1]; // B列: 関数が入っているID列
-            const title = cols[4];      // E列
-            const coords = cols[6];     // G列
-            const year = cols[7];       // H列
-            const desc = cols[9];       // J列
+            const fileId = cols[1];   // B列: 抽出されたID
+            const title = cols[4];    // E列: 資料名
+            const coords = cols[6];   // G列: 座標
+            const year = cols[7];     // H列: 年代
+            const desc = cols[9];     // J列: 説明
 
             if (!title) return;
 
-            // 【鉄壁のロジック】
-            // B列の中から「IDらしき部分（25文字以上の英数字・ハイフン・アンダースコア）」だけを抽出する
-            const idPattern = /([-\w]{25,})/;
-            const match = rawIdField ? rawIdField.match(idPattern) : null;
-            const cleanId = match ? match[1] : "";
-            
-            const imgUrl = cleanId ? `https://drive.google.com/uc?export=view&id=${cleanId}` : '';
+            // Googleドライブの最も安定したプレビュー用URLを作成
+            const imgUrl = fileId ? `https://lh3.googleusercontent.com/u/0/d/${fileId}` : '';
 
-            // リスト作成
+            // リストのHTML
             const item = document.createElement('div');
             item.className = 'list-item';
             let coordStatus = (coords && coords.includes(',')) ? '' : '<span class="no-coord">【地点不明】</span>';
             item.innerHTML = `
                 <strong>${title}</strong>${coordStatus}
                 <div class="year-tag">${year || '年代不明'}</div>
-                ${imgUrl ? `<img src="${imgUrl}" class="list-img" onerror="this.src='https://via.placeholder.com/300x200?text=画像読み込み中...'">` : ''}
+                ${imgUrl ? `<img src="${imgUrl}" class="list-img" alt="${title}" loading="lazy">` : ''}
             `;
+            
             item.onclick = () => {
                 if (coords && coords.includes(',')) {
                     const [lat, lng] = coords.split(',').map(n => parseFloat(n.trim()));
@@ -79,7 +77,7 @@
             };
             listContainer.appendChild(item);
 
-            // ピン作成
+            // 地図ピンの作成
             if (coords && coords.includes(',')) {
                 const [lat, lng] = coords.split(',').map(n => parseFloat(n.trim()));
                 if(!isNaN(lat) && !isNaN(lng)) {
@@ -87,7 +85,7 @@
                         <div class="popup-card">
                             <h3 style="margin:0;">${title}</h3>
                             <div class="year-tag">${year || ''}</div>
-                            <img src="${imgUrl}" class="popup-img" onerror="this.src='https://via.placeholder.com/250x150?text=画像リンクを確認中'">
+                            <img src="${imgUrl}" class="popup-img" onerror="this.src='https://via.placeholder.com/250x150?text=画像を表示できません'">
                             <p style="font-size:0.9em; margin-top:8px;">${desc || ''}</p>
                         </div>
                     `);
