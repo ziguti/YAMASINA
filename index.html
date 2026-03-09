@@ -5,19 +5,17 @@
     <title>山科歴史デジタルアーカイブ</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { margin: 0; display: flex; height: 100vh; font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; background: #f4f1ea; }
-        #sidebar { width: 350px; overflow-y: auto; background: #fff; border-right: 2px solid #d3c4a9; z-index: 1000; display: flex; flex-direction: column; }
+        body { margin: 0; display: flex; height: 100vh; font-family: sans-serif; background: #f4f1ea; }
+        #sidebar { width: 350px; overflow-y: auto; background: #fff; border-right: 2px solid #d3c4a9; z-index: 1000; }
         #map { flex: 1; }
         .sidebar-header { padding: 20px; background: #8b4513; color: white; }
-        .list-container { flex: 1; overflow-y: auto; }
-        .list-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: 0.2s; }
+        .list-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
         .list-item:hover { background: #fdf5e6; }
-        .list-item strong { display: block; font-size: 1.1em; color: #5d4037; }
-        .list-img { width: 100%; height: auto; border-radius: 4px; margin-top: 8px; border: 1px solid #ddd; display: block; }
-        .no-coord { color: #b71c1c; font-size: 0.8em; font-weight: bold; }
-        .year-tag { display: inline-block; background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-top: 4px; }
+        .list-img { width: 100%; height: auto; border-radius: 4px; margin-top: 8px; border: 1px solid #ddd; }
         .popup-card { width: 250px; }
         .popup-img { width: 100%; height: auto; border-radius: 4px; margin-top: 8px; }
+        .year-tag { display: inline-block; background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-top: 4px; }
+        .no-coord { color: #b71c1c; font-size: 0.8em; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -27,87 +25,72 @@
         <h2 style="margin:0; font-size:1.2em;">山科資料アーカイブ</h2>
         <p style="margin:5px 0 0 0; font-size:0.8em; opacity:0.8;">郷土史研究記録</p>
     </div>
-    <div id="list-container" class="list-container">読み込み中...</div>
+    <div id="list-container">読み込み中...</div>
 </div>
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // スプレッドシートのID
     const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
-    
     const map = L.map('map').setView([34.992, 135.813], 15);
-    L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', { 
-        attribution: '国土地理院' 
-    }).addTo(map);
+    L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', { attribution: '国土地理院' }).addTo(map);
 
     async function loadArchive() {
-        try {
-            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
-            const response = await fetch(url);
-            const csv = await response.text();
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+        const response = await fetch(url);
+        const csv = await response.text();
+        const rows = csv.split('\n').slice(1);
+        const listContainer = document.getElementById('list-container');
+        listContainer.innerHTML = '';
+
+        rows.forEach(row => {
+            const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
             
-            // CSVを1行ずつ分割（引用符内のカンマを無視する正規表現）
-            const rows = csv.split('\n').slice(1);
-            const listContainer = document.getElementById('list-container');
-            listContainer.innerHTML = '';
+            const fileIdRaw = cols[1];  // B列: ファイルID
+            const title = cols[4];      // E列: 資料名
+            const coords = cols[6];     // G列: 座標
+            const year = cols[7];       // H列: 年代
+            const desc = cols[9];       // J列: 説明
 
-            rows.forEach(row => {
-                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
-                
-                // スプレッドシートの列定義
-                const fileId = cols[1];    // B列: ファイルID
-                const title = cols[4];     // E列: 資料名
-                const coords = cols[6];    // G列: 座標
-                const year = cols[7];      // H列: 年代
-                const desc = cols[9];      // J列: 説明
+            if (!title) return;
 
-                if (!title) return; // タイトルがなければスキップ
+            // 重要：ファイルIDから余計な文字を排除して純粋なIDだけを取り出す
+            const cleanId = fileIdRaw ? fileIdRaw.split('.')[0].trim() : '';
+            const imgUrl = cleanId ? `https://drive.google.com/uc?export=view&id=${cleanId}` : '';
 
-                // 表示用の画像URLを生成
-                const imgUrl = fileId ? `https://drive.google.com/uc?export=view&id=${fileId}` : '';
-
-                // --- サイドバー項目の作成 ---
-                const item = document.createElement('div');
-                item.className = 'list-item';
-                let coordStatus = (coords && coords.includes(',')) ? '' : '<span class="no-coord">【地点不明】</span>';
-                
-                item.innerHTML = `
-                    <strong>${title}</strong>
-                    ${coordStatus}
-                    <div class="year-tag">${year || '年代不明'}</div>
-                    ${imgUrl ? `<img src="${imgUrl}" class="list-img" onerror="this.style.display='none'">` : ''}
-                `;
-                
-                item.onclick = () => {
-                    if (coords && coords.includes(',')) {
-                        const [lat, lng] = coords.split(',').map(n => parseFloat(n.trim()));
-                        map.setView([lat, lng], 17);
-                    }
-                };
-                listContainer.appendChild(item);
-
-                // --- 地図ピンの作成 ---
+            // サイドバー作成
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            let coordStatus = (coords && coords.includes(',')) ? '' : '<span class="no-coord">【地点不明】</span>';
+            item.innerHTML = `
+                <strong>${title}</strong>${coordStatus}
+                <div class="year-tag">${year || '年代不明'}</div>
+                ${imgUrl ? `<img src="${imgUrl}" class="list-img" onerror="this.style.display='none'">` : ''}
+            `;
+            item.onclick = () => {
                 if (coords && coords.includes(',')) {
                     const [lat, lng] = coords.split(',').map(n => parseFloat(n.trim()));
-                    if(!isNaN(lat) && !isNaN(lng)) {
-                        L.marker([lat, lng]).addTo(map).bindPopup(`
-                            <div class="popup-card">
-                                <h3 style="margin:0; font-size:1.1em;">${title}</h3>
-                                <div class="year-tag">${year || ''}</div>
-                                <img src="${imgUrl}" class="popup-img" onerror="this.src='https://via.placeholder.com/250x150?text=画像読み込みエラー'">
-                                <p style="font-size:0.9em; line-height:1.4;">${desc || ''}</p>
-                            </div>
-                        `);
-                    }
+                    map.setView([lat, lng], 17);
                 }
-            });
-        } catch (error) {
-            console.error("エラーが発生しました:", error);
-            document.getElementById('list-container').innerText = "データの読み込みに失敗しました。";
-        }
-    }
+            };
+            listContainer.appendChild(item);
 
+            // 地図ピン作成
+            if (coords && coords.includes(',')) {
+                const [lat, lng] = coords.split(',').map(n => parseFloat(n.trim()));
+                if(!isNaN(lat) && !isNaN(lng)) {
+                    L.marker([lat, lng]).addTo(map).bindPopup(`
+                        <div class="popup-card">
+                            <h3 style="margin:0;">${title}</h3>
+                            <div class="year-tag">${year || ''}</div>
+                            <img src="${imgUrl}" class="popup-img" onerror="this.src='https://via.placeholder.com/250x150?text=画像準備中'">
+                            <p style="font-size:0.9em;">${desc || ''}</p>
+                        </div>
+                    `);
+                }
+            }
+        });
+    }
     loadArchive();
 </script>
 </body>
