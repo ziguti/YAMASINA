@@ -6,245 +6,177 @@
     <title>山科歴史デジタルアーカイブ</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        /* 基本設定：明朝体と洗練された配色 */
         :root {
-            --base-font: "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", "MS PMincho", serif;
-            --primary-brown: #5d4037;
-            --accent-gold: #c0a062;
+            --font-serif: "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", "MS PMincho", serif;
+            --primary-brown: #4e342e;
             --bg-cream: #fdfaf2;
         }
 
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
+            margin: 0; padding: 0;
             background-color: var(--bg-cream);
-            font-family: var(--base-font);
-            scroll-behavior: smooth;
+            font-family: var(--font-serif);
             overflow-x: hidden;
+            scroll-behavior: smooth;
         }
 
-        /* --- 1. メインビジュアル（Hero Section） --- */
-        #hero {
+        /* --- 1. メインビジュアル（アニメーション強化） --- */
+        .hero {
             position: relative;
             width: 100%;
             height: 100vh;
-            overflow: hidden;
+            background: #222; /* 画像がない時の予備色 */
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #000;
-        }
-
-        #hero-img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0.7;
-            /* スライド登場アニメーション */
-            transform: translateY(100px);
-            animation: slideUp 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-        }
-
-        @keyframes slideUp {
-            to { transform: translateY(0); opacity: 0.8; }
-        }
-
-        #hero-title {
-            position: relative;
-            color: #fff;
-            font-size: clamp(2rem, 8vw, 4.5rem);
-            letter-spacing: 0.5rem;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-            z-index: 10;
-            text-align: center;
-            opacity: 0;
-            animation: fadeIn 2s 0.5s forwards;
-        }
-
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
-
-        /* --- 2. メニューセクション --- */
-        .menu-section {
-            padding: 80px 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        .button-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
-            margin-top: 40px;
-        }
-
-        .nav-button {
-            position: relative;
-            height: 250px;
-            border-radius: 12px;
             overflow: hidden;
-            cursor: pointer;
-            text-decoration: none;
-            color: white;
-            transition: transform 0.4s ease;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
 
-        .nav-button:hover {
-            transform: scale(1.05); /* 少し大きくなるアニメーション */
-        }
-
-        .nav-button img {
+        .hero-img {
+            position: absolute;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            filter: brightness(0.7);
+            opacity: 0;
+            /* 下から滑り込みながらふわっと浮き上がる */
+            transform: translateY(30px);
+            animation: heroReveal 1.8s ease-out forwards;
         }
 
-        .nav-button span {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1.8rem;
-            font-weight: bold;
-            width: 100%;
-            pointer-events: none;
+        @keyframes heroReveal {
+            to { opacity: 0.6; transform: translateY(0); }
         }
 
-        /* --- 3. マップセクション --- */
-        #map-container {
-            padding: 40px 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        #map {
-            height: 700px;
-            border-radius: 15px;
-            border: 2px solid var(--primary-brown);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        /* 洗練されたカスタムピン（Leaflet） */
-        .custom-pin {
-            background-color: var(--primary-brown);
-            border: 2px solid #fff;
-            border-radius: 50% 50% 50% 0;
-            transform: rotate(-45deg);
-            width: 30px !important;
-            height: 30px !important;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-        }
-
-        footer {
-            background: var(--primary-brown);
+        .hero-title {
+            position: relative;
             color: #fff;
-            padding: 40px 20px;
+            font-size: clamp(1.5rem, 5vw, 3.5rem);
+            letter-spacing: 0.5rem;
             text-align: center;
-            margin-top: 60px;
+            z-index: 10;
+            opacity: 0;
+            /* 文字は少し遅れて浮き上がる */
+            animation: textFadeUp 2s 0.8s ease-out forwards;
+            text-shadow: 2px 2px 15px rgba(0,0,0,0.7);
+        }
+
+        @keyframes textFadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- 2. ナビゲーション（画像ボタン） --- */
+        .nav-section {
+            max-width: 1100px;
+            margin: -50px auto 50px;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            z-index: 20;
+            position: relative;
+        }
+
+        .nav-card {
+            background: #fff;
+            border-radius: 2px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-decoration: none;
+            color: var(--primary-brown);
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            text-align: center;
+        }
+
+        /* カーソルを合わせると大きくなる */
+        .nav-card:hover {
+            transform: translateY(-10px) scale(1.04);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .nav-card img {
+            width: 100%; height: 160px;
+            object-fit: cover;
+            transition: 0.5s;
+        }
+
+        .nav-card span {
+            display: block; padding: 18px;
+            font-size: 1.1rem; font-weight: bold;
+        }
+
+        /* --- 3. マップ --- */
+        #map-container { padding: 50px 20px; max-width: 1300px; margin: 0 auto; }
+        #map {
+            height: 650px; border: 1px solid #ccc; border-radius: 4px;
+        }
+
+        .refined-pin {
+            background: var(--primary-brown); border: 2px solid #fff;
+            border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+            width: 24px !important; height: 24px !important;
         }
     </style>
 </head>
 <body>
 
-<section id="hero">
-    <img src="‎IMG_20250907_083738.jpg" id="hero-img" alt="山科の風景">
-    <h1 id="hero-title">山科歴史デジタルアーカイブ</h1>
+<section class="hero">
+    <img src="IMG_20250907_083738.jpg" class="hero-img" alt="風景画像">
+    <h1 class="hero-title">山科歴史デジタルアーカイブ</h1>
 </section>
 
-<section class="menu-section">
-    <h2 style="font-size: 2rem; color: var(--primary-brown); margin-bottom: 20px;">資料を探る</h2>
-    <p>郷土の記憶を、地図と写真で辿ります。</p>
-
-    <div class="button-grid">
-        <a href="#map-container" class="nav-button">
-            <img src="https://via.placeholder.com/600x400/5d4037/ffffff?text=Old+Photo" alt="古写真">
-            <span>古写真アーカイブ</span>
-        </a>
-        
-        <a href="#map-container" class="nav-button">
-            <img src="https://via.placeholder.com/600x400/c0a062/ffffff?text=Map" alt="地図">
-            <span>山科マップ</span>
-        </a>
-
-        <a href="https://yamashina-furusato.com/" target="_blank" class="nav-button">
-            <img src="https://via.placeholder.com/600x400/8b4513/ffffff?text=Link" alt="ふるさとの会">
-            <span>ふるさとの会</span>
-        </a>
-    </div>
-</section>
+<nav class="nav-section">
+    <a href="#map-container" class="nav-card">
+        <img src="https://via.placeholder.com/600x400/4e342e/ffffff?text=Old+Photos">
+        <span>古写真アーカイブ</span>
+    </a>
+    <a href="#map-container" class="nav-card">
+        <img src="https://via.placeholder.com/600x400/8d6e63/ffffff?text=Map">
+        <span>山科マップ</span>
+    </a>
+    <a href="https://yamashina-furusato.com/" target="_blank" class="nav-card">
+        <img src="https://via.placeholder.com/600x400/c0a062/ffffff?text=Link">
+        <span>ふるさとの会</span>
+    </a>
+</nav>
 
 <section id="map-container">
-    <h2 style="text-align: center; color: var(--primary-brown);">山科歴史探訪マップ</h2>
     <div id="map"></div>
 </section>
 
-<footer>
-    <p>&copy; 2026 山科歴史デジタルアーカイブプロジェクト</p>
-    <p style="font-size: 0.8rem; opacity: 0.7;">協力：山科を語り継ぐ会 / 古材文化の会</p>
-</footer>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // --- マップの設定 ---
-    const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
     const map = L.map('map').setView([34.992, 135.813], 15);
-
-    // 国土地理院地図（淡色地図など、明朝体デザインに合うものを選択）
     L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png', {
-        attribution: '国土地理院'
+        attribution: '&copy; 国土地理院'
     }).addTo(map);
 
-    // --- データ読み込み ---
+    const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
+    
     async function loadData() {
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
-        const response = await fetch(url);
-        const csv = await response.text();
-        const rows = csv.split('\n').slice(1);
+        try {
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+            const response = await fetch(url);
+            const csv = await response.text();
+            const rows = csv.split('\n').slice(1);
 
-        rows.forEach(row => {
-            const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
-            const fileId = cols[1];
-            const title = cols[4];
-            const coords = cols[6];
-            const year = cols[7];
-            const desc = cols[9];
+            rows.forEach(row => {
+                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
+                const fileId = cols[1], title = cols[4], coords = cols[6], year = cols[7];
 
-            if (coords && coords.includes(',')) {
-                const [lat, lng] = coords.split(',').map(n => parseFloat(n.trim()));
-                const imgUrl = fileId ? `https://drive.google.com/uc?export=view&id=${fileId}` : '';
-
-                // 洗練されたデザインのマーカー
-                const marker = L.marker([lat, lng], {
-                    icon: L.divIcon({ className: 'custom-pin' })
-                }).addTo(map);
-
-                marker.bindPopup(`
-                    <div style="font-family: var(--base-font); width: 250px;">
-                        <span style="background: var(--primary-brown); color: #fff; padding: 2px 8px; font-size: 0.7rem; border-radius: 10px;">${year || '年代不明'}</span>
-                        <h3 style="margin: 8px 0; color: var(--primary-brown);">${title}</h3>
-                        ${imgUrl ? `<img src="${imgUrl}" style="width:100%; border-radius: 4px;">` : ''}
-                        <p style="font-size: 0.9rem; line-height: 1.5;">${desc || ''}</p>
-                    </div>
-                `);
-            }
-        });
+                if (coords && coords.includes(',')) {
+                    const [lat, lng] = coords.split(',').map(n => parseFloat(n.trim()));
+                    if (!isNaN(lat)) {
+                        const imgUrl = fileId ? `https://drive.google.com/uc?export=view&id=${fileId}` : '';
+                        L.marker([lat, lng], { icon: L.divIcon({ className: 'refined-pin' }) })
+                         .addTo(map)
+                         .bindPopup(`<h3 style="font-family:var(--font-serif)">${title}</h3><img src="${imgUrl}" style="width:100%">`);
+                    }
+                }
+            });
+        } catch (e) { console.error("Data Load Error"); }
     }
-
-    // 将来的なQGISデータの読み込み用（雛形）
-    async function loadQGISData() {
-        // 例: fetch('qgis_data.geojson').then(r => r.json()).then(data => L.geoJSON(data).addTo(map));
-    }
-
     loadData();
 </script>
 </body>
 </html>
-
