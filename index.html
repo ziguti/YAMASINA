@@ -15,15 +15,13 @@
             --header-height: 85px;
         }
 
-        body, html { margin: 0; padding: 0; background-color: var(--bg-cream); font-family: var(--font-serif); color: #333; }
+        body, html { margin: 0; padding: 0; background-color: var(--bg-cream); font-family: var(--font-serif); color: #333; overflow-x: hidden; scroll-behavior: smooth; }
 
-        /* --- 1. 固定ヘッダー --- */
+        /* --- ヘッダー --- */
         header {
             position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height);
-            background: rgba(255, 255, 255, 0.2); 
-            -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.3); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3); display: flex; align-items: center; justify-content: space-between;
             padding: 0 40px; z-index: 2000; box-sizing: border-box;
         }
         .logo-group { display: flex; flex-direction: column; line-height: 1.1; }
@@ -32,58 +30,61 @@
         .header-nav a { margin-left: 25px; text-decoration: none; color: #222; font-size: 0.9rem; font-weight: 600; }
 
         .page { display: none; min-height: 100vh; box-sizing: border-box; }
-        #home-page { display: block; }
         .page-content { padding-top: var(--header-height); }
 
-        /* --- 2. HOME: 巨大画像ボタンと説明文 --- */
-        .hero { position: relative; width: 100%; height: 90vh; background: #000; display: flex; align-items: center; justify-content: center; }
+        /* --- HOME --- */
+        #home-page { display: block; }
+        .hero { position: relative; width: 100%; height: 85vh; background: #000; display: flex; align-items: center; justify-content: center; }
         .hero-img { position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
-        .hero-title { position: relative; color: #fff; font-size: clamp(2rem, 8vw, 4.5rem); letter-spacing: 1rem; text-shadow: 0 0 30px rgba(0,0,0,0.5); z-index: 10; }
+        .hero-title { position: relative; color: #fff; font-size: clamp(2rem, 8vw, 4.5rem); letter-spacing: 1rem; text-shadow: 0 0 30px rgba(0,0,0,0.5); z-index: 10; text-align: center; }
 
-        .nav-container { display: flex; flex-direction: column; gap: 40px; max-width: 1000px; margin: -150px auto 100px; padding: 0 20px; position: relative; z-index: 100; }
-        
-        .nav-card {
-            position: relative; width: 100%; height: 350px; /* 大きく設定 */
-            background: #000; border-radius: 4px; overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            text-decoration: none; display: block;
-        }
+        .nav-container { display: flex; flex-direction: column; gap: 40px; max-width: 1000px; margin: -100px auto 100px; padding: 0 20px; position: relative; z-index: 100; }
+        .nav-card { position: relative; width: 100%; height: 350px; background: #000; border-radius: 4px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.3); text-decoration: none; display: block; }
         .nav-card img { width: 100%; height: 100%; object-fit: cover; transition: 0.8s ease; opacity: 0.8; }
-        .nav-card:hover img { transform: scale(1.05); opacity: 0.5; } /* ホバーで薄く・拡大 */
+        .nav-card:hover img { transform: scale(1.05); opacity: 0.5; }
+        .nav-card-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-align: center; }
+        .nav-card-title { font-size: 2.2rem; font-weight: bold; letter-spacing: 0.5rem; margin-bottom: 15px; }
+        .nav-card-sub { font-size: 1rem; letter-spacing: 0.1rem; opacity: 0.9; }
 
-        /* 画像の上に重なるテキスト */
-        .nav-card-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: #fff; text-align: center; pointer-events: none;
-        }
-        .nav-card-title { font-size: 2.2rem; font-weight: bold; letter-spacing: 0.5rem; margin-bottom: 15px; text-shadow: 2px 2px 10px rgba(0,0,0,0.7); }
-        .nav-card-sub { font-size: 1rem; letter-spacing: 0.1rem; opacity: 0.9; text-shadow: 1px 1px 5px rgba(0,0,0,0.7); }
-
-        /* --- 3. ARCHIVE: 検索窓とフィルタ --- */
-        .archive-controls {
-            max-width: 900px; margin: 40px auto; display: flex; gap: 10px; padding: 0 20px;
-        }
-        .search-input-long {
-            flex: 2; padding: 12px 20px; border: none; border-bottom: 1px solid var(--primary-brown);
-            background: transparent; font-family: var(--font-serif); font-size: 1.1rem; outline: none;
-        }
-        .filter-select {
-            flex: 1; padding: 10px; border: 1px solid #ddd; background: #fff;
-            font-family: var(--font-serif); cursor: pointer;
-        }
-
+        /* --- ARCHIVE 一覧 --- */
+        .archive-controls { max-width: 900px; margin: 40px auto; display: flex; gap: 10px; padding: 0 20px; }
+        .search-input-long { flex: 2; padding: 12px; border: none; border-bottom: 1px solid var(--primary-brown); background: transparent; font-family: var(--font-serif); font-size: 1.1rem; outline: none; }
+        .filter-select { flex: 1; padding: 10px; border: 1px solid #ddd; background: #fff; font-family: var(--font-serif); }
         .archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 40px; padding: 0 40px 40px; }
-        .archive-item { background: #fff; padding: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .archive-item { background: #fff; padding: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); cursor: pointer; transition: 0.3s; }
+        .archive-item:hover { transform: translateY(-5px); }
         .archive-item img { width: 100%; height: 240px; object-fit: cover; }
 
-        /* --- 4. MAP --- */
+        /* --- DETAIL PAGE (詳細画面) --- */
+        .detail-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 1.5fr 1fr; gap: 50px; }
+        .detail-image img { width: 100%; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .detail-info h2 { font-size: 2rem; border-bottom: 2px solid var(--primary-brown); padding-bottom: 15px; margin-top: 0; }
+        .info-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .info-table th, .info-table td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
+        .info-table th { width: 120px; color: #888; font-weight: normal; }
+        .back-btn { display: inline-block; margin-top: 30px; padding: 10px 25px; background: var(--primary-brown); color: #fff; text-decoration: none; border-radius: 4px; }
+
+        /* --- MAP --- */
         #map-wrapper { width: 100%; height: calc(100vh - var(--header-height)); position: relative; }
         #map { width: 100%; height: 100%; }
-        .map-overlay { position: absolute; bottom: 40px; left: 20px; z-index: 1000; background: rgba(255,255,255,0.95); padding: 20px; border-radius: 8px; width: 260px; }
-        .camera-pin { background: var(--primary-brown); color: #fff; width: 38px!important; height: 38px!important; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; font-size: 16px; }
+        .map-overlay { position: absolute; bottom: 40px; left: 20px; z-index: 1000; background: rgba(255,255,255,0.95); padding: 15px; border-radius: 8px; width: 220px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        
+        /* ヌルっと動くポップアップのアニメーション */
+        .leaflet-popup-content-wrapper { border-radius: 8px; padding: 0; overflow: hidden; animation: fadeInBlur 0.4s ease-out; }
+        @keyframes fadeInBlur { from { opacity: 0; transform: translateY(10px); filter: blur(5px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
+        
+        .popup-card img { width: 100%; height: 120px; object-fit: cover; display: block; }
+        .popup-body { padding: 12px; }
+        .popup-title { font-weight: bold; font-size: 1rem; margin-bottom: 5px; color: var(--primary-brown); }
+        .popup-meta { font-size: 0.75rem; color: #666; margin-bottom: 10px; }
+        .popup-link { display: block; text-align: center; background: var(--accent-gold); color: #fff; text-decoration: none; padding: 5px; font-size: 0.8rem; border-radius: 3px; }
 
-        footer { padding: 80px; background: var(--primary-brown); color: #fff; text-align: center; }
+        .camera-pin { background: var(--primary-brown); color: #fff; width: 38px!important; height: 38px!important; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; }
+
+        @media (max-width: 768px) {
+            .detail-container { grid-template-columns: 1fr; }
+            .header-nav { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -97,7 +98,6 @@
         <a href="javascript:showPage('home')">ホーム</a>
         <a href="javascript:showPage('archive')">古写真データベース</a>
         <a href="javascript:showPage('map')">山科比較マップ</a>
-        <a href="https://furusato.la.coocan.jp/hurusato2/homeindex.htm" target="_blank">ふるさとの会</a>
     </nav>
 </header>
 
@@ -106,56 +106,36 @@
         <img src="IMG_20250907_083738.jpg" class="hero-img">
         <h1 class="hero-title">山科の記憶を辿る</h1>
     </section>
-
     <div class="nav-container">
         <a href="javascript:showPage('archive')" class="nav-card">
             <img src="IMG_20250426_140907.jpg">
-            <div class="nav-card-overlay">
-                <div class="nav-card-title">古写真データベース</div>
-                <div class="nav-card-sub">これまでに収集した約700枚の古写真を探索</div>
-            </div>
+            <div class="nav-card-overlay"><div class="nav-card-title">古写真データベース</div><div class="nav-card-sub">これまでに収集した約700枚の古写真を探索</div></div>
         </a>
         <a href="javascript:showPage('map')" class="nav-card">
             <img src="190400-0007.jpg">
-            <div class="nav-card-overlay">
-                <div class="nav-card-title">山科比較マップ</div>
-                <div class="nav-card-sub">古地図と古写真を地図上で比較</div>
-            </div>
-        </a>
-        <a href="https://furusato.la.coocan.jp/hurusato2/homeindex.htm" target="_blank" class="nav-card">
-            <img src="images.jpg">
-            <div class="nav-card-overlay">
-                <div class="nav-card-title">ふるさとの会</div>
-                <div class="nav-card-sub">ふるさとを活かしたまちづくりを進める会のHPへのリンク</div>
-            </div>
+            <div class="nav-card-overlay"><div class="nav-card-title">山科比較マップ</div><div class="nav-card-sub">古地図と古写真を地図上で比較</div></div>
         </a>
     </div>
-    <footer><p>© 山科を語り継ぐ会 / 郷土史研究プロジェクト</p></footer>
 </div>
 
 <div id="archive-page" class="page page-content">
-    <h2 style="text-align:center; letter-spacing: 0.3rem; margin: 40px 0;">古写真アーカイブ</h2>
-    
+    <h2 style="text-align:center; margin: 40px 0;">古写真アーカイブ</h2>
     <div class="archive-controls">
-        <input type="text" id="search-input" class="search-input-long" placeholder="キーワードで探索（例：毘沙門堂、駅、街道）" oninput="filterData()">
-        <select id="era-filter" class="filter-select" onchange="filterData()">
-            <option value="">すべての時代</option>
-            <option value="明治">明治</option>
-            <option value="大正">大正</option>
-            <option value="昭和">昭和</option>
-            <option value="平成">平成</option>
-            <option value="不明">年代不明</option>
-        </select>
+        <input type="text" id="search-input" class="search-input-long" placeholder="キーワードで探索" oninput="filterData()">
+        <select id="era-filter" class="filter-select" onchange="filterData()"><option value="">すべての時代</option><option value="明治">明治</option><option value="大正">大正</option><option value="昭和">昭和</option></select>
     </div>
-
     <div id="archive-list" class="archive-grid"></div>
+</div>
+
+<div id="detail-page" class="page page-content">
+    <div id="detail-content" class="detail-container"></div>
 </div>
 
 <div id="map-page" class="page page-content">
     <div id="map-wrapper">
         <div id="map"></div>
         <div class="map-overlay">
-            <h4 style="margin:0 0 10px; font-size:0.8rem;">1940年代 空中写真 (国土地理院)</h4>
+            <h4 style="margin:0 0 10px; font-size:0.8rem;">1940年代 空中写真</h4>
             <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="0.7" style="width: 100%;">
         </div>
     </div>
@@ -166,59 +146,79 @@
     let archiveData = [];
     let map, historicalLayer;
 
-    function showPage(pageId) {
+    function showPage(pageId, recordId = null) {
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.getElementById(pageId + '-page').style.display = 'block';
         window.scrollTo(0,0);
         if(pageId === 'map' && map) setTimeout(() => map.invalidateSize(), 200);
+        if(pageId === 'detail' && recordId) renderDetail(recordId);
     }
 
-    // 検索・フィルタ機能
-    function filterData() {
-        const query = document.getElementById('search-input').value.toLowerCase();
-        const era = document.getElementById('era-filter').value;
-        const filtered = archiveData.filter(d => {
-            const matchQuery = d.title.toLowerCase().includes(query) || (d.desc && d.desc.toLowerCase().includes(query));
-            const matchEra = era === "" || (d.year && d.year.includes(era));
-            return matchQuery && matchEra;
-        });
-        renderArchive(filtered);
-    }
-
-    const mapInit = () => {
-        map = L.map('map').setView([34.992, 135.813], 15);
-        L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-            subdomains: ['mt0','mt1','mt2','mt3'], attribution: '&copy; Google Maps'
-        }).addTo(map);
-        historicalLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png', {
-            attribution: '国土地理院(米軍)', opacity: 0.7, zIndex: 10
-        }).addTo(map);
-        document.getElementById('opacity-slider').addEventListener('input', (e) => historicalLayer.setOpacity(e.target.value));
-    };
-
+    // 1. データ読み込み（スプレッドシートのカラム構成に合わせて調整してください）
     const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
     async function loadData() {
         const res = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`);
         const csv = await res.text();
         const rows = csv.split('\n').slice(1);
-        archiveData = rows.map(row => {
+        archiveData = rows.map((row, index) => {
             const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
-            return { id: cols[1], title: (cols[4]||"").replace(/\.[^/.]+$/, ""), coords: cols[6], year: cols[7], desc: cols[9] };
+            return {
+                db_id: index, // 内部管理用ID
+                drive_id: cols[1],
+                title: (cols[4]||"").replace(/\.[^/.]+$/, ""),
+                coords: cols[6],
+                year: cols[7],
+                author: cols[8] || "不明", // 撮影者
+                desc: cols[9] || "",
+                location: cols[10] || "山科区内", // 詳細場所
+                copyright: cols[11] || "山科を語り継ぐ会" // 著作権
+            };
         }).filter(d => d.title);
         renderArchive(archiveData);
+        initMap();
         renderMarkers(archiveData);
     }
 
+    // 2. アーカイブ一覧
     function renderArchive(data) {
         const list = document.getElementById('archive-list');
-        list.innerHTML = data.map(item => {
-            const imgUrl = item.id ? `https://drive.google.com/thumbnail?id=${item.id.replace(/\s/g,'')}&sz=w800` : '';
-            return `<div class="archive-item">
-                <img src="${imgUrl}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x300?text=Image+Load+Error'">
+        list.innerHTML = data.map(item => `
+            <div class="archive-item" onclick="showPage('detail', ${item.db_id})">
+                <img src="https://drive.google.com/thumbnail?id=${item.drive_id.replace(/\s/g,'')}&sz=w600" loading="lazy">
                 <h3>${item.title}</h3>
-                <p class="tag">${item.year || '年代不明'}</p>
-            </div>`;
-        }).join('');
+                <p style="font-size:0.8rem; color:#888;">${item.year || ''}</p>
+            </div>
+        `).join('');
+    }
+
+    // 3. 詳細ページ描画（高画質対応）
+    function renderDetail(db_id) {
+        const item = archiveData.find(d => d.db_id === db_id);
+        const container = document.getElementById('detail-content');
+        const highResUrl = `https://drive.google.com/thumbnail?id=${item.drive_id.replace(/\s/g,'')}&sz=w1200`;
+        
+        container.innerHTML = `
+            <div class="detail-image"><img src="${highResUrl}"></div>
+            <div class="detail-info">
+                <h2>${item.title}</h2>
+                <table class="info-table">
+                    <tr><th>撮影年代</th><td>${item.year}</td></tr>
+                    <tr><th>撮影者</th><td>${item.author}</td></tr>
+                    <tr><th>場所</th><td>${item.location}</td></tr>
+                    <tr><th>解説</th><td>${item.desc}</td></tr>
+                    <tr><th>権利</th><td>${item.copyright}</td></tr>
+                </table>
+                <a href="javascript:showPage('archive')" class="back-btn">一覧に戻る</a>
+            </div>
+        `;
+    }
+
+    // 4. マップ機能
+    function initMap() {
+        map = L.map('map').setView([34.992, 135.813], 15);
+        L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', { subdomains: ['mt0','mt1','mt2','mt3'], attribution: 'Google Maps' }).addTo(map);
+        historicalLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png', { opacity: 0.7, zIndex: 10 }).addTo(map);
+        document.getElementById('opacity-slider').oninput = (e) => historicalLayer.setOpacity(e.target.value);
     }
 
     function renderMarkers(data) {
@@ -226,15 +226,33 @@
             if (item.coords && item.coords.includes(',')) {
                 const [lat, lng] = item.coords.split(',').map(n => parseFloat(n.trim()));
                 if (!isNaN(lat)) {
-                    const icon = L.divIcon({ className: 'custom', html: `<div class="camera-pin"><i class="fa-solid fa-camera"></i></div>`, iconSize: [38,38], iconAnchor: [19,19] });
-                    const imgUrl = `https://drive.google.com/thumbnail?id=${item.id.replace(/\s/g,'')}&sz=w800`;
-                    L.marker([lat, lng], { icon }).addTo(map).bindPopup(`<div style="width:200px;"><h4>${item.title}</h4><img src="${imgUrl}" style="width:100%;"><p>${item.year||''}</p></div>`);
+                    const icon = L.divIcon({ className: 'custom', html: `<div class="camera-pin"><i class="fa-solid fa-camera"></i></div>`, iconSize:[38,38], iconAnchor:[19,19] });
+                    const thumbUrl = `https://drive.google.com/thumbnail?id=${item.drive_id.replace(/\s/g,'')}&sz=w400`;
+                    
+                    // ヌルっとしたポップアップの中身
+                    const popupContent = `
+                        <div class="popup-card">
+                            <img src="${thumbUrl}">
+                            <div class="popup-body">
+                                <div class="popup-title">${item.title}</div>
+                                <div class="popup-meta">${item.year} / ${item.location}</div>
+                                <a href="javascript:showPage('detail', ${item.db_id})" class="popup-link">詳細データベースを見る</a>
+                            </div>
+                        </div>
+                    `;
+                    L.marker([lat, lng], { icon }).addTo(map).bindPopup(popupContent, { maxWidth: 220, className: 'custom-popup' });
                 }
             }
         });
     }
 
-    mapInit();
+    function filterData() {
+        const query = document.getElementById('search-input').value.toLowerCase();
+        const era = document.getElementById('era-filter').value;
+        const filtered = archiveData.filter(d => (d.title.toLowerCase().includes(query) || d.desc.toLowerCase().includes(query)) && (era === "" || d.year.includes(era)));
+        renderArchive(filtered);
+    }
+
     loadData();
 </script>
 </body>
