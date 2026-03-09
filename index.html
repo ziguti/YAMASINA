@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>山科歴史デジタルアーカイブ | YAMASHINA HISTORY</title>
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    
     <style>
         :root {
             --font-serif: "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", "MS PMincho", serif;
@@ -17,203 +15,75 @@
             --header-height: 85px;
         }
 
-        body, html {
-            margin: 0; padding: 0;
-            background-color: var(--bg-cream);
-            font-family: var(--font-serif);
-            color: #333;
-            overflow-x: hidden;
-        }
+        body, html { margin: 0; padding: 0; background-color: var(--bg-cream); font-family: var(--font-serif); color: #333; }
 
-        /* --- ヘッダー: 京博スタイルの透過 + 英文ロゴ --- */
+        /* --- 1. 固定ヘッダー --- */
         header {
-            position: fixed;
-            top: 0; left: 0; width: 100%;
-            height: var(--header-height);
+            position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height);
             background: rgba(255, 255, 255, 0.2); 
-            -webkit-backdrop-filter: blur(15px) saturate(150%);
-            backdrop-filter: blur(15px) saturate(150%);
+            -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 40px;
-            z-index: 2000;
-            box-sizing: border-box;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px; z-index: 2000; box-sizing: border-box;
         }
+        .logo-group { display: flex; flex-direction: column; line-height: 1.1; }
+        .header-logo { font-size: 1.4rem; font-weight: bold; color: var(--primary-brown); text-decoration: none; letter-spacing: 0.15rem; }
+        .header-sub-logo { font-size: 0.7rem; color: var(--primary-brown); letter-spacing: 0.35rem; font-family: serif; margin-top: 5px; opacity: 0.9; }
+        .header-nav a { margin-left: 25px; text-decoration: none; color: #222; font-size: 0.9rem; font-weight: 600; }
 
-        .logo-group {
-            display: flex;
-            flex-direction: column;
-            line-height: 1.1;
-        }
-
-        .header-logo {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: var(--primary-brown);
-            text-decoration: none;
-            letter-spacing: 0.15rem;
-        }
-
-        .header-sub-logo {
-            font-size: 0.7rem;
-            color: var(--primary-brown);
-            letter-spacing: 0.35rem;
-            font-family: 'Times New Roman', serif;
-            margin-top: 5px;
-            opacity: 0.9;
-        }
-
-        .header-nav a {
-            margin-left: 25px;
-            text-decoration: none;
-            color: #222;
-            font-size: 0.9rem;
-            font-weight: 600;
-            transition: 0.3s;
-        }
-
-        .header-nav a:hover { color: var(--accent-gold); }
-
-        /* --- ページ構成 --- */
         .page { display: none; min-height: 100vh; box-sizing: border-box; }
         #home-page { display: block; }
         .page-content { padding-top: var(--header-height); }
 
-        /* --- 1. HOME: ヒーローとカード --- */
-        .hero {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
+        /* --- 2. HOME: 巨大画像ボタンと説明文 --- */
+        .hero { position: relative; width: 100%; height: 90vh; background: #000; display: flex; align-items: center; justify-content: center; }
+        .hero-img { position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0.6; }
+        .hero-title { position: relative; color: #fff; font-size: clamp(2rem, 8vw, 4.5rem); letter-spacing: 1rem; text-shadow: 0 0 30px rgba(0,0,0,0.5); z-index: 10; }
 
-        .hero-img {
-            position: absolute; width: 100%; height: 100%;
-            object-fit: cover; opacity: 0.6;
-        }
-
-        .hero-title {
-            position: relative;
-            color: #fff;
-            font-size: clamp(2rem, 8vw, 4rem);
-            letter-spacing: 0.6rem;
-            text-shadow: 0 0 30px rgba(0,0,0,0.5);
-            text-align: center;
-            z-index: 10;
-        }
-
-        .nav-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin: -100px auto 100px;
-            max-width: 1200px;
-            padding: 0 20px;
-            position: relative;
-            z-index: 100;
-        }
-
+        .nav-container { display: flex; flex-direction: column; gap: 40px; max-width: 1000px; margin: -150px auto 100px; padding: 0 20px; position: relative; z-index: 100; }
+        
         .nav-card {
-            background: #fff;
-            border-radius: 4px;
-            overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-            text-decoration: none;
-            color: var(--primary-brown);
-            text-align: center;
-            transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative; width: 100%; height: 350px; /* 大きく設定 */
+            background: #000; border-radius: 4px; overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            text-decoration: none; display: block;
+        }
+        .nav-card img { width: 100%; height: 100%; object-fit: cover; transition: 0.8s ease; opacity: 0.8; }
+        .nav-card:hover img { transform: scale(1.05); opacity: 0.5; } /* ホバーで薄く・拡大 */
+
+        /* 画像の上に重なるテキスト */
+        .nav-card-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #fff; text-align: center; pointer-events: none;
+        }
+        .nav-card-title { font-size: 2.2rem; font-weight: bold; letter-spacing: 0.5rem; margin-bottom: 15px; text-shadow: 2px 2px 10px rgba(0,0,0,0.7); }
+        .nav-card-sub { font-size: 1rem; letter-spacing: 0.1rem; opacity: 0.9; text-shadow: 1px 1px 5px rgba(0,0,0,0.7); }
+
+        /* --- 3. ARCHIVE: 検索窓とフィルタ --- */
+        .archive-controls {
+            max-width: 900px; margin: 40px auto; display: flex; gap: 10px; padding: 0 20px;
+        }
+        .search-input-long {
+            flex: 2; padding: 12px 20px; border: none; border-bottom: 1px solid var(--primary-brown);
+            background: transparent; font-family: var(--font-serif); font-size: 1.1rem; outline: none;
+        }
+        .filter-select {
+            flex: 1; padding: 10px; border: 1px solid #ddd; background: #fff;
+            font-family: var(--font-serif); cursor: pointer;
         }
 
-        .nav-card:hover { transform: translateY(-12px); }
-        .nav-card img { width: 100%; height: 220px; object-fit: cover; }
-        .nav-card span { display: block; padding: 25px; font-weight: bold; font-size: 1.1rem; }
+        .archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 40px; padding: 0 40px 40px; }
+        .archive-item { background: #fff; padding: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .archive-item img { width: 100%; height: 240px; object-fit: cover; }
 
-        /* --- 2. ARCHIVE: 写真一覧 --- */
-        .archive-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 40px;
-            padding: 40px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .archive-item {
-            background: #fff;
-            padding: 15px;
-            border-radius: 2px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            transition: 0.3s;
-        }
-
-        .archive-item img {
-            width: 100%;
-            height: 240px;
-            object-fit: cover;
-            background: #eee;
-        }
-
-        .archive-item h3 {
-            font-size: 1rem;
-            margin: 15px 0 5px;
-            line-height: 1.4;
-            color: var(--primary-brown);
-        }
-
-        .archive-item p.tag {
-            font-size: 0.8rem;
-            color: #888;
-            margin: 0;
-        }
-
-        /* --- 3. MAP: 比較マップ --- */
-        #map-wrapper {
-            position: relative;
-            width: 100%;
-            height: calc(100vh - var(--header-height));
-        }
-
+        /* --- 4. MAP --- */
+        #map-wrapper { width: 100%; height: calc(100vh - var(--header-height)); position: relative; }
         #map { width: 100%; height: 100%; }
+        .map-overlay { position: absolute; bottom: 40px; left: 20px; z-index: 1000; background: rgba(255,255,255,0.95); padding: 20px; border-radius: 8px; width: 260px; }
+        .camera-pin { background: var(--primary-brown); color: #fff; width: 38px!important; height: 38px!important; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; font-size: 16px; }
 
-        .map-overlay {
-            position: absolute;
-            bottom: 40px;
-            left: 20px;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            width: 260px;
-        }
-
-        /* カメラピンのデザイン */
-        .camera-pin {
-            background: var(--primary-brown);
-            color: #fff;
-            width: 38px !important;
-            height: 38px !important;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #fff;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            font-size: 16px;
-        }
-
-        footer {
-            padding: 60px;
-            background: var(--primary-brown);
-            color: #fff;
-            text-align: center;
-        }
+        footer { padding: 80px; background: var(--primary-brown); color: #fff; text-align: center; }
     </style>
 </head>
 <body>
@@ -226,36 +96,58 @@
     <nav class="header-nav">
         <a href="javascript:showPage('home')">ホーム</a>
         <a href="javascript:showPage('archive')">古写真データベース</a>
-        <a href="javascript:showPage('map')">山科マップ</a>
+        <a href="javascript:showPage('map')">山科比較マップ</a>
         <a href="https://furusato.la.coocan.jp/hurusato2/homeindex.htm" target="_blank">ふるさとの会</a>
     </nav>
 </header>
 
 <div id="home-page" class="page">
     <section class="hero">
-        <img src="IMG_20250907_083738.jpg" class="hero-img" alt="山科の風景">
-        <h1 class="hero-title">山科歴史デジタルアーカイブ</h1>
+        <img src="IMG_20250907_083738.jpg" class="hero-img">
+        <h1 class="hero-title">山科の記憶を辿る</h1>
     </section>
 
     <div class="nav-container">
         <a href="javascript:showPage('archive')" class="nav-card">
             <img src="IMG_20250426_140907.jpg">
-            <span>古写真データベース</span>
+            <div class="nav-card-overlay">
+                <div class="nav-card-title">古写真データベース</div>
+                <div class="nav-card-sub">これまでに収集した約700枚の古写真を探索</div>
+            </div>
         </a>
         <a href="javascript:showPage('map')" class="nav-card">
             <img src="190400-0007.jpg">
-            <span>山科比較マップ</span>
+            <div class="nav-card-overlay">
+                <div class="nav-card-title">山科比較マップ</div>
+                <div class="nav-card-sub">古地図と古写真を地図上で比較</div>
+            </div>
         </a>
         <a href="https://furusato.la.coocan.jp/hurusato2/homeindex.htm" target="_blank" class="nav-card">
             <img src="images.jpg">
-            <span>ふるさとの会</span>
+            <div class="nav-card-overlay">
+                <div class="nav-card-title">ふるさとの会</div>
+                <div class="nav-card-sub">ふるさとを活かしたまちづくりを進める会のHPへのリンク</div>
+            </div>
         </a>
     </div>
     <footer><p>© 山科を語り継ぐ会 / 郷土史研究プロジェクト</p></footer>
 </div>
 
 <div id="archive-page" class="page page-content">
-    <h2 style="text-align:center; letter-spacing: 0.3rem; margin: 40px 0;">古写真データベース</h2>
+    <h2 style="text-align:center; letter-spacing: 0.3rem; margin: 40px 0;">古写真アーカイブ</h2>
+    
+    <div class="archive-controls">
+        <input type="text" id="search-input" class="search-input-long" placeholder="キーワードで探索（例：毘沙門堂、駅、街道）" oninput="filterData()">
+        <select id="era-filter" class="filter-select" onchange="filterData()">
+            <option value="">すべての時代</option>
+            <option value="明治">明治</option>
+            <option value="大正">大正</option>
+            <option value="昭和">昭和</option>
+            <option value="平成">平成</option>
+            <option value="不明">年代不明</option>
+        </select>
+    </div>
+
     <div id="archive-list" class="archive-grid"></div>
 </div>
 
@@ -263,12 +155,8 @@
     <div id="map-wrapper">
         <div id="map"></div>
         <div class="map-overlay">
-            <h4 style="margin:0 0 15px; font-size:0.9rem;">1940年代 空中写真 (国土地理院)</h4>
+            <h4 style="margin:0 0 10px; font-size:0.8rem;">1940年代 空中写真 (国土地理院)</h4>
             <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="0.7" style="width: 100%;">
-            <div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-top:5px; color:#666;">
-                <span>現在(Google)</span>
-                <span>過去(米軍写真)</span>
-            </div>
         </div>
     </div>
 </div>
@@ -278,126 +166,76 @@
     let archiveData = [];
     let map, historicalLayer;
 
-    // 1. ページ切り替え機能
     function showPage(pageId) {
         document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
         document.getElementById(pageId + '-page').style.display = 'block';
-        window.scrollTo(0, 0);
-        
-        // マップの描画崩れ防止
-        if (pageId === 'map' && map) {
-            setTimeout(() => map.invalidateSize(), 200);
-        }
+        window.scrollTo(0,0);
+        if(pageId === 'map' && map) setTimeout(() => map.invalidateSize(), 200);
     }
 
-    // 2. マップ初期化
-    function initMap() {
-        map = L.map('map').setView([34.992, 135.813], 15);
-
-        // Google 衛星写真 (mt0-mt3 サブドメイン利用)
-        const googleSat = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-            attribution: '&copy; Google Maps',
-            maxZoom: 20
-        }).addTo(map);
-
-        // 歴史写真レイヤー (米軍撮影 1945~50)
-        historicalLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png', {
-            attribution: '国土地理院(米軍撮影空中写真)',
-            opacity: 0.7,
-            zIndex: 10
-        }).addTo(map);
-
-        // スライダー連動
-        document.getElementById('opacity-slider').addEventListener('input', (e) => {
-            historicalLayer.setOpacity(e.target.value);
+    // 検索・フィルタ機能
+    function filterData() {
+        const query = document.getElementById('search-input').value.toLowerCase();
+        const era = document.getElementById('era-filter').value;
+        const filtered = archiveData.filter(d => {
+            const matchQuery = d.title.toLowerCase().includes(query) || (d.desc && d.desc.toLowerCase().includes(query));
+            const matchEra = era === "" || (d.year && d.year.includes(era));
+            return matchQuery && matchEra;
         });
+        renderArchive(filtered);
     }
 
-    // 3. データ読み込み & 処理
+    const mapInit = () => {
+        map = L.map('map').setView([34.992, 135.813], 15);
+        L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+            subdomains: ['mt0','mt1','mt2','mt3'], attribution: '&copy; Google Maps'
+        }).addTo(map);
+        historicalLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png', {
+            attribution: '国土地理院(米軍)', opacity: 0.7, zIndex: 10
+        }).addTo(map);
+        document.getElementById('opacity-slider').addEventListener('input', (e) => historicalLayer.setOpacity(e.target.value));
+    };
+
     const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
     async function loadData() {
-        try {
-            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
-            const res = await fetch(url);
-            const csv = await res.text();
-            const rows = csv.split('\n').slice(1);
-
-            archiveData = rows.map(row => {
-                // CSVパース (カンマ区切り、引用符対応)
-                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
-                
-                // 論理処理: .jpg 等の拡張子を消す
-                const rawTitle = cols[4] || "";
-                const cleanTitle = rawTitle.replace(/\.(jpg|jpeg|png|gif|bmp)$/i, "");
-                
-                return {
-                    id: cols[1],
-                    title: cleanTitle,
-                    coords: cols[6],
-                    year: cols[7],
-                    desc: cols[9]
-                };
-            }).filter(d => d.title);
-
-            renderArchive(archiveData);
-            renderMarkers(archiveData);
-        } catch (e) {
-            console.error("データの読み込みに失敗しました:", e);
-        }
+        const res = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`);
+        const csv = await res.text();
+        const rows = csv.split('\n').slice(1);
+        archiveData = rows.map(row => {
+            const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
+            return { id: cols[1], title: (cols[4]||"").replace(/\.[^/.]+$/, ""), coords: cols[6], year: cols[7], desc: cols[9] };
+        }).filter(d => d.title);
+        renderArchive(archiveData);
+        renderMarkers(archiveData);
     }
 
-    // 4. アーカイブ一覧の表示
     function renderArchive(data) {
         const list = document.getElementById('archive-list');
         list.innerHTML = data.map(item => {
-            const imgId = item.id ? item.id.replace(/\s/g, '') : '';
-            const imgUrl = imgId ? `https://drive.google.com/thumbnail?id=${imgId}&sz=w800` : '';
-            return `
-                <div class="archive-item">
-                    <img src="${imgUrl}" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
-                    <h3>${item.title}</h3>
-                    <p class="tag">${item.year || '年代不明'}</p>
-                </div>
-            `;
+            const imgUrl = item.id ? `https://drive.google.com/thumbnail?id=${item.id.replace(/\s/g,'')}&sz=w800` : '';
+            return `<div class="archive-item">
+                <img src="${imgUrl}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x300?text=Image+Load+Error'">
+                <h3>${item.title}</h3>
+                <p class="tag">${item.year || '年代不明'}</p>
+            </div>`;
         }).join('');
     }
 
-    // 5. マップ上のカメラピン表示
     function renderMarkers(data) {
         data.forEach(item => {
             if (item.coords && item.coords.includes(',')) {
                 const [lat, lng] = item.coords.split(',').map(n => parseFloat(n.trim()));
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    // 洗練されたカメラアイコン
-                    const cameraIcon = L.divIcon({
-                        className: 'custom-icon',
-                        html: `<div class="camera-pin"><i class="fa-solid fa-camera"></i></div>`,
-                        iconSize: [38, 38],
-                        iconAnchor: [19, 19]
-                    });
-
-                    const imgId = item.id ? item.id.replace(/\s/g, '') : '';
-                    const imgUrl = imgId ? `https://drive.google.com/thumbnail?id=${imgId}&sz=w800` : '';
-
-                    L.marker([lat, lng], { icon: cameraIcon }).addTo(map)
-                        .bindPopup(`
-                            <div style="width:220px; font-family:var(--font-serif);">
-                                <h4 style="margin:0 0 8px; color:var(--primary-brown); border-bottom:1px solid #eee; padding-bottom:5px;">${item.title}</h4>
-                                <img src="${imgUrl}" style="width:100%; border-radius:3px; margin-bottom:8px;">
-                                <p style="font-size:0.8rem; color:#666; margin:0;">${item.year || ''}</p>
-                                <p style="font-size:0.75rem; line-height:1.4; margin-top:5px;">${item.desc || ''}</p>
-                            </div>
-                        `);
+                if (!isNaN(lat)) {
+                    const icon = L.divIcon({ className: 'custom', html: `<div class="camera-pin"><i class="fa-solid fa-camera"></i></div>`, iconSize: [38,38], iconAnchor: [19,19] });
+                    const imgUrl = `https://drive.google.com/thumbnail?id=${item.id.replace(/\s/g,'')}&sz=w800`;
+                    L.marker([lat, lng], { icon }).addTo(map).bindPopup(`<div style="width:200px;"><h4>${item.title}</h4><img src="${imgUrl}" style="width:100%;"><p>${item.year||''}</p></div>`);
                 }
             }
         });
     }
 
-    // 実行
-    initMap();
+    mapInit();
     loadData();
 </script>
 </body>
 </html>
-
