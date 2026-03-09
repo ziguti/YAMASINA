@@ -21,14 +21,17 @@
             scroll-behavior: smooth;
         }
 
-        /* --- 1. 固定ヘッダー（京博スタイル） --- */
+        /* --- 1. 固定ヘッダー（京博スタイル：透過とぼかし） --- */
         header {
             position: fixed;
             top: 0; left: 0; width: 100%;
             height: var(--header-height);
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(5px);
-            border-bottom: 1px solid #ddd;
+            /* 背景を白の70%にして透過させる */
+            background: rgba(255, 255, 255, 0.7);
+            /* 背後をぼかす（Safari等のブラウザ対応も含む） */
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0,0,0,0.1);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -51,6 +54,7 @@
             color: #333;
             font-size: 0.95rem;
             transition: color 0.3s;
+            font-weight: 500;
         }
 
         .header-nav a:hover { color: var(--accent-gold); }
@@ -65,7 +69,6 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            margin-top: 0;
         }
 
         .hero-img {
@@ -76,6 +79,17 @@
         }
 
         @keyframes heroReveal { to { opacity: 0.6; transform: translateY(0); } }
+
+        .hero-title {
+            position: relative; color: #fff;
+            font-size: clamp(1.8rem, 6vw, 4rem);
+            letter-spacing: 0.8rem; z-index: 10;
+            opacity: 0;
+            animation: textFadeUp 1.5s 0.6s ease-out forwards;
+            text-shadow: 2px 2px 15px rgba(0,0,0,0.6);
+        }
+
+        @keyframes textFadeUp { to { opacity: 1; transform: translateY(0); } }
 
         /* --- 3. ナビゲーションカード --- */
         .content-section { padding: 80px 20px; max-width: 1200px; margin: 0 auto; }
@@ -97,9 +111,9 @@
         .nav-card img { width: 100%; height: 200px; object-fit: cover; }
         .nav-card span { display: block; padding: 20px; font-size: 1.2rem; font-weight: bold; }
 
-        /* --- 4. 古写真データベース・検索セクション --- */
+        /* --- 4. 古写真データベース（検索セクション） --- */
         #archive-section {
-            display: none; /* 初期は非表示 */
+            display: none;
             background: #fff;
             padding: 100px 20px 60px;
             min-height: 100vh;
@@ -109,38 +123,40 @@
             max-width: 800px; margin: 0 auto 40px;
             text-align: center; background: var(--bg-cream);
             padding: 30px; border-radius: 8px;
+            border: 1px solid #eee;
         }
 
         .search-box input, .search-box select {
             padding: 12px; font-size: 1rem; border: 1px solid #ccc;
             border-radius: 4px; font-family: var(--font-serif);
-            margin: 5px;
+            margin: 5px; min-width: 200px;
         }
 
         .archive-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
         }
 
         .archive-item {
-            border-bottom: 1px solid #eee; padding-bottom: 15px;
-            transition: 0.3s;
+            background: #fff; border: 1px solid #eee; padding: 15px;
+            transition: 0.3s; border-radius: 4px;
         }
-        .archive-item img { width: 100%; height: 180px; object-fit: cover; border-radius: 4px; margin-bottom: 10px; }
-        .archive-item h3 { margin: 10px 0 5px; font-size: 1.1rem; color: var(--primary-brown); }
-        .tag { font-size: 0.8rem; background: #eee; padding: 2px 8px; border-radius: 10px; }
+        .archive-item:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .archive-item img { width: 100%; height: 200px; object-fit: cover; border-radius: 2px; }
+        .archive-item h3 { margin: 15px 0 5px; font-size: 1.1rem; color: var(--primary-brown); }
+        .tag { font-size: 0.8rem; background: #f0f0f0; padding: 3px 10px; border-radius: 15px; color: #666; }
 
         /* --- 5. マップ --- */
         #map { height: 600px; border: 1px solid var(--primary-brown); border-radius: 8px; margin-top: 20px; }
 
-        footer { padding: 40px; background: var(--primary-brown); color: #fff; text-align: center; }
+        footer { padding: 60px; background: var(--primary-brown); color: #fff; text-align: center; margin-top: 100px; }
     </style>
 </head>
 <body>
 
 <header>
-    <a href="index.html" class="header-logo">山科歴史デジタルアーカイブ</a>
+    <a href="javascript:showPage('home')" class="header-logo">山科歴史デジタルアーカイブ</a>
     <nav class="header-nav">
         <a href="javascript:showPage('home')">ホーム</a>
         <a href="javascript:showPage('archive')">古写真データベース</a>
@@ -166,13 +182,13 @@
                 <span>山科マップ</span>
             </a>
             <a href="https://furusato.la.coocan.jp/hurusato2/homeindex.htm" target="_blank" class="nav-card">
-                <img src="images.jpg">
+                <img src="image_057335.png">
                 <span>ふるさとの会</span>
             </a>
         </nav>
 
-        <section id="map-section" style="margin-top: 100px;">
-            <h2 style="text-align:center; letter-spacing: 0.3rem;">山科探索マップ</h2>
+        <section id="map-section" style="margin-top: 120px;">
+            <h2 style="text-align:center; letter-spacing: 0.3rem; margin-bottom: 40px;">山科探索マップ</h2>
             <div id="map"></div>
         </section>
     </div>
@@ -180,10 +196,10 @@
 
 <div id="archive-section">
     <div class="content-section">
-        <h2 style="text-align:center; letter-spacing: 0.3rem;">古写真データベース</h2>
+        <h2 style="text-align:center; letter-spacing: 0.3rem; margin-bottom: 40px;">古写真データベース</h2>
         
         <div class="search-box">
-            <input type="text" id="search-input" placeholder="キーワード検索（地名、建物名など）" oninput="filterArchive()">
+            <input type="text" id="search-input" placeholder="キーワードを入力..." oninput="filterArchive()">
             <select id="year-filter" onchange="filterArchive()">
                 <option value="">すべての時代</option>
                 <option value="明治">明治</option>
@@ -205,54 +221,65 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    let archiveData = []; // 全データを保持する配列
+    let archiveData = [];
 
-    // 1. ページ切り替えロジック
+    // 1. ページ表示切り替え
     function showPage(page) {
         if(page === 'archive') {
             document.getElementById('home-page').style.display = 'none';
             document.getElementById('archive-section').style.display = 'block';
-            window.scrollTo(0,0);
         } else {
             document.getElementById('home-page').style.display = 'block';
             document.getElementById('archive-section').style.display = 'none';
         }
+        window.scrollTo(0, 0);
     }
 
     // 2. マップ初期化
     const map = L.map('map').setView([34.992, 135.813], 15);
     L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png', { attribution: '国土地理院' }).addTo(map);
 
-    // 3. スプレッドシート読み込み
+    // 3. データ読み込み
     const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
     async function loadData() {
-        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
-        const response = await fetch(url);
-        const csv = await response.text();
-        const rows = csv.split('\n').slice(1);
+        try {
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+            const response = await fetch(url);
+            const csv = await response.text();
+            const rows = csv.split('\n').slice(1);
 
-        archiveData = rows.map(row => {
-            const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
-            return {
-                id: cols[1], title: cols[4], coords: cols[6], year: cols[7], desc: cols[9]
-            };
-        }).filter(item => item.title);
+            archiveData = rows.map(row => {
+                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
+                return {
+                    id: cols[1] ? cols[1].trim() : '', // IDの余計な空白を削除
+                    title: cols[4], 
+                    coords: cols[6], 
+                    year: cols[7], 
+                    desc: cols[9]
+                };
+            }).filter(item => item.title);
 
-        renderArchive(archiveData);
-        renderMarkers(archiveData);
+            renderArchive(archiveData);
+            renderMarkers(archiveData);
+        } catch (e) {
+            console.error("データ読み込みエラー:", e);
+        }
     }
 
-    // 4. アーカイブの描画
+    // 4. アーカイブ一覧の表示（URL形式をより安定したものに変更）
     function renderArchive(data) {
         const container = document.getElementById('archive-list');
+        if (!container) return;
+        
         container.innerHTML = data.map(item => {
-            const imgUrl = item.id ? `https://drive.google.com/uc?id=${item.id}` : 'https://via.placeholder.com/300x200?text=No+Image';
+            // 最も表示成功率の高いサムネイルURL形式を採用
+            const imgUrl = item.id ? `https://drive.google.com/thumbnail?id=${item.id}&sz=w600` : 'https://via.placeholder.com/600x400?text=No+Image';
             return `
                 <div class="archive-item">
-                    <img src="${imgUrl}" alt="${item.title}" onerror="this.src='https://via.placeholder.com/300x200?text=Image+Error'">
+                    <img src="${imgUrl}" alt="${item.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=Image+Load+Error'">
                     <h3>${item.title}</h3>
                     <span class="tag">${item.year || '年代不明'}</span>
-                    <p style="font-size:0.85rem; color:#666; margin-top:8px;">${item.desc || ''}</p>
+                    <p style="font-size:0.85rem; color:#666; margin-top:12px; line-height:1.6;">${item.desc || ''}</p>
                 </div>
             `;
         }).join('');
@@ -271,7 +298,7 @@
         renderArchive(filtered);
     }
 
-    // 6. マップマーカーの描画
+    // 6. マップマーカー
     function renderMarkers(data) {
         data.forEach(item => {
             if (item.coords && item.coords.includes(',')) {
@@ -287,4 +314,3 @@
 </script>
 </body>
 </html>
-
