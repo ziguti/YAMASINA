@@ -46,16 +46,17 @@
         rows.forEach(row => {
             const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
             
-            const fileIdRaw = cols[1];  // B列: ファイルID
-            const title = cols[4];      // E列: 資料名
-            const coords = cols[6];     // G列: 座標
-            const year = cols[7];       // H列: 年代
-            const desc = cols[9];       // J列: 説明
+            // B列(ID), E列(資料名), G列(座標), H列(年代), J列(説明)
+            const rawID = cols[1];  
+            const title = cols[4];      
+            const coords = cols[6];     
+            const year = cols[7];       
+            const desc = cols[9];       
 
             if (!title) return;
 
-            // 重要：ファイルIDから余計な文字を排除して純粋なIDだけを取り出す
-            const cleanId = fileIdRaw ? fileIdRaw.split('.')[0].trim() : '';
+            // IDから「.jpg」などの拡張子だけを消し、ID本体のドットは残す
+            const cleanId = rawID ? rawID.replace(/\.(jpg|jpeg|png|JPG|PNG)$/, "").trim() : '';
             const imgUrl = cleanId ? `https://drive.google.com/uc?export=view&id=${cleanId}` : '';
 
             // サイドバー作成
@@ -83,7 +84,7 @@
                         <div class="popup-card">
                             <h3 style="margin:0;">${title}</h3>
                             <div class="year-tag">${year || ''}</div>
-                            <img src="${imgUrl}" class="popup-img" onerror="this.src='https://via.placeholder.com/250x150?text=画像準備中'">
+                            <img src="${imgUrl}" class="popup-img" onerror="this.src='https://via.placeholder.com/250x150?text=画像読み込み中...'">
                             <p style="font-size:0.9em;">${desc || ''}</p>
                         </div>
                     `);
