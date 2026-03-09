@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>山科歴史デジタルアーカイブ</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { height: 100vh; width: 100%; }
+        .popup-img { width: 100%; height: auto; margin-top: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // スプレッドシートID
+        const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
+        
+        const map = L.map('map').setView([34.992, 135.813], 15);
+        L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
+            attribution: '国土地理院'
+        }).addTo(map);
+
+        async function loadArchive() {
+            try {
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+                const response = await fetch(url);
+                const csv = await response.text();
+                
+                const rows = csv.split('\n').slice(1);
+                rows.forEach(row => {
+                    // カンマ区切りで分割（引用符を考慮）
+                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
+                    
+                    const fileIdRaw = cols[1]; // B列: ファイルID
+                    const title = cols[4];    // E列: 資料名
+                    const coords = cols[6];   // G列: 座標
+                    const desc = cols[9];     // J列: 説明
+
+                    if (coords && coords.includes(',')) {
+                        const [lat, lng] = coords.split(',').map(n => parseFloat(n.trim()));
+                        
+                        // ファイルIDから直リンク用のIDを抽出
+                        const idMatch = fileIdRaw.match(/[-\w]{25,}/);
+                        const cleanId = idMatch ? idMatch[0] : null;
+
+                        if (!isNaN(lat) && !isNaN(lng) && cleanId) {
+                            const imgUrl = `https://drive.google.com/uc?export=view&id=${cleanId}`;
+                            L.marker([lat, lng]).addTo(map)
+                                .bindPopup(`
+                                    <b>${title}</b><br>
+                                    <img src="${imgUrl}" class="popup-img" onerror="this.style.display='none'">
+                                    <p>${desc || ''}</p>
+                                `);
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error("データの読み込みに失敗しました:", e);
+            }
+        }
+        loadArchive();
+    </script>
+</body>
+</html>
