@@ -5,62 +5,102 @@
     <title>山科歴史デジタルアーカイブ</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { margin: 0; padding: 0; }
-        #map { height: 100vh; width: 100%; }
-        .popup-img { width: 100%; height: auto; margin-top: 10px; border-radius: 5px; }
+        body { margin: 0; display: flex; height: 100vh; font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; }
+        #sidebar { width: 350px; overflow-y: auto; background: #f4f1ea; border-right: 2px solid #d3c4a9; box-shadow: 2px 0 5px rgba(0,0,0,0.1); z-index: 1000; }
+        #map { flex: 1; }
+        .sidebar-header { padding: 20px; background: #8b4513; color: white; }
+        .list-item { padding: 15px; border-bottom: 1px solid #d3c4a9; cursor: pointer; transition: 0.3s; }
+        .list-item:hover { background: #fff; }
+        .list-item strong { display: block; font-size: 1.1em; color: #5d4037; }
+        .list-img { width: 100%; height: auto; border-radius: 4px; margin-top: 8px; border: 1px solid #ddd; }
+        .no-coord { color: #b71c1c; font-size: 0.8em; font-weight: bold; }
+        .popup-card { width: 250px; }
+        .popup-img { width: 100%; height: auto; border-radius: 4px; margin: 8px 0; border: 1px solid #ccc; }
+        .year-tag { display: inline-block; background: #e0e0e0; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-top: 4px; }
     </style>
 </head>
 <body>
-    <div id="map"></div>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // スプレッドシートID
-        const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
+
+<div id="sidebar">
+    <div class="sidebar-header">
+        <h2 style="margin:0; font-size:1.2em;">山科資料アーカイブ</h2>
+        <p style="margin:5px 0 0 0; font-size:0.8em; opacity:0.8;">郷土史研究記録</p>
+    </div>
+    <div id="list-container"></div>
+</div>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
+    const map = L.map('map').setView([34.992, 135.813], 15);
+    
+    // 国土地理院の標準地図を使用
+    L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', { 
+        attribution: '国土地理院' 
+    }).addTo(map);
+
+    async function loadArchive() {
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+        const response = await fetch(url);
+        const csv = await response.text();
         
-        const map = L.map('map').setView([34.992, 135.813], 15);
-        L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
-            attribution: '国土地理院'
-        }).addTo(map);
+        // CSVのパース（ダブルクォーテーション内のカンマを無視する論理）
+        const rows = csv.split('\n').slice(1);
+        const listContainer = document.getElementById('list-container');
+        listContainer.innerHTML = '';
 
-        async function loadArchive() {
-            try {
-                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
-                const response = await fetch(url);
-                const csv = await response.text();
-                
-                const rows = csv.split('\n').slice(1);
-                rows.forEach(row => {
-                    // カンマ区切りで分割（引用符を考慮）
-                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
-                    
-                    const fileIdRaw = cols[1]; // B列: ファイルID
-                    const title = cols[4];    // E列: 資料名
-                    const coords = cols[6];   // G列: 座標
-                    const desc = cols[9];     // J列: 説明
+        rows.forEach(row => {
+            const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
+            
+            // スプレッドシートの列定義に基づいた抽出
+            const fileIdRaw = cols[1];  // B列: ファイルID
+            const title = cols[4];      // E列: 資料名
+            const coords = cols[6];     // G列: 座標
+            const year = cols[7];       // H列: 年代
+            const desc = cols[9];       // J列: 説明
 
-                    if (coords && coords.includes(',')) {
-                        const [lat, lng] = coords.split(',').map(n => parseFloat(n.trim()));
-                        
-                        // ファイルIDから直リンク用のIDを抽出
-                        const idMatch = fileIdRaw.match(/[-\w]{25,}/);
-                        const cleanId = idMatch ? idMatch[0] : null;
+            // GoogleドライブのファイルIDを抽出
+            const idMatch = fileIdRaw ? fileIdRaw.match(/[-\w]{25,}/) : null;
+            const imgUrl = idMatch ? `https://drive.google.com/uc?export=view&id=${idMatch[0]}` : '';
 
-                        if (!isNaN(lat) && !isNaN(lng) && cleanId) {
-                            const imgUrl = `https://drive.google.com/uc?export=view&id=${cleanId}`;
-                            L.marker([lat, lng]).addTo(map)
-                                .bindPopup(`
-                                    <b>${title}</b><br>
-                                    <img src="${imgUrl}" class="popup-img" onerror="this.style.display='none'">
-                                    <p>${desc || ''}</p>
-                                `);
-                        }
-                    }
-                });
-            } catch (e) {
-                console.error("データの読み込みに失敗しました:", e);
+            // リスト項目の作成
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            let coordStatus = (coords && coords !== "") ? '' : '<span class="no-coord">【地点不明】</span>';
+            
+            item.innerHTML = `
+                <strong>${title}</strong>
+                ${coordStatus}
+                <div class="year-tag">${year || '年代不明'}</div>
+                ${imgUrl ? `<img src="${imgUrl}" class="list-img" alt="${title}">` : ''}
+            `;
+            
+            item.onclick = () => {
+                if (coords && coords.includes(',')) {
+                    const [lat, lng] = coords.split(',').map(n => parseFloat(n.trim()));
+                    map.setView([lat, lng], 17);
+                }
+            };
+            listContainer.appendChild(item);
+
+            // 地図にピンを立てる（座標がある場合のみ）
+            if (coords && coords.includes(',')) {
+                const [lat, lng] = coords.split(',').map(n => parseFloat(n.trim()));
+                if(!isNaN(lat) && !isNaN(lng)) {
+                    L.marker([lat, lng]).addTo(map).bindPopup(`
+                        <div class="popup-card">
+                            <h3 style="margin:0;">${title}</h3>
+                            <div class="year-tag">${year || ''}</div>
+                            <img src="${imgUrl}" class="popup-img" onerror="this.src='https://via.placeholder.com/250x150?text=No+Image'">
+                            <p style="font-size:0.9em;">${desc || ''}</p>
+                        </div>
+                    `);
+                }
             }
-        }
-        loadArchive();
-    </script>
+        });
+    }
+    loadArchive();
+</script>
 </body>
 </html>
