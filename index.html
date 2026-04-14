@@ -7,50 +7,22 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
-        :root {
-            --primary-brown: #4e342e;
-            --accent-gold: #bda06d;
-            --bg-cream: #fdfaf2;
-            --header-height: 60px;
-        }
+        :root { --primary-brown: #4e342e; --accent-gold: #bda06d; --bg-cream: #fdfaf2; --header-height: 60px; }
         body, html { margin: 0; padding: 0; background-color: var(--bg-cream); font-family: "Yu Mincho", serif; color: #333; height: 100%; overflow: hidden; }
-
-        header {
-            position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height);
-            background: #fff; border-bottom: 1px solid #ddd;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 20px; z-index: 2000; box-sizing: border-box;
-        }
-        .nav-buttons button {
-            background: none; border: 1px solid var(--primary-brown);
-            padding: 5px 15px; cursor: pointer; font-family: inherit; margin-left: 5px; border-radius: 4px;
-        }
+        header { position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height); background: #fff; border-bottom: 1px solid #ddd; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 2000; box-sizing: border-box; }
+        .nav-buttons button { background: none; border: 1px solid var(--primary-brown); padding: 5px 15px; cursor: pointer; font-family: inherit; margin-left: 5px; border-radius: 4px; }
         .nav-buttons button.active { background: var(--primary-brown); color: #fff; }
-
         .page { display: none; height: calc(100vh - var(--header-height)); margin-top: var(--header-height); overflow-y: auto; position: relative; }
         .page.active { display: block; }
-
         #map { width: 100%; height: 100%; background: #eee; }
-        
-        .map-controls {
-            position: absolute; bottom: 30px; left: 10px; z-index: 1000;
-            background: rgba(255,255,255,0.9); padding: 15px; border-radius: 8px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2); width: 220px;
-        }
-
+        .map-controls { position: absolute; bottom: 30px; left: 10px; z-index: 1000; background: rgba(255,255,255,0.9); padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); width: 220px; }
         .database-container { padding: 20px; max-width: 1200px; margin: 0 auto; }
         .search-box { width: 100%; padding: 12px; margin-bottom: 20px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
         .photo-card { background: #fff; padding: 10px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; transition: 0.2s; }
-        .photo-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .photo-card img { width: 100%; height: 180px; object-fit: cover; border-radius: 3px; }
-
-        #detail-modal {
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-            z-index: 3000; justify-content: center; align-items: center; padding: 20px;
-        }
+        #detail-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 3000; justify-content: center; align-items: center; padding: 20px; }
         .modal-content { background: #fff; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 25px; position: relative; border-radius: 8px; }
-
         #lock-screen { position: fixed; inset: 0; background: var(--bg-cream); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .pass-input { padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; width: 240px; text-align: center; margin-bottom: 10px; }
     </style>
@@ -58,31 +30,30 @@
 <body>
 
 <div id="lock-screen">
-    <h2 style="color:var(--primary-brown); letter-spacing: 0.2rem;">山科歴史デジタルアーカイブ</h2>
-    <p style="font-size: 0.8rem; margin-bottom: 20px;">INTERNAL ACCESS ONLY</p>
+    <h2 style="color:var(--primary-brown);">山科歴史デジタルアーカイブ</h2>
     <input type="password" id="pass-input" class="pass-input" placeholder="合言葉を入力">
     <button onclick="checkPass()" style="padding:10px 40px; background:var(--primary-brown); color:white; border:none; border-radius:4px; cursor:pointer;">入室</button>
 </div>
 
 <header id="main-header" style="display:none;">
-    <div style="font-weight:bold; color:var(--primary-brown); font-size: 1.1rem;">山科歴史アーカイブ</div>
+    <div style="font-weight:bold; color:var(--primary-brown);">山科歴史アーカイブ</div>
     <div class="nav-buttons">
-        <button id="btn-map" class="active" onclick="showPage('map')"><i class="fa-solid fa-map"></i> 比較地図</button>
-        <button id="btn-db" onclick="showPage('db')"><i class="fa-solid fa-images"></i> データベース</button>
+        <button id="btn-map" class="active" onclick="showPage('map')">比較地図</button>
+        <button id="btn-db" onclick="showPage('db')">データベース</button>
     </div>
 </header>
 
 <div id="page-map" class="page active">
     <div id="map"></div>
     <div class="map-controls">
-        <label style="font-size:0.8rem; font-weight:bold; color:var(--primary-brown);">古地図・空中写真 透過度</label><br>
-        <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="0.8" style="width:100%; margin-top:10px;">
+        <label style="font-size:0.8rem; font-weight:bold;">古地図・空中写真 透過度</label>
+        <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="0.8" style="width:100%;">
     </div>
 </div>
 
 <div id="page-db" class="page">
     <div class="database-container">
-        <input type="text" id="db-search" class="search-box" placeholder="キーワードで古写真を検索（例：山科駅, 御陵...）" oninput="filterDB()">
+        <input type="text" id="db-search" class="search-box" placeholder="キーワードで検索" oninput="filterDB()">
         <div id="photo-list" class="photo-grid"></div>
     </div>
 </div>
@@ -90,7 +61,6 @@
 <div id="detail-modal" onclick="this.style.display='none'">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div id="modal-body"></div>
-        <button onclick="document.getElementById('detail-modal').style.display='none'" style="margin-top:20px; padding:8px 20px; cursor:pointer;">閉じる</button>
     </div>
 </div>
 
@@ -98,8 +68,7 @@
 <script>
     const SECRET_PASSWORD = "yamashina_rekishi";
     const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
-    let map, archiveData = [], markers = [], chisekiLayer, taishoLayer;
-    let photoLayers = {};
+    let map, archiveData = [], markers = [], chisekiLayer, taishoLayer, photoLayers = [];
 
     function checkPass() {
         if (document.getElementById('pass-input').value === SECRET_PASSWORD) {
@@ -121,40 +90,30 @@
             const rows = csv.split('\n').slice(1);
             archiveData = rows.map((row, index) => {
                 const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
-                return {
-                    id: index,
-                    drive_id: cols[1],
-                    title: cols[4] || "名称未設定",
-                    coords: cols[6],
-                    year: cols[7] || "年代不明",
-                    desc: cols[9] || ""
-                };
+                return { id: index, drive_id: cols[1], title: cols[4], coords: cols[6], year: cols[7], desc: cols[9] };
             }).filter(d => d.drive_id);
-            
             renderDB(archiveData);
             renderMarkers(archiveData);
-        } catch (e) { console.error("データ読み込み失敗:", e); }
+        } catch (e) { console.error(e); }
     }
 
     function initMap() {
-        map = L.map('map', { zoomSnap: 0.1 }).setView([34.992, 135.813], 15);
+        map = L.map('map').setView([34.992, 135.813], 15);
 
-        // --- 地理院タイル（年代別） ---
-        const gsiStd = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', { attribution: "地理院地図" }).addTo(map);
-        const gsiLatest = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg', { attribution: "最新空中写真" });
-        const gsi1974 = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg', { attribution: "1974-78年" });
-        const gsi1961 = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.jpg', { attribution: "1961-69年" });
-        const gsi1945 = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_usa10/{z}/{x}/{y}.jpg', { attribution: "1945-50年" });
-        const gsi1936 = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_riku10/{z}/{x}/{y}.jpg', { attribution: "1936-42年" });
+        // 地理院タイル
+        const gsiStd = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', { attribution: "地理院" }).addTo(map);
+        const gsiLatest = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg');
+        const gsi1974 = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg');
+        const gsi1961 = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png'); // 1961はpng
+        const gsi1945 = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_usa10/{z}/{x}/{y}.jpg');
+        const gsi1936 = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_riku10/{z}/{x}/{y}.jpg');
 
-        // --- 自作タイル（パス修正済） ---
-        chisekiLayer = L.tileLayer('./地籍図tile/{z}/{x}/{y}.png', { 
-            minZoom: 12, maxNativeZoom: 18, maxZoom: 21, opacity: 0.8 
-        }).addTo(map);
-
-        taishoLayer = L.tileLayer('./taisho1922/{z}/{x}/{y}.png', { 
-            minZoom: 12, maxNativeZoom: 18, maxZoom: 21, opacity: 0.8 
-        });
+        // 自作タイル
+        // 明治地籍図 (png)
+        chisekiLayer = L.tileLayer('./地籍図tile/{z}/{x}/{y}.png', { minZoom: 12, maxNativeZoom: 18, maxZoom: 21, opacity: 0.8 }).addTo(map);
+        
+        // 大正測量図 (jpgに修正)
+        taishoLayer = L.tileLayer('./taisho1922/{z}/{x}/{y}.jpg', { minZoom: 12, maxNativeZoom: 18, maxZoom: 21, opacity: 0.8 });
 
         const baseMaps = {
             "現代地図": gsiStd,
@@ -165,49 +124,29 @@
             "空中写真(1936-42)": gsi1936
         };
 
-        const overlayMaps = {
-            "明治地籍図": chisekiLayer,
-            "大正測量図": taishoLayer
-        };
-
+        const overlayMaps = { "明治地籍図": chisekiLayer, "大正測量図": taishoLayer };
         L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
 
-        // スライダー連動
+        photoLayers = [chisekiLayer, taishoLayer, gsiLatest, gsi1974, gsi1961, gsi1945, gsi1936];
+
         document.getElementById('opacity-slider').oninput = (e) => {
-            const v = e.target.value;
-            [chisekiLayer, taishoLayer, gsi1936, gsi1945, gsi1961, gsi1974].forEach(l => {
-                if(l) l.setOpacity(v);
-            });
+            photoLayers.forEach(l => { if(l) l.setOpacity(e.target.value); });
         };
     }
 
     function renderMarkers(data) {
-        markers.forEach(m => map.removeLayer(m));
         data.forEach(item => {
-            if (!item.coords || !item.coords.includes(',')) return;
+            if (!item.coords) return;
             const [lat, lng] = item.coords.split(',').map(Number);
-            if(isNaN(lat) || isNaN(lng)) return;
-
-            const m = L.marker([lat, lng]).addTo(map).bindPopup(`
-                <div style="width:180px; font-family:sans-serif;">
-                    <strong style="display:block; margin-bottom:5px;">${item.title}</strong>
-                    <img src="https://lh3.googleusercontent.com/d/${item.drive_id}" style="width:100%; border-radius:3px; margin-bottom:5px;">
-                    <button onclick="openDetail(${item.id})" style="width:100%; cursor:pointer; padding:5px; background:var(--primary-brown); color:#fff; border:none; border-radius:3px;">詳細・解説を見る</button>
-                </div>
-            `);
-            markers.push(m);
+            L.marker([lat, lng]).addTo(map).bindPopup(`<b>${item.title}</b><br><button onclick="openDetail(${item.id})">詳細</button>`);
         });
     }
 
     function renderDB(data) {
-        const list = document.getElementById('photo-list');
-        list.innerHTML = data.map(item => `
+        document.getElementById('photo-list').innerHTML = data.map(item => `
             <div class="photo-card" onclick="openDetail(${item.id})">
                 <img src="https://lh3.googleusercontent.com/d/${item.drive_id}" loading="lazy">
-                <div style="padding:8px;">
-                    <h4 style="margin:5px 0; font-size:0.95rem;">${item.title}</h4>
-                    <small style="color:#666;">${item.year}</small>
-                </div>
+                <p style="padding:5px; font-size:0.9rem;">${item.title}</p>
             </div>
         `).join('');
     }
@@ -215,10 +154,9 @@
     function openDetail(id) {
         const item = archiveData.find(d => d.id === id);
         document.getElementById('modal-body').innerHTML = `
-            <img src="https://lh3.googleusercontent.com/d/${item.drive_id}" style="width:100%; border-radius:5px; margin-bottom:15px;">
-            <h2 style="color:var(--primary-brown); border-bottom:2px solid var(--accent-gold); padding-bottom:5px;">${item.title}</h2>
-            <p><strong>推定年代:</strong> ${item.year}</p>
-            <div style="line-height:1.8; background:#f9f9f9; padding:15px; border-radius:5px;">${item.desc || "解説準備中"}</div>
+            <h2 style="color:var(--primary-brown);">${item.title}</h2>
+            <img src="https://lh3.googleusercontent.com/d/${item.drive_id}" style="width:100%; border-radius:5px;">
+            <p style="margin-top:15px; line-height:1.6;">${item.desc || "解説はありません"}</p>
         `;
         document.getElementById('detail-modal').style.display = 'flex';
     }
@@ -233,8 +171,7 @@
 
     function filterDB() {
         const q = document.getElementById('db-search').value.toLowerCase();
-        const filtered = archiveData.filter(d => d.title.toLowerCase().includes(q) || d.desc.toLowerCase().includes(q));
-        renderDB(filtered);
+        renderDB(archiveData.filter(d => d.title.toLowerCase().includes(q)));
     }
 </script>
 </body>
