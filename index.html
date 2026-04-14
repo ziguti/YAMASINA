@@ -16,14 +16,13 @@
 
         body, html { margin: 0; padding: 0; background-color: var(--bg-cream); font-family: "Yu Mincho", serif; color: #333; height: 100%; overflow: hidden; }
 
-        /* ヘッダー：スマホではより低く */
         header {
             position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height);
             background: #fff; border-bottom: 1px solid var(--accent-gold);
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 12px; z-index: 2000; box-sizing: border-box;
         }
-        .logo { font-weight: bold; color: var(--primary-brown); font-size: 1rem; letter-spacing: 0.05em; }
+        .logo { font-weight: bold; color: var(--primary-brown); font-size: 1rem; }
 
         .nav-buttons button {
             background: none; border: 1px solid var(--accent-gold); padding: 5px 10px;
@@ -32,67 +31,44 @@
         }
         .nav-buttons button.active { background: var(--primary-brown); color: #fff; }
 
-        /* サブナビをフローティング化して圧迫感を軽減 */
         .sub-nav {
             position: fixed; top: calc(var(--header-height) + 10px); left: 10px; right: 10px;
-            height: auto; min-height: 45px; background: rgba(255, 255, 255, 0.9); 
-            display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+            background: rgba(255, 255, 255, 0.9); display: flex; align-items: center; gap: 10px;
             padding: 8px 12px; z-index: 1500; border: 1px solid var(--accent-gold);
             border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            box-sizing: border-box;
         }
         
-        .mode-switch { display: flex; gap: 4px; }
-        .mode-btn { border: none; background: #eee; padding: 4px 12px; cursor: pointer; font-size: 0.75rem; border-radius: 15px; font-family: inherit; }
+        .mode-btn { border: none; background: #eee; padding: 4px 12px; cursor: pointer; font-size: 0.75rem; border-radius: 15px; }
         .mode-btn.active { background: var(--accent-gold); color: white; }
 
         .control-panel { flex-grow: 1; display: none; align-items: center; }
         .control-panel.active { display: flex; }
 
-        .timeline-wrapper { display: flex; align-items: center; gap: 8px; width: 100%; }
-        .timeline-slider { flex-grow: 1; cursor: pointer; accent-color: var(--primary-brown); height: 20px; }
-        .timeline-label { font-size: 0.75rem; font-weight: bold; color: var(--primary-brown); white-space: nowrap; }
-
-        /* コンテンツエリア */
         .page { display: none; height: calc(100vh - var(--header-height)); margin-top: var(--header-height); position: relative; }
         .page.active { display: block; }
-        #map { width: 100%; height: 100%; z-index: 1; }
+        #map { width: 100%; height: 100%; }
 
-        /* 透過度スライダー：右下に配置して親指で操作しやすく */
+        /* 比較用コントロール */
         .map-overlay-controls {
             position: absolute; bottom: 20px; right: 10px; z-index: 1000;
             background: rgba(255,255,255,0.9); padding: 10px; border-radius: 8px;
-            border: 1px solid var(--accent-gold); width: 150px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid var(--accent-gold); width: 160px;
         }
-        .map-overlay-controls label { font-size: 0.65rem; display: block; margin-bottom: 3px; font-weight: bold; text-align: center;}
+        .control-desc { font-size: 0.65rem; color: #666; margin-bottom: 5px; line-height: 1.2; }
 
-        /* ポップアップ：スマホ対応サイズ */
-        .leaflet-popup-content { margin: 0; width: 180px !important; }
-        .popup-img { width: 100%; height: 110px; object-fit: cover; }
-        .popup-title { padding: 5px; font-weight: bold; font-size: 0.8rem; text-align: center; }
-
-        /* データベース：スマホで2列表示 */
+        /* データベース画像表示の修正 */
         .database-container { padding: 15px; height: 100%; overflow-y: auto; box-sizing: border-box; }
-        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-        .photo-card img { height: 110px; }
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+        .photo-card { background: #fff; padding: 5px; border: 1px solid #eee; cursor: pointer; border-radius: 4px; }
+        .photo-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 2px; display: block; }
+        .photo-card p { font-size: 0.75rem; margin: 5px 0; text-align: center; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        @media (max-width: 600px) {
-            .logo { font-size: 0.85rem; }
-            .sub-nav { padding: 6px 10px; top: calc(var(--header-height) + 5px); }
-            .timeline-label { min-width: 60px; font-size: 0.7rem; }
-            .leaflet-control-layers { scale: 0.9; transform-origin: top right; }
-        }
+        .popup-img { width: 100%; max-height: 150px; object-fit: cover; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="lock-screen" style="position:fixed; inset:0; background:var(--bg-cream); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
-    <h3 style="color:var(--primary-brown); letter-spacing:0.1em; text-align:center;">山科歴史デジタルアーカイブ</h3>
-    <input type="password" id="pass-input" style="padding:12px; border:1px solid var(--accent-gold); text-align:center; width:100%; max-width:240px; margin-bottom:15px;" placeholder="合言葉を入力">
-    <button onclick="checkPass()" style="padding:10px 40px; background:var(--primary-brown); color:white; border:none; border-radius:4px; font-family:inherit;">入室</button>
-</div>
-
-<header id="main-header" style="display:none;">
+<header id="main-header">
     <div class="logo"><i class="fa-solid fa-map-location-dot"></i> 山科アーカイブ</div>
     <div class="nav-buttons">
         <button id="btn-map" class="active" onclick="showPage('map')">地図</button>
@@ -107,56 +83,43 @@
             <button id="mode-btn-slider" class="mode-btn" onclick="switchControl('slider')"><i class="fa-solid fa-clock"></i></button>
         </div>
         <div id="panel-slider" class="control-panel">
-            <div class="timeline-wrapper">
-                <input type="range" id="timeline-slider" class="timeline-slider" min="0" max="5" step="1" value="5">
-                <span id="timeline-label" class="timeline-label">最新空中写真</span>
-            </div>
+            <input type="range" id="timeline-slider" style="flex-grow:1;" min="0" max="5" step="1" value="5">
+            <span id="timeline-label" style="font-size:0.7rem; margin-left:8px; font-weight:bold;">最新写真</span>
         </div>
         <div id="panel-layers" class="control-panel active">
-            <span style="font-size:0.7rem; color:#666;">右上のメニューで重ね合わせ</span>
+            <span style="font-size:0.7rem; color:#444;">右上の選択肢から2つまで比較可能</span>
         </div>
     </div>
 
     <div id="map"></div>
 
     <div class="map-overlay-controls">
-        <label>重ね合わせ透過度</label>
+        <div id="comparison-target" class="control-desc">比較レイヤー未選択</div>
         <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="0.8" style="width:100%;">
     </div>
 </div>
 
 <div id="page-db" class="page">
     <div class="database-container">
-        <input type="text" id="db-search" class="search-box" style="width:100%; padding:10px; margin-bottom:15px; border:1px solid var(--accent-gold); font-family:inherit;" placeholder="検索..." oninput="filterDB()">
+        <input type="text" id="db-search" style="width:100%; padding:10px; margin-bottom:15px; border:1px solid var(--accent-gold);" placeholder="検索..." oninput="filterDB()">
         <div id="photo-list" class="photo-grid"></div>
     </div>
 </div>
 
 <div id="detail-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:3000; justify-content:center; align-items:center; padding:15px;" onclick="this.style.display='none'">
-    <div class="modal-content" onclick="event.stopPropagation()" style="background:#fff; width:100%; max-width:600px; max-height:90vh; overflow-y:auto; padding:20px; border-radius:4px;">
+    <div class="modal-content" onclick="event.stopPropagation()" style="background:#fff; width:100%; max-width:600px; padding:20px; border-radius:4px;">
         <div id="modal-body"></div>
     </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const SECRET_PASSWORD = "yamashina_rekishi";
     const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
     let map, archiveData = [], layerControl, baseMap;
-    let allTimelineLayers = {}, activeOverlays = [];
+    let allLayers = {}, activeOverlays = [];
 
-    function checkPass() {
-        if (document.getElementById('pass-input').value === SECRET_PASSWORD) {
-            document.getElementById('lock-screen').style.display = 'none';
-            document.getElementById('main-header').style.display = 'flex';
-            initApp();
-        } else { alert("合言葉が違います"); }
-    }
-
-    async function initApp() {
-        initMap();
-        await loadData();
-    }
+    // 画像URL生成の修正
+    const getImgUrl = (id) => `https://lh3.googleusercontent.com/d/${id}=s600`;
 
     function initMap() {
         map = L.map('map', { zoomControl: false, maxZoom: 22 }).setView([34.992, 135.813], 15);
@@ -164,53 +127,65 @@
 
         baseMap = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', { maxNativeZoom: 18, maxZoom: 22 }).addTo(map);
 
-        const tileConfig = { maxNativeZoom: 18, maxZoom: 22, opacity: 0.8 };
-        const layers = {
-            chiseki: L.tileLayer('./地籍図tile/{z}/{x}/{y}.png', tileConfig),
-            taisho: L.tileLayer('./taisho1922/{z}/{x}/{y}.jpg', tileConfig),
-            usa1946: L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png', tileConfig),
-            old1961: L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png', tileConfig),
-            gazo1974: L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg', tileConfig),
-            latest: L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg', tileConfig)
+        const tileConfig = { maxNativeZoom: 18, maxZoom: 22, opacity: 1.0 };
+        allLayers = {
+            "明治地籍図": L.tileLayer('./地籍図tile/{z}/{x}/{y}.png', tileConfig),
+            "大正測量図": L.tileLayer('./taisho1922/{z}/{x}/{y}.jpg', tileConfig),
+            "1946年写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png', tileConfig),
+            "1961年写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png', tileConfig),
+            "1974年写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg', tileConfig),
+            "最新写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg', tileConfig)
         };
 
-        allTimelineLayers = { 0: layers.chiseki, 1: layers.taisho, 2: layers.usa1946, 3: layers.old1961, 4: layers.gazo1974, 5: layers.latest };
+        // レイヤ選択の復活
+        layerControl = L.control.layers(null, allLayers, { position: 'topright', collapsed: false }).addTo(map);
 
-        const overlayMaps = {
-            "明治地籍図": layers.chiseki, "大正測量図": layers.taisho,
-            "1946年": layers.usa1946, "1961年": layers.old1961,
-            "1974年": layers.gazo1974, "最新写真": layers.latest
-        };
+        // 時代スライダー用の紐付け
+        const sliderLayers = [allLayers["明治地籍図"], allLayers["大正測量図"], allLayers["1946年写真"], allLayers["1961年写真"], allLayers["1974年写真"], allLayers["最新写真"]];
+        const labels = ["明治地籍図", "大正測量図", "1946年写真", "1961年写真", "1974年写真", "最新写真"];
 
-        layerControl = L.control.layers(null, overlayMaps, { position: 'topright', collapsed: true }).addTo(map);
-
-        const labels = ["明治地籍図", "大正測量図", "1946年", "1961年", "1974年", "最新写真"];
         document.getElementById('timeline-slider').oninput = function() {
             const val = parseInt(this.value);
             document.getElementById('timeline-label').innerText = labels[val];
-            Object.values(layers).forEach(l => map.removeLayer(l));
-            allTimelineLayers[val].addTo(map);
-            activeOverlays = [allTimelineLayers[val]];
-            allTimelineLayers[val].setOpacity(document.getElementById('opacity-slider').value);
+            Object.values(allLayers).forEach(l => map.removeLayer(l));
+            sliderLayers[val].addTo(map);
+            activeOverlays = [sliderLayers[val]];
+            sliderLayers[val].setOpacity(1.0); // スライダーモードは基本不透明
         };
 
+        // レイヤー比較ロジック：2つまで
         map.on('overlayadd', function(e) {
             activeOverlays.push(e.layer);
-            if (activeOverlays.length > 2) map.removeLayer(activeOverlays.shift());
-            e.layer.setOpacity(document.getElementById('opacity-slider').value);
+            if (activeOverlays.length > 2) {
+                map.removeLayer(activeOverlays.shift());
+            }
+            updateComparisonUI();
         });
-        map.on('overlayremove', function(e) { activeOverlays = activeOverlays.filter(l => l !== e.layer); });
+
+        map.on('overlayremove', function(e) {
+            activeOverlays = activeOverlays.filter(l => l !== e.layer);
+            updateComparisonUI();
+        });
+
+        function updateComparisonUI() {
+            const targetDisplay = document.getElementById('comparison-target');
+            if (activeOverlays.length === 2) {
+                // 2番目に選んだレイヤーの名前を探す
+                const name = Object.keys(allLayers).find(key => allLayers[key] === activeOverlays[1]);
+                targetDisplay.innerText = `調整中：${name}`;
+                activeOverlays[0].setOpacity(1.0); // 1つ目は不透明固定
+                activeOverlays[1].setOpacity(document.getElementById('opacity-slider').value);
+            } else {
+                targetDisplay.innerText = "比較レイヤー未選択";
+                if (activeOverlays[0]) activeOverlays[0].setOpacity(1.0);
+            }
+        }
 
         document.getElementById('opacity-slider').oninput = function() {
-            activeOverlays.forEach(l => l.setOpacity(this.value));
+            if (activeOverlays.length === 2) {
+                activeOverlays[1].setOpacity(this.value);
+            }
         };
-    }
-
-    function switchControl(mode) {
-        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.control-panel').forEach(p => p.classList.remove('active'));
-        document.getElementById('mode-btn-' + mode).classList.add('active');
-        document.getElementById('panel-' + mode).classList.add('active');
     }
 
     async function loadData() {
@@ -220,11 +195,22 @@
             const rows = csv.split('\n').slice(1);
             archiveData = rows.map((row, index) => {
                 const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/"/g, '').trim());
-                return { id: index, drive_id: cols[1], title: cols[4], coords: cols[6], desc: cols[9] };
+                // .jpg 除去
+                const cleanTitle = cols[4] ? cols[4].replace(/\.jpg$/i, '') : "無題";
+                return { id: index, drive_id: cols[1], title: cleanTitle, coords: cols[6], desc: cols[9] };
             }).filter(d => d.drive_id);
             renderDB(archiveData);
             renderMarkers(archiveData);
         } catch (e) { console.error(e); }
+    }
+
+    function renderDB(data) {
+        document.getElementById('photo-list').innerHTML = data.map(item => `
+            <div class="photo-card" onclick="openDetail(${item.id})">
+                <img src="${getImgUrl(item.drive_id)}" loading="lazy">
+                <p>${item.title}</p>
+            </div>
+        `).join('');
     }
 
     function renderMarkers(data) {
@@ -232,33 +218,31 @@
             if (!item.coords) return;
             const [lat, lng] = item.coords.split(',').map(Number);
             const popupContent = `
-                <div onclick="openDetail(${item.id})" style="cursor:pointer;">
-                    <img class="popup-img" src="https://lh3.googleusercontent.com/d/$${item.drive_id}">
-                    <div class="popup-title">${item.title}</div>
+                <div onclick="openDetail(${item.id})" style="cursor:pointer; width:150px;">
+                    <img class="popup-img" src="${getImgUrl(item.drive_id)}">
+                    <div style="font-size:0.8rem; font-weight:bold; text-align:center; padding:5px;">${item.title}</div>
                 </div>
             `;
             L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
         });
     }
 
-    function renderDB(data) {
-        document.getElementById('photo-list').innerHTML = data.map(item => `
-            <div class="photo-card" onclick="openDetail(${item.id})" style="background:#fff; padding:8px; border:1px solid #eee;">
-                <img src="https://lh3.googleusercontent.com/d/$${item.drive_id}" style="width:100%; object-fit:cover; border-radius:2px;">
-                <p style="margin:5px 0 0; font-size:0.75rem; text-align:center; font-weight:bold;">${item.title}</p>
-            </div>
-        `).join('');
-    }
-
     function openDetail(id) {
         const item = archiveData.find(d => d.id === id);
         document.getElementById('modal-body').innerHTML = `
-            <h3 style="color:var(--primary-brown); border-bottom:1px solid var(--accent-gold); padding-bottom:8px; margin-top:0;">${item.title}</h3>
-            <img src="https://lh3.googleusercontent.com/d/$${item.drive_id}" style="width:100%; border-radius:2px; margin:10px 0;">
-            <p style="font-size:0.9rem; line-height:1.6; white-space:pre-wrap;">${item.desc || ""}</p>
+            <h3 style="margin:0 0 10px; font-size:1.1rem;">${item.title}</h3>
+            <img src="${getImgUrl(item.drive_id)}" style="width:100%; border-radius:2px;">
+            <p style="font-size:0.85rem; line-height:1.6; margin-top:10px;">${item.desc || ""}</p>
         `;
         document.getElementById('detail-modal').style.display = 'flex';
         map.closePopup();
+    }
+
+    function switchControl(mode) {
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.control-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('mode-btn-' + mode).classList.add('active');
+        document.getElementById('panel-' + mode).classList.add('active');
     }
 
     function showPage(p) {
@@ -273,6 +257,9 @@
         const q = document.getElementById('db-search').value.toLowerCase();
         renderDB(archiveData.filter(d => d.title.toLowerCase().includes(q)));
     }
+
+    initMap();
+    loadData();
 </script>
 </body>
 </html>
