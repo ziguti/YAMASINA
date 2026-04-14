@@ -46,7 +46,7 @@
 <div id="page-map" class="page active">
     <div id="map"></div>
     <div class="map-controls">
-        <label style="font-size:0.8rem; font-weight:bold;">古地図・空中写真 透過度</label>
+        <label style="font-size:0.8rem; font-weight:bold;">地図透過度</label>
         <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="0.8" style="width:100%;">
     </div>
 </div>
@@ -100,19 +100,15 @@
     function initMap() {
         map = L.map('map').setView([34.992, 135.813], 15);
 
-        // 地理院タイル
+        // 地理院タイル設定
         const gsiStd = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', { attribution: "地理院" }).addTo(map);
         const gsiLatest = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg');
         const gsi1974 = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg');
-        const gsi1961 = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png'); // 1961はpng
-        const gsi1945 = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_usa10/{z}/{x}/{y}.jpg');
-        const gsi1936 = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_riku10/{z}/{x}/{y}.jpg');
+        const gsi1961 = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png');
+        const gsi1946 = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png'); // 1946追加 (.png指定)
 
         // 自作タイル
-        // 明治地籍図 (png)
         chisekiLayer = L.tileLayer('./地籍図tile/{z}/{x}/{y}.png', { minZoom: 12, maxNativeZoom: 18, maxZoom: 21, opacity: 0.8 }).addTo(map);
-        
-        // 大正測量図 (jpgに修正)
         taishoLayer = L.tileLayer('./taisho1922/{z}/{x}/{y}.jpg', { minZoom: 12, maxNativeZoom: 18, maxZoom: 21, opacity: 0.8 });
 
         const baseMaps = {
@@ -120,14 +116,13 @@
             "空中写真(最新)": gsiLatest,
             "空中写真(1974-78)": gsi1974,
             "空中写真(1961-69)": gsi1961,
-            "空中写真(1945-50)": gsi1945,
-            "空中写真(1936-42)": gsi1936
+            "空中写真(1946)": gsi1946
         };
 
         const overlayMaps = { "明治地籍図": chisekiLayer, "大正測量図": taishoLayer };
         L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
 
-        photoLayers = [chisekiLayer, taishoLayer, gsiLatest, gsi1974, gsi1961, gsi1945, gsi1936];
+        photoLayers = [chisekiLayer, taishoLayer, gsiLatest, gsi1974, gsi1961, gsi1946];
 
         document.getElementById('opacity-slider').oninput = (e) => {
             photoLayers.forEach(l => { if(l) l.setOpacity(e.target.value); });
