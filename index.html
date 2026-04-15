@@ -164,32 +164,36 @@
  function initMap() {
         if (typeof L === 'undefined') return; 
         
-        // 1. mapのオプションに zoomSnap と zoomAnimation を追加
         map = L.map('map', { 
             zoomControl: false, 
             maxZoom: 22,
-            zoomSnap: 0,        // これが最重要：滑らかなズームを許可する
-            zoomAnimation: true // ズーム時のアニメーションを強制
+            // --- ここから追加：背景に張り付かせるための設定 ---
+            zoomSnap: 0,           // ズームを整数に固定せず、滑らかに（張り付いたように）動かす
+            zoomAnimation: true,   // ズーム中のアニメーションを強制する
+            fadeAnimation: true    // タイルの切り替えをフェードにして隙間を見せない
+            // --- ここまで ---
         }).setView([34.992, 135.813], 15);
 
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
-        // 2. 各タイルレイヤーに updateWhenZooming を追加
+        // 標準地図
         L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
             attribution: "地理院タイル",
             maxNativeZoom: 18,
             maxZoom: 22,
-            updateWhenZooming: true // ズームの動きに合わせて画像を追従させる
+            updateWhenZooming: true // ズーム動作中にタイルを即座に引き伸ばして更新
         }).addTo(map);
 
+        // 各歴史レイヤー
         eras.forEach(era => {
             layers[era.name] = L.tileLayer(era.url, { 
                 maxNativeZoom: 18, 
                 maxZoom: 22,
-                updateWhenZooming: true // ここにも追加
+                updateWhenZooming: true // ズーム動作中にタイルを即座に引き伸ばして更新
             });
         });
-
+        
+        // ...以下、layerControlなどのコードが続く
         layerControl = L.control.layers(null, layers, { collapsed: true, position: 'topright' }).addTo(map);
         // (以下、イベント処理などはそのまま)
         map.on('overlayadd', function(e) {
