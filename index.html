@@ -161,17 +161,44 @@
         { name: "現代空中写真", url: "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg", type: "gsi" }
     ];
 
-    function initMap() {
-        map = L.map('map', { zoomControl: false, maxZoom: 22 }).setView([34.992, 135.813], 15);
+   function initMap() {
+        if (typeof L === 'undefined') return; 
+        
+        // --- ここから書き換え ---
+        map = L.map('map', { 
+            zoomControl: false, 
+            maxZoom: 22,
+            zoomSnap: 0,           // ズームレベルを整数に固定せず、滑らかに動かす
+            zoomDelta: 0.25,       // 1回の操作でのズーム変化量
+            wheelPxPerZoomLevel: 120, // マウスホイールでのズーム感度
+            zoomAnimation: true,   // ズームアニメーションを有効化
+            fadeAnimation: true,   // タイルのフェードを有効化
+            markerZoomAnimation: true
+        }).setView([34.992, 135.813], 15);
+        // --- ここまで ---
+
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
-        // 最下層：標準地図
-        L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', { maxNativeZoom: 18, maxZoom: 22, attribution: "地理院タイル" }).addTo(map);
+        // 標準地図
+        L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
+            attribution: "地理院タイル",
+            maxNativeZoom: 18,
+            maxZoom: 22,
+            updateWhenZooming: true, // ズーム中もタイルを更新し続ける
+            updateInterval: 100      // タイル更新のインターバル
+        }).addTo(map);
 
-        // 各レイヤの作成
+        // 各歴史レイヤー
         eras.forEach(era => {
-            layers[era.name] = L.tileLayer(era.url, { maxNativeZoom: 18, maxZoom: 22 });
+            layers[era.name] = L.tileLayer(era.url, { 
+                maxNativeZoom: 18, 
+                maxZoom: 22,
+                updateWhenZooming: true,
+                updateInterval: 100
+            });
         });
+
+        // (以下、overlayadd等のイベント処理は変更なし)
 
         // レイヤ選択（Leaflet標準の折りたたみUI）
         L.control.layers(null, layers, { collapsed: true, position: 'topright' }).addTo(map);
