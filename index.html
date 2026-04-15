@@ -184,12 +184,14 @@
             updateWhenZooming: true // ズーム動作中にタイルを即座に引き伸ばして更新
         }).addTo(map);
 
-        // 各歴史レイヤー
+       // 各レイヤの作成
         eras.forEach(era => {
             layers[era.name] = L.tileLayer(era.url, { 
                 maxNativeZoom: 18, 
                 maxZoom: 22,
-                updateWhenZooming: true // ズーム動作中にタイルを即座に引き伸ばして更新
+                updateWhenZooming: true, // ズーム中も描画を維持
+                updateWhenIdle: false,   // アイドルを待たずに更新
+                keepBuffer: 10           // 周囲のタイルを保持して隙間を防ぐ
             });
         });
         
@@ -224,18 +226,21 @@
             }
         };
 
-        // 時代スライダー連動
+       // 時代スライダー連動
         document.getElementById('era-slider').oninput = function() {
             const era = eras[this.value];
             document.getElementById('era-label').innerText = era.name;
+            
+            // 全ての歴史レイヤーを一旦削除
             activeOverlays.forEach(l => map.removeLayer(l));
-            activeOverlays = [layers[era.name]];
-            layers[era.name].addTo(map).bringToFront();
+            
+            // 新しいレイヤーを取得
+            const nextLayer = layers[era.name];
+            
+            // 再追加する際にもオプションが生きていることを確認して追加
+            nextLayer.addTo(map).bringToFront();
+            activeOverlays = [nextLayer];
         };
-
-        add3DMarkers();
-        startLocationTracking();
-    }
 
     function updateOpacityUI() {
         const display = document.getElementById('opacity-target');
