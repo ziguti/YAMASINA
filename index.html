@@ -15,57 +15,42 @@
             --header-height: 55px;
             --sub-header-height: 50px;
         }
-        body, html { margin: 0; padding: 0; background-color: var(--bg-cream); font-family: "Sawarabi Mincho", "Yu Mincho", serif; color: #333; height: 100%; overflow: hidden; }
+        body, html { margin: 0; padding: 0; background-color: var(--bg-cream); font-family: "Sawarabi Mincho", serif; color: #333; height: 100%; overflow: hidden; }
         
-        /* メインヘッダー */
         header { 
             position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height); 
             background: #fff; border-bottom: 2px solid var(--accent-gold); 
             display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 3000; box-sizing: border-box; 
         }
-        .logo { font-weight: bold; color: var(--primary-brown); font-size: 1.2rem; letter-spacing: 0.05em; }
 
-        /* サブヘッダー（コントロール格納用） */
         .sub-header {
             position: fixed; top: var(--header-height); left: 0; width: 100%; height: var(--sub-header-height);
-            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(5px);
-            display: flex; align-items: center; padding: 0 10px; z-index: 2500; border-bottom: 1px solid #ddd; gap: 10px; box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px);
+            display: flex; align-items: center; padding: 0 12px; z-index: 2500; border-bottom: 1px solid #ddd; gap: 15px; box-sizing: border-box;
         }
 
-        /* 検索窓（写真DB用） */
-        .search-bar-fixed {
-            position: absolute; top: 5px; left: 10px; right: 10px; display: none;
-        }
-        #db-search { width: 100%; padding: 8px 12px; border: 1px solid var(--accent-gold); border-radius: 20px; font-family: inherit; }
+        .mode-switch { display: flex; gap: 5px; border-right: 1px solid #ddd; padding-right: 10px; }
+        .mode-btn { border: 1px solid var(--accent-gold); background: #fff; font-size: 0.7rem; padding: 4px 8px; cursor: pointer; border-radius: 2px; }
+        .mode-btn.active { background: var(--accent-gold); color: #fff; }
 
-        /* 地図コンテナ */
+        .control-group { display: none; align-items: center; gap: 10px; flex-grow: 1; }
+        .control-group.active { display: flex; }
+
         .page { position: absolute; top: calc(var(--header-height) + var(--sub-header-height)); bottom: 0; width: 100%; display: none; }
         .page.active { display: block; }
-        #map { width: 100%; height: 100%; background: #eee; }
+        #map { width: 100%; height: 100%; background: #fff; }
 
-        /* カスタムレイヤー一覧のデザイン */
-        .custom-layer-menu {
-            font-family: "Sawarabi Mincho", serif; background: #fff; border: 1px solid var(--accent-gold); border-radius: 4px; padding: 5px 10px; cursor: pointer; font-size: 0.85rem;
-        }
-
-        /* 写真グリッド */
-        .database-container { height: 100%; overflow-y: auto; padding: 20px; box-sizing: border-box; }
-        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
-        .photo-card { background: #fff; border: 1px solid var(--accent-gold); padding: 8px; border-radius: 2px; cursor: pointer; transition: transform 0.2s; }
-        .photo-card img { width: 100%; height: 120px; object-fit: cover; border-bottom: 1px solid #eee; }
-        .photo-card p { font-size: 0.8rem; margin: 8px 0 0; font-weight: bold; text-align: center; }
-
-        /* モーダル */
-        #detail-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:5000; justify-content:center; align-items:center; }
-        .modal-content { background:#fff; width:95%; max-width:700px; padding:25px; border-radius:4px; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .fullscreen-btn { background: var(--primary-brown); color: white; border: none; padding: 12px; border-radius: 4px; width: 100%; cursor: pointer; margin-top: 15px; font-family: inherit; }
-
-        /* スライダー */
-        .opacity-panel { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(255,255,255,0.9); padding: 10px 20px; border-radius: 30px; border: 1px solid var(--accent-gold); display: flex; align-items: center; gap: 15px; min-width: 250px; }
-        #opacity-slider { flex-grow: 1; accent-color: var(--primary-brown); }
-
-        .nav-buttons button { background: none; border: 1px solid var(--accent-gold); padding: 6px 15px; cursor: pointer; font-family: inherit; border-radius: 2px; }
+        .opacity-panel { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(255,255,255,0.9); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--accent-gold); display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        .nav-buttons button { background: none; border: 1px solid var(--accent-gold); padding: 5px 12px; cursor: pointer; font-family: inherit; border-radius: 2px; }
         .nav-buttons button.active { background: var(--primary-brown); color: #fff; }
+
+        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; padding: 15px; }
+        .photo-card { background: #fff; border: 1px solid #ddd; padding: 5px; border-radius: 4px; cursor: pointer; text-align: center; }
+        .photo-card img { width: 100%; height: 110px; object-fit: cover; }
+        
+        #detail-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:5000; justify-content:center; align-items:center; }
+        .modal-content { background:#fff; width:90%; max-width:650px; padding:20px; border-radius:4px; position:relative; }
     </style>
 </head>
 <body>
@@ -79,28 +64,37 @@
 </header>
 
 <div class="sub-header">
-    <div id="map-controls" style="display: flex; gap: 10px; width: 100%; align-items: center;">
-        <select id="layer-select-1" class="custom-layer-menu" onchange="updateLayerSelection()"></select>
-        <span style="font-size: 0.8rem;">×</span>
-        <select id="layer-select-2" class="custom-layer-menu" onchange="updateLayerSelection()"></select>
-        <div id="current-op-name" style="font-size: 0.7rem; color: var(--primary-brown); font-weight: bold;"></div>
+    <div id="map-ui" style="display: flex; align-items: center; width: 100%;">
+        <div class="mode-switch">
+            <button id="m-btn-comp" class="mode-btn active" onclick="setMode('comp')">比較</button>
+            <button id="m-btn-slide" class="mode-btn" onclick="setMode('slide')">時代</button>
+        </div>
+        <div id="group-comp" class="control-group active">
+            <select id="sel-1" class="mode-btn" onchange="syncLayers()"></select>
+            <span style="font-size:0.7rem;">×</span>
+            <select id="sel-2" class="mode-btn" onchange="syncLayers()"></select>
+        </div>
+        <div id="group-slide" class="control-group">
+            <input type="range" id="time-slider" min="0" max="5" step="1" value="5" style="flex-grow:1; accent-color:var(--accent-gold);">
+            <span id="time-label" style="font-size:0.75rem; font-weight:bold; min-width:80px;">最新写真</span>
+        </div>
     </div>
-    <div id="db-controls" class="search-bar-fixed">
-        <input type="text" id="db-search" placeholder="古写真を検索..." oninput="filterDB()">
+    <div id="db-ui" style="display: none; width: 100%;">
+        <input type="text" id="db-search" placeholder="古写真をタイトルで検索..." oninput="filterDB()" style="width:100%; padding:6px 12px; border-radius:20px; border:1px solid var(--accent-gold);">
     </div>
 </div>
 
 <div id="page-map" class="page active">
     <div id="map"></div>
     <div class="opacity-panel">
-        <span style="font-size: 0.7rem;">透過</span>
-        <input type="range" id="opacity-slider" min="0" max="1" step="0.01" value="1">
+        <span id="op-target-name" style="font-size: 0.65rem; font-weight: bold;">透過</span>
+        <input type="range" id="op-slider" min="0" max="1" step="0.01" value="1" style="width:150px; accent-color:var(--primary-brown);">
     </div>
-    <button onclick="requestLocation()" style="position:absolute; bottom:100px; right:20px; z-index:1000; width:45px; height:45px; border-radius:50%; border:none; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,0.3); cursor:pointer;"><i class="fa-solid fa-crosshairs"></i></button>
+    <button onclick="requestLocation()" style="position:absolute; bottom:90px; right:20px; z-index:1000; width:40px; height:40px; border-radius:50%; border:none; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.3); cursor:pointer;"><i class="fa-solid fa-location-crosshairs"></i></button>
 </div>
 
 <div id="page-db" class="page">
-    <div class="database-container">
+    <div class="database-container" style="height:100%; overflow-y:auto;">
         <div id="photo-list" class="photo-grid"></div>
     </div>
 </div>
@@ -108,32 +102,32 @@
 <div id="detail-modal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div id="modal-body"></div>
-        <button class="fullscreen-btn" onclick="toggleFullScreen()"><i class="fa-solid fa-expand"></i> 画像を全画面で詳しく見る</button>
-        <button onclick="closeModal()" style="position:absolute; top:10px; right:15px; font-size:1.8rem; border:none; background:none; cursor:pointer;">&times;</button>
+        <button style="width:100%; padding:12px; background:var(--primary-brown); color:white; border:none; margin-top:15px; cursor:pointer;" onclick="toggleFullScreen()">全画面表示</button>
+        <button onclick="closeModal()" style="position:absolute; top:10px; right:10px; border:none; background:none; font-size:1.5rem; cursor:pointer;">×</button>
     </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
-    let map, archiveData = [], allLayers = {}, layerSelection = [null, null];
+    let map, archiveData = [], allLayers = {}, activeLayers = [null, null];
     let userMarker, userCircle;
 
     function initMap() {
-        // --- 拡大縮小の滑らかさとタイル連動の最適化 ---
+        // --- タイルの置き去り対策: アニメーションの同期とバッファの最適化 ---
         map = L.map('map', {
             zoomControl: false,
             maxZoom: 22,
-            zoomSnap: 0,        // 自由なズーム倍率
-            zoomDelta: 0.25,     // 滑らかなズーム
-            wheelPxPerZoomLevel: 120,
-            fadeAnimation: true, // ズーム中の白抜け防止
-            markerZoomAnimation: true
+            zoomSnap: 0.1,
+            zoomDelta: 0.5,
+            fadeAnimation: true,
+            markerZoomAnimation: false, // ピンが先行するのを防ぐ
+            inertia: true,
+            zoomAnimationThreshold: 10
         }).setView([34.992, 135.813], 15);
 
-        const tCfg = { maxNativeZoom: 18, maxZoom: 22, updateWhenIdle: false, updateWhenZooming: true, keepBuffer: 5 };
+        const tCfg = { maxNativeZoom: 18, maxZoom: 22, updateWhenIdle: false, updateWhenZooming: true, keepBuffer: 6, tms: false };
 
-        // ベースタイル
         L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', tCfg).addTo(map);
 
         allLayers = {
@@ -146,57 +140,69 @@
             "最新航空写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg', tCfg)
         };
 
-        // セレクトボックスの初期化
-        const s1 = document.getElementById('layer-select-1');
-        const s2 = document.getElementById('layer-select-2');
-        Object.keys(allLayers).forEach(name => {
-            s1.add(new Option(name, name));
-            s2.add(new Option(name, name));
+        // UI初期化
+        const s1 = document.getElementById('sel-1');
+        const s2 = document.getElementById('sel-2');
+        Object.keys(allLayers).forEach(k => {
+            s1.add(new Option(k, k));
+            s2.add(new Option(k, k));
         });
-        s2.value = "大正測量図"; 
-        updateLayerSelection();
+        s2.value = "大正測量図";
+        syncLayers();
 
-        // 3D道標
+        // 3D道標表示の復元
         const icon3d = L.divIcon({ html: '<i class="fa-solid fa-cube" style="color:#e67e22; font-size:24px; text-shadow:0 0 3px #fff;"></i>', className:'c-3d', iconSize:[24,24] });
-        L.marker([34.985075, 135.823981], {icon:icon3d, zIndexOffset:1000}).addTo(map).bindPopup(`
+        L.marker([34.985075, 135.823981], {icon:icon3d, zIndexOffset:2000}).addTo(map).bindPopup(`
             <div style="width:200px;text-align:center;">
-                <model-viewer src="./両御坊道標.glb" auto-rotate camera-controls style="width:100%; height:150px; background:#f0f0f0;"></model-viewer>
-                <b style="display:block;margin-top:5px;">両御坊道道標</b>
+                <model-viewer src="./両御坊道標.glb" auto-rotate camera-controls style="width:100%; height:160px;"></model-viewer>
+                <b>両御坊道道標</b>
             </div>`);
 
-        document.getElementById('opacity-slider').oninput = (e) => {
-            if(layerSelection[1]) layerSelection[1].setOpacity(e.target.value);
+        // 現在地用レイヤー（最前面）
+        map.createPane('userPane');
+        map.getPane('userPane').style.zIndex = 650;
+
+        document.getElementById('op-slider').oninput = (e) => {
+            if(activeLayers[1]) activeLayers[1].setOpacity(e.target.value);
+        };
+
+        document.getElementById('time-slider').oninput = (e) => {
+            const keys = Object.keys(allLayers).filter(k => k !== "選択なし");
+            const key = keys[e.target.value];
+            document.getElementById('time-label').innerText = key;
+            activeLayers.forEach(l => { if(l) map.removeLayer(l); });
+            activeLayers = [null, allLayers[key]];
+            if(activeLayers[1]) activeLayers[1].addTo(map).setOpacity(1);
         };
     }
 
-    function updateLayerSelection() {
-        const n1 = document.getElementById('layer-select-1').value;
-        const n2 = document.getElementById('layer-select-2').value;
-        
-        // 既存レイヤー削除
-        layerSelection.forEach(l => { if(l) map.removeLayer(l); });
-        
-        layerSelection[0] = allLayers[n1];
-        layerSelection[1] = allLayers[n2];
-
-        if(layerSelection[0]) { layerSelection[0].addTo(map).setOpacity(1); }
-        if(layerSelection[1]) { 
-            layerSelection[1].addTo(map).setOpacity(document.getElementById('opacity-slider').value);
-            document.getElementById('current-op-name').innerText = `調整中: ${n2}`;
-        } else {
-            document.getElementById('current-op-name').innerText = "";
+    function syncLayers() {
+        const n1 = document.getElementById('sel-1').value;
+        const n2 = document.getElementById('sel-2').value;
+        activeLayers.forEach(l => { if(l) map.removeLayer(l); });
+        activeLayers = [allLayers[n1], allLayers[n2]];
+        if(activeLayers[0]) activeLayers[0].addTo(map).setOpacity(1);
+        if(activeLayers[1]) {
+            activeLayers[1].addTo(map).setOpacity(document.getElementById('op-slider').value);
+            document.getElementById('op-target-name').innerText = n2;
         }
     }
 
-    function requestLocation() {
-        map.locate({setView: true, maxZoom: 17, enableHighAccuracy: true});
+    function setMode(m) {
+        document.getElementById('m-btn-comp').classList.toggle('active', m === 'comp');
+        document.getElementById('m-btn-slide').classList.toggle('active', m === 'slide');
+        document.getElementById('group-comp').classList.toggle('active', m === 'comp');
+        document.getElementById('group-slide').classList.toggle('active', m === 'slide');
+        if(m === 'slide') document.getElementById('time-slider').dispatchEvent(new Event('input'));
+        else syncLayers();
     }
+
+    function requestLocation() { map.locate({setView: true, maxZoom: 16, enableHighAccuracy: true}); }
 
     map?.on('locationfound', e => {
         if(userMarker) map.removeLayer(userMarker);
-        if(userCircle) map.removeLayer(userCircle);
-        userCircle = L.circle(e.latlng, e.accuracy/2, {color:'#2196F3', fillOpacity:0.1, weight:1}).addTo(map);
-        userMarker = L.circleMarker(e.latlng, {color:'#fff', fillColor:'#2196F3', fillOpacity:1, radius:8, weight:3}).addTo(map);
+        userCircle = L.circle(e.latlng, {radius: e.accuracy/2, color:'#2196F3', pane:'userPane'}).addTo(map);
+        userMarker = L.circleMarker(e.latlng, {radius: 8, color:'#fff', fillColor:'#2196F3', fillOpacity:1, weight:3, pane:'userPane'}).addTo(map);
     });
 
     async function loadData() {
@@ -204,19 +210,12 @@
         const csv = await res.text();
         archiveData = csv.split('\n').slice(1).map((r, i) => {
             const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
-            const title = (c[4] || "無題").replace(/\.(jpg|png|jpeg)$/i, '');
-            return { id:i, drive_id:c[1], title:title, coords:c[6], desc:c[9] };
+            return { id:i, drive_id:c[1], title:(c[4]||"").replace(/\.jpg$/i, ''), coords:c[6], desc:c[9] };
         }).filter(d => d.drive_id);
         
         renderDB(archiveData);
         archiveData.forEach(item => {
-            if(item.coords) {
-                L.marker(item.coords.split(',').map(Number)).addTo(map).bindPopup(`
-                    <div onclick="openDetail(${item.id})" style="cursor:pointer;width:130px;text-align:center;">
-                        <img src="https://lh3.googleusercontent.com/d/${item.drive_id}=s300" style="width:100%; border-radius:2px;">
-                        <div style="font-size:0.75rem; font-weight:bold; margin-top:5px;">${item.title}</div>
-                    </div>`);
-            }
+            if(item.coords) L.marker(item.coords.split(',').map(Number)).addTo(map).bindPopup(`<div onclick="openDetail(${item.id})" style="cursor:pointer;width:120px;text-align:center;"><img src="https://lh3.googleusercontent.com/d/${item.drive_id}" style="width:100%"><br>${item.title}</div>`);
         });
     }
 
@@ -224,36 +223,29 @@
         document.getElementById('photo-list').innerHTML = data.map(item => `
             <div class="photo-card" onclick="openDetail(${item.id})">
                 <img src="https://lh3.googleusercontent.com/d/${item.drive_id}=s400" loading="lazy">
-                <p>${item.title}</p>
+                <p style="font-size:0.75rem;">${item.title}</p>
             </div>`).join('');
     }
 
     function openDetail(id) {
         const item = archiveData.find(d => d.id === id);
-        document.getElementById('modal-body').innerHTML = `
-            <h2 style="margin:0 0 15px 0; font-size:1.2rem; border-bottom:1px solid var(--accent-gold); padding-bottom:5px;">${item.title}</h2>
-            <img id="detail-img" src="https://lh3.googleusercontent.com/d/${item.drive_id}=s1200" style="width:100%; max-height:65vh; object-fit:contain; border-radius:2px;">
-            <p style="margin-top:15px; line-height:1.6; font-size:0.9rem;">${item.desc || "解説はありません。"}</p>`;
+        document.getElementById('modal-body').innerHTML = `<h3>${item.title}</h3><img id="detail-img" src="https://lh3.googleusercontent.com/d/${item.drive_id}" style="width:100%; max-height:60vh; object-fit:contain;"><p>${item.desc||""}</p>`;
         document.getElementById('detail-modal').style.display = 'flex';
     }
 
     function closeModal() { document.getElementById('detail-modal').style.display = 'none'; }
-
     function toggleFullScreen() {
         const img = document.getElementById('detail-img');
-        if (img.requestFullscreen) img.requestFullscreen();
-        else if (img.webkitRequestFullscreen) img.webkitRequestFullscreen();
+        if (img.requestFullscreen) img.requestFullscreen(); else if (img.webkitRequestFullscreen) img.webkitRequestFullscreen();
     }
 
     function showPage(p) {
         document.querySelectorAll('.page, .nav-buttons button').forEach(el => el.classList.remove('active'));
         document.getElementById('page-'+p).classList.add('active');
         document.getElementById('btn-'+p).classList.add('active');
-        
-        document.getElementById('map-controls').style.display = (p === 'map') ? 'flex' : 'none';
-        document.getElementById('db-controls').style.display = (p === 'db') ? 'block' : 'none';
-
-        if(p === 'map') setTimeout(() => map.invalidateSize(), 300);
+        document.getElementById('map-ui').style.display = (p === 'map') ? 'flex' : 'none';
+        document.getElementById('db-ui').style.display = (p === 'db') ? 'flex' : 'none';
+        if(p === 'map') setTimeout(() => map.invalidateSize(), 200);
     }
 
     function filterDB() {
