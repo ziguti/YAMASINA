@@ -21,14 +21,11 @@
         .control-panel.active { display: flex; }
         .page { display: none; height: calc(100vh - var(--header-height)); margin-top: var(--header-height); position: relative; }
         .page.active { display: block; }
-        #map { width: 100%; height: 100%; z-index: 1; }
+        #map { width: 100%; height: 100%; z-index: 1; background: #eee; }
         .leaflet-control-layers { margin-top: 75px !important; margin-right: 10px !important; max-height: 55vh; overflow-y: auto; }
         .map-overlay-controls { position: absolute; bottom: 95px; right: 10px; z-index: 1000; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 8px; border: 1px solid var(--accent-gold); width: 160px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .leaflet-bottom.leaflet-left { bottom: 85px !important; left: 10px !important; }
-        
         .locate-btn { position: absolute; bottom: 160px; left: 10px; z-index: 1000; background: #fff; border: 2px solid rgba(0,0,0,0.2); width: 34px; height: 34px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #444; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
-        .locate-btn.active { color: #2196F3; border-color: #2196F3; }
-
+        
         .database-container { padding: 20px 15px; height: 100%; overflow-y: auto; box-sizing: border-box; }
         .db-search-wrapper { margin-top: 15px; margin-bottom: 25px; position: sticky; top: 0; z-index: 10; background: var(--bg-cream); padding: 5px 0; }
         #db-search { width: 100%; padding: 12px; border: 1px solid var(--accent-gold); border-radius: 4px; font-family: inherit; }
@@ -36,12 +33,16 @@
         .photo-card { background: #fff; padding: 5px; border: 1px solid #ddd; cursor: pointer; border-radius: 4px; }
         .photo-card img { width: 100%; height: 110px; object-fit: cover; }
         .photo-card p { font-size: 0.7rem; margin: 5px 0; text-align: center; font-weight: bold; line-height: 1.3; }
-        .popup-img { width: 100%; max-height: 150px; object-fit: cover; }
+
+        /* モーダルとフルスクリーンボタン */
+        #detail-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:3000; justify-content:center; align-items:center; padding:15px; }
+        .modal-content { background:#fff; width:100%; max-width:650px; padding:20px; border-radius:4px; position:relative; max-height: 90vh; overflow-y: auto; }
+        .fullscreen-btn { background: var(--primary-brown); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-top: 10px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
-<header id="main-header">
+<header>
     <div class="logo"><i class="fa-solid fa-map-location-dot"></i> 山科アーカイブ</div>
     <div class="nav-buttons">
         <button id="btn-map" class="active" onclick="showPage('map')">地図</button>
@@ -51,7 +52,7 @@
 
 <div id="page-map" class="page active">
     <div class="sub-nav">
-        <div class="mode-switch" style="display:flex; gap:4px; border-right:1px solid #ddd; padding-right:10px;">
+        <div style="display:flex; gap:4px; border-right:1px solid #ddd; padding-right:10px;">
             <button id="mode-btn-layers" class="mode-btn active" onclick="switchControl('layers')">比較</button>
             <button id="mode-btn-slider" class="mode-btn" onclick="switchControl('slider')">時代</button>
         </div>
@@ -60,182 +61,176 @@
             <span id="timeline-label" style="font-size:0.7rem; font-weight:bold; min-width:60px;">最新写真</span>
         </div>
         <div id="panel-layers" class="control-panel active">
-            <span style="font-size:0.65rem; color:#666;">比較するレイヤーを選択</span>
+            <span style="font-size:0.65rem; color:#666;">2枚選択して比較（後に選んだ方が透過）</span>
         </div>
     </div>
-
     <div id="map"></div>
-    <div id="locate-btn" class="locate-btn" onclick="requestLocation()"><i class="fa-solid fa-location-crosshairs"></i></div>
-
+    <div class="locate-btn" onclick="requestLocation()"><i class="fa-solid fa-location-crosshairs"></i></div>
     <div class="map-overlay-controls">
-        <div id="comparison-target" class="control-desc">透過度調整</div>
-        <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="1.0" style="width:100%; accent-color:var(--accent-gold);">
+        <div id="comparison-target" class="control-desc" style="font-size:0.7rem; font-weight:bold; margin-bottom:5px;">透過度調整</div>
+        <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="1.0" style="width:100%;">
     </div>
 </div>
 
 <div id="page-db" class="page">
     <div class="database-container">
-        <div class="db-search-wrapper"><input type="text" id="db-search" placeholder="キーワードで検索" oninput="filterDB()"></div>
+        <div class="db-search-wrapper"><input type="text" id="db-search" placeholder="キーワード検索" oninput="filterDB()"></div>
         <div id="photo-list" class="photo-grid"></div>
     </div>
 </div>
 
-<div id="detail-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:3000; justify-content:center; align-items:center; padding:15px;" onclick="this.style.display='none'">
-    <div class="modal-content" onclick="event.stopPropagation()" style="background:#fff; width:100%; max-width:600px; padding:20px; border-radius:4px;">
+<div id="detail-modal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
         <div id="modal-body"></div>
+        <button class="fullscreen-btn" onclick="toggleFullScreen()"><i class="fa-solid fa-expand"></i> 全画面表示</button>
+        <button onclick="closeModal()" style="position:absolute; top:10px; right:10px; border:none; background:none; font-size:1.5rem; cursor:pointer;">&times;</button>
     </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
-    let map, archiveData = [], layerControl, baseMap;
-    let allLayers = {}, activeOverlays = [];
+    let map, archiveData = [], layerControl, activeOverlays = [], allLayers = {};
     let userMarker, userCircle;
 
-    const getImgUrl = (id) => `https://lh3.googleusercontent.com/d/${id}=s600`;
-
     function initMap() {
-        map = L.map('map', { zoomControl: false, maxZoom: 22 }).setView([34.992, 135.813], 15);
+        // タイル表示の最適化
+        const tCfg = { maxNativeZoom: 18, maxZoom: 22, updateWhenIdle: false, updateWhenZooming: true, keepBuffer: 2 };
+
+        map = L.map('map', { zoomControl: false, maxZoom: 22, fadeAnimation: true }).setView([34.992, 135.813], 15);
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
-        baseMap = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', { maxNativeZoom: 18, maxZoom: 22 }).addTo(map);
+        const base = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', tCfg).addTo(map);
 
-        const tileConfig = { maxNativeZoom: 18, maxZoom: 22 };
         allLayers = {
-            "明治地籍図": L.tileLayer('./地籍図tile/{z}/{x}/{y}.png', tileConfig),
-            "大正測量図": L.tileLayer('./taisho1922/{z}/{x}/{y}.png', tileConfig),
-            "1946年写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png', tileConfig),
-            "1961年写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png', tileConfig),
-            "1974年写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg', tileConfig),
-            "最新写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg', tileConfig)
+            "明治地籍図": L.tileLayer('./地籍図tile/{z}/{x}/{y}.png', tCfg),
+            "大正測量図": L.tileLayer('./taisho1922/{z}/{x}/{y}.png', tCfg),
+            "1946年写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png', tCfg),
+            "1961年写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png', tCfg),
+            "1974年写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg', tCfg),
+            "最新写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg', tCfg)
         };
 
         layerControl = L.control.layers(null, allLayers, { position: 'topright', collapsed: false }).addTo(map);
 
-        // --- 修正された3Dモデルデータ（座標を更新、道標の名称を修正） ---
-        const threeDData = [
+        // 3Dデータ
+        const threeD = [
             { title: "両御坊道標", file: "両御坊道標.glb", coords: [34.985075, 135.823981] },
             { title: "妙見寺開渠", file: "妙見寺開渠.glb", coords: [34.977573, 135.827704] },
             { title: "旧井戸跡地", file: "旧井戸跡地.glb", coords: [34.983122, 135.814421] }
         ];
 
-        const threeDIcon = L.divIcon({
-            html: '<i class="fa-solid fa-cube" style="color:#e67e22; font-size:26px; text-shadow: 0 0 4px #fff;"></i>',
-            className: 'custom-3d-icon', iconSize: [26, 26], iconAnchor: [13, 13]
+        const icon3d = L.divIcon({ html: '<i class="fa-solid fa-cube" style="color:#e67e22; font-size:26px; text-shadow:0 0 3px #fff;"></i>', className:'c-3d', iconSize:[26,26] });
+        threeD.forEach(d => {
+            L.marker(d.coords, {icon:icon3d}).addTo(map).bindPopup(`
+                <div style="width:200px;"><model-viewer src="./${encodeURIComponent(d.file)}" auto-rotate camera-controls style="width:100%; height:150px; background:#eee;"></model-viewer>
+                <div style="text-align:center;font-weight:bold;margin-top:5px;">${d.title}</div></div>`);
         });
 
-        threeDData.forEach(d => {
-            const content = `
-                <div style="width:220px; font-family:sans-serif;">
-                    <model-viewer src="./${encodeURIComponent(d.file)}" auto-rotate camera-controls shadow-intensity="1" style="width:100%; height:180px; background:#f4f4f4; border-radius:8px;"></model-viewer>
-                    <div style="text-align:center; font-weight:bold; margin-top:10px; font-size:1rem;">${d.title}</div>
-                </div>`;
-            L.marker(d.coords, { icon: threeDIcon }).addTo(map).bindPopup(content, { maxWidth: 250 });
-        });
-
-        map.on('locationfound', onLocationFound);
-        map.on('locationerror', () => { alert("位置情報の取得に失敗しました。設定を確認してください。"); });
-
-        document.getElementById('timeline-slider').oninput = function() {
-            const labels = ["明治地籍図", "大正測量図", "1946年写真", "1961年写真", "1974年写真", "最新写真"];
-            const val = labels[this.value];
-            document.getElementById('timeline-label').innerText = val;
-            activeOverlays.forEach(l => map.removeLayer(l));
-            activeOverlays = [allLayers[val]];
-            allLayers[val].addTo(map);
-            applyOpacity();
-        };
-
+        // レイヤー選択ロジック復元
         map.on('overlayadd', e => {
-            if (!activeOverlays.includes(e.layer)) {
+            if(!activeOverlays.includes(e.layer)) {
                 activeOverlays.push(e.layer);
-                if (activeOverlays.length > 2) map.removeLayer(activeOverlays.shift());
+                if(activeOverlays.length > 2) map.removeLayer(activeOverlays.shift());
             }
             applyOpacity();
+            syncCheckboxes();
         });
-        map.on('overlayremove', e => { activeOverlays = activeOverlays.filter(l => l !== e.layer); applyOpacity(); });
+        map.on('overlayremove', e => {
+            activeOverlays = activeOverlays.filter(l => l !== e.layer);
+            applyOpacity();
+        });
+
         document.getElementById('opacity-slider').oninput = applyOpacity;
+        document.getElementById('timeline-slider').oninput = function() {
+            const keys = Object.keys(allLayers);
+            const key = keys[this.value];
+            document.getElementById('timeline-label').innerText = key;
+            activeOverlays.forEach(l => map.removeLayer(l));
+            activeOverlays = [allLayers[key]];
+            allLayers[key].addTo(map);
+            syncCheckboxes();
+        };
     }
 
     function applyOpacity() {
         const val = document.getElementById('opacity-slider').value;
-        if (activeOverlays.length > 0) {
+        const targetLabel = document.getElementById('comparison-target');
+        if(activeOverlays.length > 0) {
             const top = activeOverlays[activeOverlays.length - 1];
-            document.getElementById('comparison-target').innerText = "調整：" + Object.keys(allLayers).find(k => allLayers[k] === top);
+            const name = Object.keys(allLayers).find(k => allLayers[k] === top);
+            targetLabel.innerText = "調整：" + name;
             activeOverlays.forEach((l, i) => l.setOpacity(i === activeOverlays.length - 1 ? val : 1));
-        }
+        } else { targetLabel.innerText = "透過度調整"; }
     }
 
-    // --- 現在地取得の安定化 ---
-    function requestLocation() {
-        const btn = document.getElementById('locate-btn');
-        btn.classList.add('active');
-        // watchではなく一回取得(locate)にすることで、表示の飛びを抑えます
-        map.locate({ setView: true, maxZoom: 17, enableHighAccuracy: true });
-        // 取得後3秒でアイコンの色を戻す
-        setTimeout(() => btn.classList.remove('active'), 3000);
+    function syncCheckboxes() {
+        const inputs = document.querySelectorAll('.leaflet-control-layers-overlays input');
+        inputs.forEach(input => {
+            const layerName = input.nextSibling.textContent.trim();
+            input.checked = activeOverlays.includes(allLayers[layerName]);
+        });
     }
 
-    function onLocationFound(e) {
-        if (userCircle) map.removeLayer(userCircle);
-        if (userMarker) map.removeLayer(userMarker);
-
-        const radius = e.accuracy / 2;
-        // 青い範囲円
-        userCircle = L.circle(e.latlng, radius, { color: '#2196F3', fillOpacity: 0.1, weight: 1, pane: 'markerPane' }).addTo(map);
-        // 現在地の青いドット（最前面に表示）
-        userMarker = L.circleMarker(e.latlng, { color: '#fff', fillColor: '#2196F3', fillOpacity: 1, weight: 2, radius: 8, pane: 'popupPane' }).addTo(map);
-        
-        userMarker.on('click', () => map.setView(e.latlng, 17));
-    }
+    function requestLocation() { map.locate({setView: true, maxZoom: 17, enableHighAccuracy: true}); }
+    map?.on('locationfound', e => {
+        if(userMarker) map.removeLayer(userMarker); if(userCircle) map.removeLayer(userCircle);
+        userCircle = L.circle(e.latlng, e.accuracy/2, {color:'#2196F3', fillOpacity:0.1, pane:'markerPane'}).addTo(map);
+        userMarker = L.circleMarker(e.latlng, {color:'#fff', fillColor:'#2196F3', fillOpacity:1, radius:8, pane:'popupPane'}).addTo(map);
+    });
 
     async function loadData() {
-        try {
-            const res = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`);
-            const csv = await res.text();
-            archiveData = csv.split('\n').slice(1).map((row, i) => {
-                const c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
-                return { id: i, drive_id: c[1], title: c[4] || "無題", coords: c[6], desc: c[9] };
-            }).filter(d => d.drive_id);
-            renderDB(archiveData);
-            renderMarkers(archiveData);
-        } catch (e) { console.error(e); }
+        const res = await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`);
+        const csv = await res.text();
+        archiveData = csv.split('\n').slice(1).map((r, i) => {
+            const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
+            return { id:i, drive_id:c[1], title:c[4]||"無題", coords:c[6], desc:c[9] };
+        }).filter(d => d.drive_id);
+        renderDB(archiveData);
+        renderMarkers(archiveData);
     }
 
     function renderDB(data) {
         document.getElementById('photo-list').innerHTML = data.map(item => `
             <div class="photo-card" onclick="openDetail(${item.id})">
-                <img src="${getImgUrl(item.drive_id)}" loading="lazy">
+                <img src="https://lh3.googleusercontent.com/d/$${item.drive_id}=s600" loading="lazy">
                 <p>${item.title}</p>
-            </div>
-        `).join('');
+            </div>`).join('');
     }
 
     function renderMarkers(data) {
         data.forEach(item => {
-            if (!item.coords) return;
-            L.marker(item.coords.split(',').map(Number)).addTo(map).bindPopup(`<div onclick="openDetail(${item.id})" style="cursor:pointer; width:150px;"><img class="popup-img" src="${getImgUrl(item.drive_id)}"><div style="text-align:center;font-weight:bold;">${item.title}</div></div>`);
+            if(!item.coords) return;
+            L.marker(item.coords.split(',').map(Number)).addTo(map).bindPopup(`<div onclick="openDetail(${item.id})" style="cursor:pointer;width:150px;"><img src="https://lh3.googleusercontent.com/d/$${item.drive_id}=s600" style="width:100%"><div style="text-align:center;font-weight:bold;">${item.title}</div></div>`);
         });
     }
 
     function openDetail(id) {
         const item = archiveData.find(d => d.id === id);
-        document.getElementById('modal-body').innerHTML = `<h3>${item.title}</h3><img src="${getImgUrl(item.drive_id)}" style="width:100%;"><p>${item.desc || ""}</p>`;
+        const url = `https://lh3.googleusercontent.com/d/$${item.drive_id}=s1200`;
+        document.getElementById('modal-body').innerHTML = `<h3>${item.title}</h3><img id="detail-img" src="${url}" style="width:100%; border-radius:4px;"><p>${item.desc||""}</p>`;
         document.getElementById('detail-modal').style.display = 'flex';
     }
 
-    function switchControl(mode) {
-        document.querySelectorAll('.mode-btn, .control-panel').forEach(el => el.classList.remove('active'));
-        document.getElementById('mode-btn-' + mode).classList.add('active');
-        document.getElementById('panel-' + mode).classList.add('active');
+    function closeModal() { document.getElementById('detail-modal').style.display = 'none'; }
+
+    function toggleFullScreen() {
+        const img = document.getElementById('detail-img');
+        if (img.requestFullscreen) img.requestFullscreen();
+        else if (img.webkitRequestFullscreen) img.webkitRequestFullscreen();
     }
 
     function showPage(p) {
         document.querySelectorAll('.page, .nav-buttons button').forEach(el => el.classList.remove('active'));
-        document.getElementById('page-' + p).classList.add('active');
-        document.getElementById('btn-' + p).classList.add('active');
-        if (p === 'map') setTimeout(() => map.invalidateSize(), 200);
+        document.getElementById('page-'+p).classList.add('active');
+        document.getElementById('btn-'+p).classList.add('active');
+        if(p==='map') setTimeout(() => map.invalidateSize(), 200);
+    }
+
+    function switchControl(mode) {
+        document.querySelectorAll('.mode-btn, .control-panel').forEach(el => el.classList.remove('active'));
+        document.getElementById('mode-btn-'+mode).classList.add('active');
+        document.getElementById('panel-'+mode).classList.add('active');
     }
 
     function filterDB() {
@@ -243,8 +238,7 @@
         renderDB(archiveData.filter(d => d.title.toLowerCase().includes(q)));
     }
 
-    initMap();
-    loadData();
+    initMap(); loadData();
 </script>
 </body>
 </html>
