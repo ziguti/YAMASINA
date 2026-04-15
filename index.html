@@ -161,24 +161,37 @@
         { name: "現代空中写真", url: "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg", type: "gsi" }
     ];
 
-  function initMap() {
-        if (typeof L === 'undefined') return; // 防御策
+ function initMap() {
+        if (typeof L === 'undefined') return; 
         
-        map = L.map('map', { zoomControl: false, maxZoom: 22 }).setView([34.992, 135.813], 15);
+        // 1. mapのオプションに zoomSnap と zoomAnimation を追加
+        map = L.map('map', { 
+            zoomControl: false, 
+            maxZoom: 22,
+            zoomSnap: 0,        // これが最重要：滑らかなズームを許可する
+            zoomAnimation: true // ズーム時のアニメーションを強制
+        }).setView([34.992, 135.813], 15);
+
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
+        // 2. 各タイルレイヤーに updateWhenZooming を追加
         L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
             attribution: "地理院タイル",
             maxNativeZoom: 18,
-            maxZoom: 22
+            maxZoom: 22,
+            updateWhenZooming: true // ズームの動きに合わせて画像を追従させる
         }).addTo(map);
 
         eras.forEach(era => {
-            layers[era.name] = L.tileLayer(era.url, { maxNativeZoom: 18, maxZoom: 22 });
+            layers[era.name] = L.tileLayer(era.url, { 
+                maxNativeZoom: 18, 
+                maxZoom: 22,
+                updateWhenZooming: true // ここにも追加
+            });
         });
 
         layerControl = L.control.layers(null, layers, { collapsed: true, position: 'topright' }).addTo(map);
-        // --- ロジック：2枚制限と「後に選んだ方を上にする」 ---
+        // (以下、イベント処理などはそのまま)
         map.on('overlayadd', function(e) {
             // 既にある場合は配列から消して末尾（最新）に追加し直す
             activeOverlays = activeOverlays.filter(l => l !== e.layer);
