@@ -8,161 +8,292 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
-        :root { --primary-brown: #4e342e; --accent-gold: #bda06d; --bg-cream: #fdfaf2; --header-height: 55px; --sub-header-height: 50px; }
-        body, html { margin: 0; padding: 0; background-color: var(--bg-cream); font-family: "Sawarabi Mincho", serif; color: #333; height: 100%; overflow: hidden; }
-        header { position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height); background: #fff; border-bottom: 2px solid var(--accent-gold); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 3000; box-sizing: border-box; }
-        .sub-header { position: fixed; top: var(--header-height); left: 0; width: 100%; height: var(--sub-header-height); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(5px); display: flex; align-items: center; padding: 0 12px; z-index: 2500; border-bottom: 1px solid #ddd; gap: 15px; box-sizing: border-box; }
-        .mode-btn { border: 1px solid var(--accent-gold); background: #fff; font-size: 0.7rem; padding: 4px 8px; cursor: pointer; border-radius: 2px; font-family: inherit; }
-        .mode-btn.active { background: var(--accent-gold); color: #fff; }
-        .control-group { display: none; align-items: center; gap: 10px; flex-grow: 1; }
-        .control-group.active { display: flex; }
-        .page { position: absolute; top: calc(var(--header-height) + var(--sub-header-height)); bottom: 0; width: 100%; display: none; }
+        :root {
+            --base-wood: #2c1e1a;
+            --accent-gold: #af9662;
+            --paper-white: #fcfaf5;
+            --deep-red: #7b2020;
+            --header-h: 60px;
+        }
+
+        body, html { 
+            margin: 0; padding: 0; height: 100%; overflow: hidden;
+            background-color: var(--paper-white);
+            font-family: "Sawarabi Mincho", "Yu Mincho", serif;
+            color: var(--base-wood);
+        }
+
+        /* 高級感のあるヘッダー */
+        header {
+            position: fixed; top: 0; width: 100%; height: var(--header-h);
+            background: var(--base-wood); color: var(--accent-gold);
+            display: flex; align-items: center; justify-content: center;
+            border-bottom: 2px solid var(--accent-gold); z-index: 3000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        header h1 { font-size: 1.1rem; letter-spacing: 0.2rem; margin: 0; }
+
+        /* スマホ向けフッターナビ */
+        nav.main-nav {
+            position: fixed; bottom: 0; width: 100%; height: 65px;
+            background: rgba(44, 30, 26, 0.95); display: flex;
+            justify-content: space-around; align-items: center;
+            border-top: 1px solid var(--accent-gold); z-index: 3000;
+            backdrop-filter: blur(10px);
+        }
+        .nav-item { color: #fff; text-decoration: none; text-align: center; font-size: 0.7rem; opacity: 0.6; transition: 0.3s; }
+        .nav-item.active { color: var(--accent-gold); opacity: 1; }
+        .nav-item i { display: block; font-size: 1.4rem; margin-bottom: 3px; }
+
+        /* サブコントロール（上部配置） */
+        .sub-nav {
+            position: fixed; top: var(--header-h); width: 100%;
+            background: rgba(252, 250, 245, 0.9); padding: 10px;
+            z-index: 2000; border-bottom: 1px solid #ddd;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .mode-tabs { display: flex; border: 1px solid var(--accent-gold); border-radius: 4px; overflow: hidden; width: fit-content; margin: 0 auto; }
+        .tab-btn { background: #fff; border: none; padding: 6px 15px; font-size: 0.8rem; cursor: pointer; color: var(--base-wood); font-family: inherit; }
+        .tab-btn.active { background: var(--accent-gold); color: #fff; }
+
+        /* スライダーデザイン */
+        input[type="range"] { accent-color: var(--accent-gold); cursor: pointer; }
+
+        /* 地図コンテナ */
+        .page { position: absolute; top: var(--header-h); bottom: 65px; width: 100%; display: none; }
         .page.active { display: block; }
-        #map { width: 100%; height: 100%; background: #fff; }
-        .opacity-panel { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(255,255,255,0.9); padding: 8px 20px; border-radius: 30px; border: 1px solid var(--accent-gold); display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; padding: 15px; }
-        .photo-card { background: #fff; border: 1px solid #ddd; padding: 5px; border-radius: 4px; cursor: pointer; text-align: center; }
-        .photo-card img { width: 100%; height: 110px; object-fit: cover; }
-        #detail-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:5000; justify-content:center; align-items:center; }
-        .modal-content { background:#fff; width:90%; max-width:650px; padding:20px; border-radius:4px; position:relative; }
+        #map { width: 100%; height: 100%; }
+
+        /* 透過度パネル */
+        .floating-ctrl {
+            position: absolute; bottom: 15px; right: 15px; z-index: 1000;
+            background: #fff; border: 1px solid var(--accent-gold);
+            padding: 12px; border-radius: 8px; width: 180px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* 3D全画面ボタン用 */
+        .model-container { position: relative; width: 100%; height: 250px; background: #eee; border-radius: 4px; overflow: hidden; }
+        .fs-btn {
+            position: absolute; bottom: 10px; right: 10px; z-index: 10;
+            background: rgba(0,0,0,0.6); color: #fff; border: none;
+            padding: 8px; border-radius: 4px; cursor: pointer;
+        }
+
+        /* 写真グリッド */
+        .photo-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px; padding: 20px;
+        }
+        .photo-card {
+            background: #fff; border: 1px solid #e0d8c3; border-bottom-width: 3px;
+            padding: 8px; transition: 0.3s;
+        }
+        .photo-card img { width: 100%; height: 120px; object-fit: cover; }
+        .photo-card p { font-size: 0.75rem; margin-top: 8px; text-align: center; border-top: 1px solid #eee; padding-top: 5px; }
+
+        /* モーダル */
+        #detail-modal {
+            display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85);
+            z-index:5000; justify-content:center; align-items:center; padding:15px;
+        }
+        .modal-inner {
+            background: var(--paper-white); width: 100%; max-width: 600px;
+            max-height: 90vh; overflow-y: auto; padding: 25px; border: 2px solid var(--accent-gold);
+        }
+
+        /* Leaflet調整 */
+        .leaflet-control-layers { border: 1px solid var(--accent-gold) !important; }
     </style>
 </head>
 <body>
 
 <header>
-    <div style="font-weight:bold; color:var(--primary-brown);">山科歴史デジタルアーカイブ</div>
-    <div style="display:flex; gap:5px;">
-        <button id="btn-map" class="mode-btn active" onclick="showPage('map')">地図探索</button>
-        <button id="btn-db" class="mode-btn" onclick="showPage('db')">古写真集</button>
-    </div>
+    <h1>山科歴史デジタルアーカイブ</h1>
 </header>
 
-<div class="sub-header">
-    <div id="map-ui" style="display: flex; align-items: center; width: 100%;">
-        <div style="display:flex; gap:5px; border-right:1px solid #ddd; padding-right:10px; margin-right:10px;">
-            <button id="m-btn-comp" class="mode-btn active" onclick="setMode('comp')">比較</button>
-            <button id="m-btn-slide" class="mode-btn" onclick="setMode('slide')">時代</button>
-        </div>
-        <div id="group-comp" class="control-group active">
-            <select id="sel-1" class="mode-btn" onchange="syncLayers()"></select>
-            <select id="sel-2" class="mode-btn" onchange="syncLayers()"></select>
-        </div>
-        <div id="group-slide" class="control-group">
-            <input type="range" id="time-slider" min="0" max="5" step="1" value="5" style="flex-grow:1; accent-color:var(--accent-gold);">
-            <span id="time-label" style="font-size:0.75rem; font-weight:bold; min-width:80px; margin-left:10px;">最新写真</span>
-        </div>
-    </div>
-    <div id="db-ui" style="display: none; width: 100%;">
-        <input type="text" id="db-search" placeholder="タイトルで検索..." oninput="filterDB()" style="width:100%; padding:6px 12px; border-radius:20px; border:1px solid var(--accent-gold);">
-    </div>
-</div>
+<nav class="main-nav">
+    <a href="#" class="nav-item active" id="nav-map" onclick="showPage('map')">
+        <i class="fa-solid fa-map-marked-alt"></i>探索
+    </a>
+    <a href="#" class="nav-item" id="nav-db" onclick="showPage('db')">
+        <i class="fa-solid fa-images"></i>古写真
+    </a>
+</nav>
 
 <div id="page-map" class="page active">
-    <div id="map"></div>
-    <div class="opacity-panel">
-        <span id="op-target-name" style="font-size: 0.65rem; font-weight: bold;">透過</span>
-        <input type="range" id="op-slider" min="0" max="1" step="0.01" value="1" style="width:150px;">
+    <div class="sub-nav">
+        <div class="mode-tabs">
+            <button id="t-layers" class="tab-btn active" onclick="switchMode('layers')">二図比較</button>
+            <button id="t-slider" class="tab-btn" onclick="switchMode('slider')">時代変遷</button>
+        </div>
+        <div id="ctrl-slider" style="display: none; align-items: center; justify-content: center; gap: 15px;">
+            <input type="range" id="time-slider" min="0" max="5" step="1" value="5" style="width: 60%;">
+            <span id="time-display" style="font-size: 0.8rem; font-weight: bold; color: var(--deep-red);">最新写真</span>
+        </div>
     </div>
-    <button onclick="requestLocation()" style="position:absolute; bottom:90px; right:20px; z-index:1000; width:40px; height:40px; border-radius:50%; border:none; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.3); cursor:pointer;"><i class="fa-solid fa-location-crosshairs"></i></button>
+    
+    <div id="map"></div>
+
+    <div class="floating-ctrl">
+        <div id="target-layer-name" style="font-size: 0.7rem; margin-bottom: 8px; border-left: 3px solid var(--deep-red); padding-left: 8px;">透過度調整</div>
+        <input type="range" id="op-slider" min="0" max="1" step="0.05" value="1.0" style="width: 100%;">
+    </div>
+
+    <button onclick="requestLocation()" style="position:absolute; bottom:120px; right:15px; z-index:1000; width:45px; height:45px; border-radius:50%; background:var(--base-wood); color:var(--accent-gold); border:1px solid var(--accent-gold); box-shadow:0 4px 10px rgba(0,0,0,0.3);"><i class="fa-solid fa-location-arrow"></i></button>
 </div>
 
 <div id="page-db" class="page">
-    <div style="height:100%; overflow-y:auto;"><div id="photo-list" class="photo-grid"></div></div>
+    <div style="padding: 15px; position: sticky; top: 0; background: var(--paper-white); z-index: 10;">
+        <input type="text" id="db-search" placeholder="山科の記憶を検索..." oninput="filterDB()" style="width:100%; padding:12px; border:1px solid var(--accent-gold); background: #fff; font-family: inherit;">
+    </div>
+    <div id="photo-list" class="photo-grid"></div>
 </div>
 
 <div id="detail-modal" onclick="closeModal()">
-    <div class="modal-content" onclick="event.stopPropagation()">
+    <div class="modal-inner" onclick="event.stopPropagation()">
         <div id="modal-body"></div>
-        <button style="width:100%; padding:12px; background:var(--primary-brown); color:white; border:none; margin-top:15px; cursor:pointer;" onclick="toggleFullScreen()">全画面表示</button>
-        <button onclick="closeModal()" style="position:absolute; top:10px; right:10px; border:none; background:none; font-size:1.5rem; cursor:pointer;">×</button>
+        <button onclick="closeModal()" style="width:100%; padding:12px; background:var(--base-wood); color:var(--accent-gold); border:none; margin-top:15px; font-family:inherit; cursor:pointer;">閉じる</button>
     </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
-    let map, archiveData = [], allLayers = {}, activeLayers = [null, null];
+    let map, archiveData = [], layerControl, allLayers = {}, activeOverlays = [];
     let userMarker, userCircle;
 
-    const getPhotoUrl = (id) => `https://lh3.googleusercontent.com/d/${id}`;
-
     function initMap() {
-        map = L.map('map', { zoomControl: false, maxZoom: 22, zoomSnap: 0.1, fadeAnimation: true, markerZoomAnimation: false }).setView([34.992, 135.813], 15);
-        const tCfg = { maxNativeZoom: 18, maxZoom: 22, updateWhenIdle: false, updateWhenZooming: true, keepBuffer: 6 };
+        map = L.map('map', { zoomControl: false, maxZoom: 22 }).setView([34.992, 135.813], 15);
+        
+        map.createPane('topPane');
+        map.getPane('topPane').style.zIndex = 650;
 
-        // 現在地表示をタイルの上に持ってくるためのPane設定
-        map.createPane('userMarkerPane');
-        map.getPane('userMarkerPane').style.zIndex = 650; 
+        L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', { maxNativeZoom: 18, maxZoom: 22 }).addTo(map);
 
-        L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', tCfg).addTo(map);
-
+        const tCfg = { maxNativeZoom: 18, maxZoom: 22 };
         allLayers = {
-            "選択なし": null,
             "明治地籍図": L.tileLayer('./地籍図tile/{z}/{x}/{y}.png', tCfg),
-            "大正測量図": L.tileLayer('./taisho1922/{z}/{x}/{y}.png', tCfg),
-            "1946年(米軍)": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png', tCfg),
-            "1961年": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png', tCfg),
-            "1974年": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg', tCfg),
-            "最新航空写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg', tCfg)
+            "大正測量図": L.tileLayer('./taisho1922/{z}/{x}/{y}.jpg', tCfg),
+            "1946年写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png', tCfg),
+            "1961年写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png', tCfg),
+            "1974年写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg', tCfg),
+            "最新写真": L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg', tCfg)
         };
 
-        const s1 = document.getElementById('sel-1'), s2 = document.getElementById('sel-2');
-        Object.keys(allLayers).forEach(k => { s1.add(new Option(k, k)); s2.add(new Option(k, k)); });
-        s2.value = "大正測量図"; syncLayers();
+        layerControl = L.control.layers(null, allLayers, { position: 'topright', collapsed: true }).addTo(map);
 
-        // 3Dデータの復元
-        const threeD = [
-            { title: "両御坊道標", file: "両御坊道標.glb", coords: [34.985075, 135.823981] },
-            { title: "妙見寺開渠", file: "妙見寺開渠.glb", coords: [34.977573, 135.827704] },
-            { title: "旧井戸跡地", file: "旧井戸跡地.glb", coords: [34.983122, 135.814421] }
-        ];
-
-        const icon3d = L.divIcon({ html: '<i class="fa-solid fa-cube" style="color:#e67e22; font-size:24px; text-shadow:0 0 3px #fff;"></i>', className:'c-3d', iconSize:[24,24] });
-        threeD.forEach(d => {
-            L.marker(d.coords, {icon:icon3d, zIndexOffset:2000}).addTo(map).bindPopup(`
-                <div style="width:200px;text-align:center;">
-                    <model-viewer src="./${encodeURIComponent(d.file)}" auto-rotate camera-controls style="width:100%; height:160px;"></model-viewer>
-                    <b>${d.title}</b>
-                </div>`);
+        // --- タイル管理ロジックの復元 ---
+        map.on('overlayadd', function(e) {
+            if (activeOverlays.includes(e.layer)) return;
+            activeOverlays.push(e.layer);
+            if (activeOverlays.length > 2) {
+                const oldLayer = activeOverlays.shift();
+                map.removeLayer(oldLayer);
+                syncLayerInputs();
+            }
+            updateZAndOpacity();
         });
 
-        document.getElementById('op-slider').oninput = (e) => { if(activeLayers[1]) activeLayers[1].setOpacity(e.target.value); };
-        document.getElementById('time-slider').oninput = (e) => {
-            const keys = Object.keys(allLayers).filter(k => k !== "選択なし");
-            const key = keys[e.target.value];
-            document.getElementById('time-label').innerText = key;
-            activeLayers.forEach(l => { if(l) map.removeLayer(l); });
-            activeLayers = [null, allLayers[key]];
-            if(activeLayers[1]) activeLayers[1].addTo(map).setOpacity(1);
+        map.on('overlayremove', function(e) {
+            activeOverlays = activeOverlays.filter(l => l !== e.layer);
+            updateZAndOpacity();
+        });
+
+        // 3Dデータ配置
+        const points = [
+            { name: "両御坊道標", file: "両御坊道標.glb", pos: [34.985075, 135.823981] },
+            { name: "妙見寺開渠", file: "妙見寺開渠.glb", pos: [34.977573, 135.827704] },
+            { name: "旧井戸跡地", file: "旧井戸跡地.glb", pos: [34.983122, 135.814421] }
+        ];
+
+        const goldIcon = L.divIcon({ html: '<i class="fa-solid fa-cube" style="color:var(--accent-gold); font-size:24px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));"></i>', className:'c3d', iconSize:[24,24] });
+
+        points.forEach(p => {
+            L.marker(p.pos, {icon: goldIcon}).addTo(map).bindPopup(`
+                <div style="width:220px; text-align:center; font-family:'Sawarabi Mincho';">
+                    <div class="model-container" id="cont-${p.name}">
+                        <model-viewer id="mv-${p.name}" src="./${encodeURIComponent(p.file)}" auto-rotate camera-controls shadow-intensity="1" style="width:100%; height:100%;"></model-viewer>
+                        <button class="fs-btn" onclick="toggleFS('mv-${p.name}')"><i class="fa-solid fa-expand"></i> 全画面</button>
+                    </div>
+                    <p style="margin:10px 0 0; font-weight:bold;">${p.name}</p>
+                </div>
+            `);
+        });
+
+        // スライダー連動
+        const labels = ["明治地籍図", "大正測量図", "1946年写真", "1961年写真", "1974年写真", "最新写真"];
+        document.getElementById('time-slider').oninput = function() {
+            const name = labels[this.value];
+            document.getElementById('time-display').innerText = name;
+            activeOverlays.forEach(l => map.removeLayer(l));
+            activeOverlays = [allLayers[name]];
+            allLayers[name].addTo(map);
+            syncLayerInputs();
         };
+
+        document.getElementById('op-slider').oninput = updateZAndOpacity;
     }
 
-    function syncLayers() {
-        const n1 = document.getElementById('sel-1').value, n2 = document.getElementById('sel-2').value;
-        activeLayers.forEach(l => { if(l) map.removeLayer(l); });
-        activeLayers = [allLayers[n1], allLayers[n2]];
-        if(activeLayers[0]) activeLayers[0].addTo(map).setOpacity(1);
-        if(activeLayers[1]) {
-            activeLayers[1].addTo(map).setOpacity(document.getElementById('op-slider').value);
-            document.getElementById('op-target-name').innerText = n2;
+    function updateZAndOpacity() {
+        const op = document.getElementById('op-slider').value;
+        const targetLabel = document.getElementById('target-layer-name');
+
+        if (activeOverlays.length > 0) {
+            const topLayer = activeOverlays[activeOverlays.length - 1];
+            const name = Object.keys(allLayers).find(k => allLayers[k] === topLayer);
+            targetLabel.innerText = `調整：${name}`;
+
+            if (activeOverlays.length === 2) {
+                activeOverlays[0].setOpacity(1);
+                activeOverlays[0].setZIndex(50);
+                activeOverlays[1].setOpacity(op);
+                activeOverlays[1].setZIndex(100);
+            } else {
+                activeOverlays[0].setOpacity(op);
+                activeOverlays[0].setZIndex(100);
+            }
+        } else {
+            targetLabel.innerText = "透過度調整";
         }
     }
 
-    function setMode(m) {
-        document.getElementById('m-btn-comp').classList.toggle('active', m === 'comp');
-        document.getElementById('m-btn-slide').classList.toggle('active', m === 'slide');
-        document.getElementById('group-comp').classList.toggle('active', m === 'comp');
-        document.getElementById('group-slide').classList.toggle('active', m === 'slide');
-        if(m === 'slide') document.getElementById('time-slider').dispatchEvent(new Event('input')); else syncLayers();
+    function syncLayerInputs() {
+        const inputs = layerControl._container.querySelectorAll('input');
+        inputs.forEach(input => {
+            const name = input.nextSibling.textContent.trim();
+            input.checked = activeOverlays.includes(allLayers[name]);
+        });
     }
 
-    function requestLocation() { map.locate({setView: true, maxZoom: 16, enableHighAccuracy: true}); }
+    function toggleFS(id) {
+        const viewer = document.getElementById(id);
+        if (viewer.requestFullscreen) viewer.requestFullscreen();
+        else if (viewer.webkitRequestFullscreen) viewer.webkitRequestFullscreen();
+    }
+
+    function switchMode(m) {
+        document.getElementById('t-layers').classList.toggle('active', m === 'layers');
+        document.getElementById('t-slider').classList.toggle('active', m === 'slider');
+        document.getElementById('ctrl-slider').style.display = (m === 'slider') ? 'flex' : 'none';
+        document.getElementById('panel-layers').style.display = (m === 'layers') ? 'block' : 'none';
+    }
+
+    function showPage(p) {
+        document.querySelectorAll('.page, .nav-item').forEach(el => el.classList.remove('active'));
+        document.getElementById('page-' + p).classList.add('active');
+        document.getElementById('nav-' + p).classList.add('active');
+        if (p === 'map') setTimeout(() => map.invalidateSize(), 300);
+    }
+
+    function requestLocation() {
+        map.locate({setView: true, maxZoom: 16, enableHighAccuracy: true});
+    }
 
     map?.on('locationfound', e => {
         if(userMarker) map.removeLayer(userMarker);
-        if(userCircle) map.removeLayer(userCircle);
-        userCircle = L.circle(e.latlng, {radius: e.accuracy/2, color:'#2196F3', weight:1, fillOpacity:0.1, pane:'userMarkerPane'}).addTo(map);
-        userMarker = L.circleMarker(e.latlng, {radius: 8, color:'#fff', fillColor:'#2196F3', fillOpacity:1, weight:3, pane:'userMarkerPane'}).addTo(map);
+        userCircle = L.circle(e.latlng, {radius: e.accuracy/2, color: '#af9662', weight: 1, pane: 'topPane'}).addTo(map);
+        userMarker = L.circleMarker(e.latlng, {radius: 8, color: '#fff', fillColor: '#7b2020', fillOpacity: 1, weight: 3, pane: 'topPane'}).addTo(map);
     });
 
     async function loadData() {
@@ -170,43 +301,40 @@
         const csv = await res.text();
         archiveData = csv.split('\n').slice(1).map((r, i) => {
             const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.replace(/"/g, '').trim());
-            return { id:i, drive_id:c[1], title:(c[4]||"").replace(/\.jpg$/i, ''), coords:c[6], desc:c[9] };
+            return { id: i, drive_id: c[1], title: (c[4]||"").replace(/\.(jpg|png)$/i, ''), coords: c[6], desc: c[9] };
         }).filter(d => d.drive_id);
+        
         renderDB(archiveData);
         archiveData.forEach(item => {
-            if(item.coords) L.marker(item.coords.split(',').map(Number)).addTo(map).bindPopup(`<div onclick="openDetail(${item.id})" style="cursor:pointer;width:120px;text-align:center;"><img src="${getPhotoUrl(item.drive_id)}" style="width:100%"><br>${item.title}</div>`);
+            if(item.coords) {
+                L.marker(item.coords.split(',').map(Number)).addTo(map).bindPopup(`
+                    <div onclick="openDetail(${item.id})" style="cursor:pointer; width:140px;">
+                        <img src="https://lh3.googleusercontent.com/d/$${item.drive_id}=s300" style="width:100%">
+                        <p style="font-size:0.7rem; margin:5px 0 0;">${item.title}</p>
+                    </div>`);
+            }
         });
     }
 
     function renderDB(data) {
         document.getElementById('photo-list').innerHTML = data.map(item => `
             <div class="photo-card" onclick="openDetail(${item.id})">
-                <img src="${getPhotoUrl(item.drive_id)}" loading="lazy">
-                <p style="font-size:0.75rem;">${item.title}</p>
+                <img src="https://lh3.googleusercontent.com/d/$${item.drive_id}=s400" loading="lazy">
+                <p>${item.title}</p>
             </div>`).join('');
     }
 
     function openDetail(id) {
         const item = archiveData.find(d => d.id === id);
-        document.getElementById('modal-body').innerHTML = `<h3>${item.title}</h3><img id="detail-img" src="${getPhotoUrl(item.drive_id)}" style="width:100%; max-height:60vh; object-fit:contain;"><p>${item.desc||""}</p>`;
+        document.getElementById('modal-body').innerHTML = `
+            <h2 style="font-size:1.2rem; border-bottom:1px solid var(--accent-gold); padding-bottom:10px;">${item.title}</h2>
+            <img src="https://lh3.googleusercontent.com/d/$${item.drive_id}=s800" style="width:100%; margin-top:15px; border:1px solid #ddd;">
+            <p style="line-height:1.8; font-size:0.9rem; margin-top:15px;">${item.desc||""}</p>
+        `;
         document.getElementById('detail-modal').style.display = 'flex';
     }
 
     function closeModal() { document.getElementById('detail-modal').style.display = 'none'; }
-    function toggleFullScreen() {
-        const img = document.getElementById('detail-img');
-        if (img.requestFullscreen) img.requestFullscreen(); else if (img.webkitRequestFullscreen) img.webkitRequestFullscreen();
-    }
-
-    function showPage(p) {
-        document.querySelectorAll('.page, .mode-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById('page-'+p).classList.add('active');
-        document.getElementById('btn-'+p).classList.add('active');
-        document.getElementById('map-ui').style.display = (p === 'map') ? 'flex' : 'none';
-        document.getElementById('db-ui').style.display = (p === 'db') ? 'flex' : 'none';
-        if(p === 'map') setTimeout(() => map.invalidateSize(), 200);
-    }
-
     function filterDB() {
         const q = document.getElementById('db-search').value.toLowerCase();
         renderDB(archiveData.filter(d => d.title.toLowerCase().includes(q)));
