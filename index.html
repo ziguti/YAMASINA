@@ -21,12 +21,11 @@
         .control-panel.active { display: flex; }
         .page { display: none; height: calc(100vh - var(--header-height)); margin-top: var(--header-height); position: relative; }
         .page.active { display: block; }
-        #map { width: 100%; height: 100%; }
+        #map { width: 100%; height: 100%; z-index: 1; }
         .leaflet-control-layers { margin-top: 75px !important; margin-right: 10px !important; max-height: 55vh; overflow-y: auto; }
         .map-overlay-controls { position: absolute; bottom: 95px; right: 10px; z-index: 1000; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 8px; border: 1px solid var(--accent-gold); width: 160px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .leaflet-bottom.leaflet-left { bottom: 85px !important; left: 10px !important; }
         
-        /* 現在地ボタン */
         .locate-btn { position: absolute; bottom: 160px; left: 10px; z-index: 1000; background: #fff; border: 2px solid rgba(0,0,0,0.2); width: 34px; height: 34px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #444; box-shadow: 0 1px 5px rgba(0,0,0,0.4); }
         .locate-btn.active { color: #2196F3; border-color: #2196F3; }
 
@@ -61,12 +60,12 @@
             <span id="timeline-label" style="font-size:0.7rem; font-weight:bold; min-width:60px;">最新写真</span>
         </div>
         <div id="panel-layers" class="control-panel active">
-            <span style="font-size:0.65rem; color:#666;">右上から2つ選んで比較</span>
+            <span style="font-size:0.65rem; color:#666;">比較するレイヤーを選択</span>
         </div>
     </div>
 
     <div id="map"></div>
-    <div id="locate-btn" class="locate-btn" onclick="toggleLocate()"><i class="fa-solid fa-location-crosshairs"></i></div>
+    <div id="locate-btn" class="locate-btn" onclick="requestLocation()"><i class="fa-solid fa-location-crosshairs"></i></div>
 
     <div class="map-overlay-controls">
         <div id="comparison-target" class="control-desc">透過度調整</div>
@@ -92,7 +91,7 @@
     const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
     let map, archiveData = [], layerControl, baseMap;
     let allLayers = {}, activeOverlays = [];
-    let userMarker, userCircle, isLocating = false;
+    let userMarker, userCircle;
 
     const getImgUrl = (id) => `https://lh3.googleusercontent.com/d/${id}=s600`;
 
@@ -114,32 +113,30 @@
 
         layerControl = L.control.layers(null, allLayers, { position: 'topright', collapsed: false }).addTo(map);
 
-        // 3Dモデル配置（GitHub上のファイルパスと一致）
+        // --- 修正された3Dモデルデータ（座標を更新、道標の名称を修正） ---
         const threeDData = [
-            { title: "両御坊道標", file: "両御坊道標.glb", coords: [34.9912, 135.8080] },
-            { title: "妙見寺開渠", file: "妙見寺開渠.glb", coords: [34.9943, 135.8152] },
-            { title: "旧井戸跡地", file: "旧井戸跡地.glb", coords: [34.9902, 135.8118] }
+            { title: "両御坊道標", file: "両御坊道標.glb", coords: [34.985075, 135.823981] },
+            { title: "妙見寺開渠", file: "妙見寺開渠.glb", coords: [34.977573, 135.827704] },
+            { title: "旧井戸跡地", file: "旧井戸跡地.glb", coords: [34.983122, 135.814421] }
         ];
 
         const threeDIcon = L.divIcon({
-            html: '<i class="fa-solid fa-cube" style="color:#e67e22; font-size:24px; text-shadow: 0 0 3px #fff;"></i>',
-            className: 'custom-3d-icon', iconSize: [24, 24], iconAnchor: [12, 12]
+            html: '<i class="fa-solid fa-cube" style="color:#e67e22; font-size:26px; text-shadow: 0 0 4px #fff;"></i>',
+            className: 'custom-3d-icon', iconSize: [26, 26], iconAnchor: [13, 13]
         });
 
         threeDData.forEach(d => {
             const content = `
-                <div style="width:200px; font-family:sans-serif;">
-                    <model-viewer src="./${encodeURIComponent(d.file)}" auto-rotate camera-controls shadow-intensity="1" style="width:100%; height:150px; background:#eee; border-radius:4px;"></model-viewer>
-                    <div style="text-align:center; font-weight:bold; margin-top:8px;">${d.title}</div>
+                <div style="width:220px; font-family:sans-serif;">
+                    <model-viewer src="./${encodeURIComponent(d.file)}" auto-rotate camera-controls shadow-intensity="1" style="width:100%; height:180px; background:#f4f4f4; border-radius:8px;"></model-viewer>
+                    <div style="text-align:center; font-weight:bold; margin-top:10px; font-size:1rem;">${d.title}</div>
                 </div>`;
-            L.marker(d.coords, { icon: threeDIcon }).addTo(map).bindPopup(content);
+            L.marker(d.coords, { icon: threeDIcon }).addTo(map).bindPopup(content, { maxWidth: 250 });
         });
 
-        // 位置情報イベント
         map.on('locationfound', onLocationFound);
-        map.on('locationerror', (e) => { alert("位置情報を取得できませんでした。"); isLocating = false; });
+        map.on('locationerror', () => { alert("位置情報の取得に失敗しました。設定を確認してください。"); });
 
-        // スライダー制御
         document.getElementById('timeline-slider').oninput = function() {
             const labels = ["明治地籍図", "大正測量図", "1946年写真", "1961年写真", "1974年写真", "最新写真"];
             const val = labels[this.value];
@@ -170,33 +167,27 @@
         }
     }
 
-    // --- 現在地機能 ---
-    function toggleLocate() {
-        if (!isLocating) {
-            isLocating = true;
-            document.getElementById('locate-btn').classList.add('active');
-            map.locate({ watch: true, setView: true, maxZoom: 17, enableHighAccuracy: true });
-        } else {
-            isLocating = false;
-            document.getElementById('locate-btn').classList.remove('active');
-            map.stopLocate();
-            if (userMarker) map.removeLayer(userMarker);
-            if (userCircle) map.removeLayer(userCircle);
-        }
+    // --- 現在地取得の安定化 ---
+    function requestLocation() {
+        const btn = document.getElementById('locate-btn');
+        btn.classList.add('active');
+        // watchではなく一回取得(locate)にすることで、表示の飛びを抑えます
+        map.locate({ setView: true, maxZoom: 17, enableHighAccuracy: true });
+        // 取得後3秒でアイコンの色を戻す
+        setTimeout(() => btn.classList.remove('active'), 3000);
     }
 
     function onLocationFound(e) {
+        if (userCircle) map.removeLayer(userCircle);
+        if (userMarker) map.removeLayer(userMarker);
+
         const radius = e.accuracy / 2;
-        if (userMarker) {
-            userMarker.setLatLng(e.latlng);
-            userCircle.setLatLng(e.latlng).setRadius(radius);
-        } else {
-            userCircle = L.circle(e.latlng, radius, { color: '#2196F3', fillOpacity: 0.15, weight: 1 }).addTo(map);
-            userMarker = L.circleMarker(e.latlng, { color: '#fff', fillColor: '#2196F3', fillOpacity: 1, weight: 2, radius: 7 }).addTo(map);
-            userMarker.bindPopup("現在地").openPopup();
-            // クリック時に現在地に移動
-            userMarker.on('click', () => map.setView(e.latlng, 17));
-        }
+        // 青い範囲円
+        userCircle = L.circle(e.latlng, radius, { color: '#2196F3', fillOpacity: 0.1, weight: 1, pane: 'markerPane' }).addTo(map);
+        // 現在地の青いドット（最前面に表示）
+        userMarker = L.circleMarker(e.latlng, { color: '#fff', fillColor: '#2196F3', fillOpacity: 1, weight: 2, radius: 8, pane: 'popupPane' }).addTo(map);
+        
+        userMarker.on('click', () => map.setView(e.latlng, 17));
     }
 
     async function loadData() {
