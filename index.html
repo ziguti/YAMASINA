@@ -28,9 +28,6 @@
             height: 100%; overflow: hidden;
         }
 
-        /* -----------------------
-           ヘッダーデザイン
-        ------------------------ */
         header {
             position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height);
             background: #fff; border-bottom: 2px solid var(--accent-gold);
@@ -57,9 +54,6 @@
         }
         .mode-btn.active { background: var(--accent-gold); color: #fff; }
 
-        /* -----------------------
-           ページエリア
-        ------------------------ */
         .page {
             position: absolute; top: calc(var(--header-height) + var(--sub-header-height));
             bottom: 0; width: 100%; display: none;
@@ -67,7 +61,6 @@
         .page.active { display: block; }
         #map { width: 100%; height: 100%; background: #eee; }
 
-        /* 不透明度コントロール */
         .map-overlay-controls {
             position: absolute; bottom: 30px; right: 15px; z-index: 1000;
             background: rgba(255,255,255,0.95); padding: 15px; border-radius: 8px;
@@ -77,9 +70,6 @@
             font-size: 0.8rem; font-weight: bold; margin-bottom: 8px; color: var(--primary-brown); display: block;
         }
 
-        /* -----------------------
-           古写真データベース
-        ------------------------ */
         .photo-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 20px; padding: 20px;
@@ -93,9 +83,6 @@
         .photo-card img { width: 100%; height: 120px; object-fit: cover; border-bottom: 1px solid #eee; }
         .photo-card p { padding: 10px; margin: 0; font-size: 0.85rem; text-align: center; color: var(--primary-brown); font-weight: bold; }
 
-        /* -----------------------
-           モーダル（詳細表示）
-        ------------------------ */
         #detail-modal {
             display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85);
             z-index:5000; justify-content:center; align-items:center; backdrop-filter: blur(5px);
@@ -110,7 +97,6 @@
         
         .full-3d-box { width: 100%; height: 60vh; border-radius: 8px; border: 1px solid var(--accent-gold); margin-top: 15px; }
 
-        /* スマホ対応 */
         @media (max-width: 600px) {
             .archive-title { font-size: 1.1rem; }
             .mode-btn { padding: 5px 12px; font-size: 0.8rem; }
@@ -174,7 +160,6 @@
 </div>
 
 <script>
-    // --- 1. グローバル変数と定数 ---
     const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
     const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
@@ -184,7 +169,6 @@
     let activeOverlays = []; 
     let userMarker, userCircle;
 
-    // レイヤの定義（時代順）
     const eras = [
         { name: "明治地籍図", url: "./地籍図tile/{z}/{x}/{y}.png" },
         { name: "大正測量図", url: "./taisho1922/{z}/{x}/{y}.jpg" },
@@ -194,34 +178,25 @@
         { name: "現代空中写真", url: "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg" }
     ];
 
-    // --- 2. 地図の初期化 ---
     function initMap() {
-        if (typeof L === 'undefined') {
-            console.error("Leaflet is not loaded.");
-            return;
-        }
-
-        // ▼ 背景に張り付くシームレスズーム設定 ▼
         map = L.map('map', { 
             zoomControl: false, 
             maxZoom: 22,
-            zoomSnap: 0,           // 滑らかな無段階ズーム
+            zoomSnap: 0,
             zoomDelta: 0.5,
-            zoomAnimation: true,   // アニメーションを強制
+            zoomAnimation: true,
             fadeAnimation: true
         }).setView([34.992, 135.813], 15);
 
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
-        // 背景：標準地図 (最下層)
         L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
             attribution: "地理院タイル",
             maxNativeZoom: 18, 
             maxZoom: 22,
-            updateWhenZooming: true // ズーム動作中も引き伸ばして維持
+            updateWhenZooming: true
         }).addTo(map);
 
-        // 歴史レイヤの作成
         eras.forEach(era => {
             layers[era.name] = L.tileLayer(era.url, { 
                 maxNativeZoom: 18, 
@@ -230,21 +205,15 @@
             });
         });
 
-        // レイヤコントロール（折りたたみ式）
         layerControl = L.control.layers(null, layers, { collapsed: true, position: 'topright' }).addTo(map);
 
-        // ▼ レイヤ制御ロジック：最大2枚、後から選んだものを上にする ▼
         map.on('overlayadd', (e) => {
-            activeOverlays = activeOverlays.filter(l => l !== e.layer); // 重複排除
+            activeOverlays = activeOverlays.filter(l => l !== e.layer);
             activeOverlays.push(e.layer);
-            
-            // 3枚目が選ばれたら一番古いものを消す
             if (activeOverlays.length > 2) {
                 const oldest = activeOverlays.shift();
                 map.removeLayer(oldest);
             }
-            
-            // 全てを重なり順に並べ直す（最新が一番上）
             activeOverlays.forEach(l => l.bringToFront());
             updateOpacityUI();
         });
@@ -254,21 +223,18 @@
             updateOpacityUI();
         });
 
-        // 時代スライダー
         document.getElementById('era-slider').oninput = function() {
             const era = eras[this.value];
             document.getElementById('era-label').innerText = era.name;
-            
             activeOverlays.forEach(l => map.removeLayer(l));
             const nextLayer = layers[era.name];
             nextLayer.addTo(map).bringToFront();
             activeOverlays = [nextLayer];
         };
 
-        // 不透明度スライダー
         document.getElementById('opacity-slider').oninput = function() {
             if (activeOverlays.length > 0) {
-                const target = activeOverlays[activeOverlays.length - 1]; // 常に最新（一番上）を操作
+                const target = activeOverlays[activeOverlays.length - 1];
                 target.setOpacity(this.value);
             }
         };
@@ -277,7 +243,6 @@
         startLocationTracking();
     }
 
-    // 不透明度UIの表示更新
     function updateOpacityUI() {
         const display = document.getElementById('opacity-target');
         if (activeOverlays.length > 0) {
@@ -290,7 +255,6 @@
         }
     }
 
-    // --- 3. 3Dデータピンの配置 ---
     function add3DMarkers() {
         const models = [
             { name: "妙見寺開渠", file: "妙見寺開渠.glb", coords: [34.977573, 135.827704] },
@@ -314,45 +278,46 @@
         });
     }
 
-    // --- 4. スプレッドシートからのデータ取得とピン配置 ---
     async function loadPhotoData() {
         try {
-           // archiveDataを作成する map処理の中を修正
-const rawUrl = cols[2] || ""; // C列
-let directImg = "";
+            const response = await fetch(CSV_URL);
+            const csvText = await response.text();
+            const rows = csvText.split(/\r?\n/).slice(1);
 
-if (rawUrl.includes('drive.google.com')) {
-    // IDを抽出して直リンクURLへ変換
-    const fileId = rawUrl.match(/[-\w]{25,}/);
-    if (fileId) directImg = `https://lh3.googleusercontent.com/u/0/d/${fileId[0]}`;
-} else {
-    directImg = rawUrl;
-}
+            archiveData = rows.filter(row => row.trim() !== "").map((row, index) => {
+                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1'));
 
-return {
-    id: index,
-    title: cleanTitle,
-    era: cols[8] || "不明",        // H列（明治・大正・昭和）
-    year: cols[9] || "",          // I列（西暦・撮影年） ★追加
-    lat: lat,
-    lng: lng,
-    img: directImg,               // 変換後のURLを使用
-    // ...以下同じ
-};
-                // E列のタイトルから拡張子を除去
+                // 画像URLの変換処理
+                const rawUrl = cols[2] || "";
+                let directImg = "";
+                const fileIdMatch = rawUrl.match(/[-\w]{25,}/);
+                if (fileIdMatch) {
+                    directImg = `https://lh3.googleusercontent.com/d/${fileIdMatch[0]}`;
+                } else {
+                    directImg = rawUrl;
+                }
+
+                let lat = 0, lng = 0;
+                if (cols[6]) {
+                    const coords = cols[6].split(/[\s,]+/);
+                    lat = parseFloat(coords[0]);
+                    lng = parseFloat(coords[1]);
+                }
+
                 const rawTitle = cols[4] || "名称未設定";
                 const cleanTitle = rawTitle.replace(/\.(jpg|jpeg|png)$/i, '');
 
                 return {
                     id: index,
                     title: cleanTitle,
-                    era: cols[7] || "不明",       // H列
+                    era: cols[7] || "不明",        // H列: 年代
+                    year: cols[9] || "",          // J列: 撮影年
                     lat: lat,
                     lng: lng,
-                    img: cols[2] || "",           // C列: 直リンクURL
+                    img: directImg,
                     desc: cols[10] || "",         // K列: 説明
-                    source: cols[12] || "",       // M列: 出典
-                    rights: cols[13] || "不明"    // N列: 権利状態など
+                    source: cols[12] || "",        // M列: 出典
+                    rights: cols[13] || "不明"     // N列: 権利
                 };
             });
 
@@ -367,7 +332,7 @@ return {
         const list = document.getElementById('photo-list');
         list.innerHTML = data.map(p => `
             <div class="photo-card" onclick="openDetail(${p.id})">
-                <img src="${p.img}" loading="lazy" onerror="this.src='https://placehold.jp/24/4e342e/ffffff/200x150.png?text=No%20Image'">
+                <img src="${p.img}" loading="lazy" onerror="this.src='https://placehold.jp/24/4e342e/ffffff/200x150.png?text=No+Image'">
                 <p>${p.title}</p>
             </div>
         `).join('');
@@ -379,35 +344,35 @@ return {
             className: 'photo-pin', iconSize: [22, 22]
         });
 
-        // addPhotoMarkers内のbindPopup部分
-data.forEach(p => {
-    if (!isNaN(p.lat) && p.lat !== 0) {
-        L.marker([p.lat, p.lng], { icon: iconCam }).addTo(map).bindPopup(`
-            <div style="text-align:center; width: 200px;">
-                <b style="color:var(--primary-brown); font-size:1rem;">${p.title}</b><br>
-                <div style="margin:8px 0; background:#eee; border-radius:4px; overflow:hidden;">
-                    <img src="${p.img}" style="width:100%; height:auto; display:block;" onerror="this.src='https://placehold.jp/200x150.png?text=Loading+Error'">
-                </div>
-                <div style="font-size:0.8rem; margin-bottom:8px;">${p.year ? p.year + '年' : p.era}</div>
-                <button class="mode-btn" style="width:100%;" onclick="openDetail(${p.id})">詳細を表示</button>
-            </div>
-        `);
+        data.forEach(p => {
+            if (!isNaN(p.lat) && p.lat !== 0) {
+                L.marker([p.lat, p.lng], { icon: iconCam }).addTo(map).bindPopup(`
+                    <div style="text-align:center; width: 200px;">
+                        <b style="color:var(--primary-brown); font-size:1rem;">${p.title}</b><br>
+                        <div style="margin:8px 0; background:#eee; border-radius:4px; overflow:hidden;">
+                            <img src="${p.img}" style="width:100%; height:auto; display:block;" onerror="this.src='https://placehold.jp/200x150.png?text=Loading+Error'">
+                        </div>
+                        <div style="font-size:0.8rem; margin-bottom:8px;">${p.year ? p.year + '年' : p.era}</div>
+                        <button class="mode-btn" style="width:100%;" onclick="openDetail(${p.id})">詳細を表示</button>
+                    </div>
+                `);
+            }
+        });
     }
-});
 
-// openDetail内の表示項目に撮影年を追加
-function openDetail(id) {
-    const p = archiveData.find(x => x.id === id);
-    // ...中略
-    body.innerHTML = `
-        <h2 style="...">${p.title}</h2>
-        <img src="${p.img}" class="modal-image" ...>
-        <div style="...">
-            <p>${p.desc}</p>
-            <div style="...">
-                　　<b>撮影年:</b> ${p.year ? p.year + '年' : '不明'} (${p.era}) <br> 
-                    <b>年代:</b> ${p.era} <br>
-                    <b>所蔵・出典・撮影者:</b> ${p.source} <br>
+    function openDetail(id) {
+        const p = archiveData.find(x => x.id === id);
+        if(!p) return;
+        
+        const body = document.getElementById('modal-body');
+        body.innerHTML = `
+            <h2 style="color:var(--primary-brown); border-bottom: 2px solid var(--accent-gold); padding-bottom:10px;">${p.title}</h2>
+            <img src="${p.img}" class="modal-image" onerror="this.src='https://placehold.jp/24/4e342e/ffffff/400x300.png?text=No+Image'">
+            <div style="font-size:1rem; line-height:1.8;">
+                <p>${p.desc}</p>
+                <div style="background:#f4f1ea; padding:15px; border-radius:4px; margin-top:20px; font-size:0.95rem; border: 1px solid var(--accent-gold);">
+                    <b>撮影年:</b> ${p.year ? p.year + '年' : '不明'} (${p.era}) <br> 
+                    <b>所蔵・出典:</b> ${p.source} <br>
                     <b>権利・転載:</b> ${p.rights}
                 </div>
                 <button class="mode-btn" style="width:100%; margin-top:25px; padding:12px; font-size:1.1rem;" onclick="focusOnMap([${p.lat}, ${p.lng}])">
@@ -427,7 +392,7 @@ function openDetail(id) {
     function focusOnMap(coords) {
         closeModal();
         showPage('map');
-        map.flyTo(coords, 18, { animate: true, duration: 1 }); // 滑らかに移動
+        map.flyTo(coords, 18, { animate: true, duration: 1 });
     }
 
     function closeModal() { document.getElementById('detail-modal').style.display = 'none'; }
@@ -435,28 +400,20 @@ function openDetail(id) {
     function showPage(page) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('header .mode-btn').forEach(b => b.classList.remove('active'));
-        
         document.getElementById('page-' + page).classList.add('active');
         document.getElementById('btn-' + page).classList.add('active');
-        
         document.getElementById('map-ui').style.display = (page === 'map') ? 'flex' : 'none';
         document.getElementById('db-ui').style.display = (page === 'db') ? 'flex' : 'none';
-        
         if (page === 'map') setTimeout(() => map.invalidateSize(), 200);
     }
 
     function switchControl(mode) {
         const isSlider = (mode === 'slider');
         document.getElementById('slider-box').style.display = isSlider ? 'flex' : 'none';
-        
         document.getElementById('m-btn-layers').classList.toggle('active', !isSlider);
         document.getElementById('m-btn-slider').classList.toggle('active', isSlider);
-        
-        // Leafletのレイヤコントロールの表示・非表示を切り替え
         const leafletControl = document.querySelector('.leaflet-control-layers');
-        if (leafletControl) {
-            leafletControl.style.display = isSlider ? 'none' : 'block';
-        }
+        if (leafletControl) leafletControl.style.display = isSlider ? 'none' : 'block';
     }
 
     function filterDB() {
@@ -466,26 +423,20 @@ function openDetail(id) {
         renderPhotos(filtered);
     }
 
-    // --- 6. 現在地トラッキング ---
     function startLocationTracking() {
-    map.on('locationfound', (e) => {
-        if (userMarker) map.removeLayer(userMarker);
-        if (userCircle) map.removeLayer(userCircle);
-        
-        userCircle = L.circle(e.latlng, { radius: e.accuracy / 2, color: '#1E88E5', fillOpacity: 0.1, weight: 1 }).addTo(map);
-        userMarker = L.circleMarker(e.latlng, { radius: 8, color: '#fff', fillColor: '#1E88E5', fillOpacity: 1, weight: 3 }).addTo(map);
-        
-        // ★ setViewをここで行わない（requestLocationで行う）
-    });
-    // watch: true をやめて、1回限りの取得ではなく「位置情報の更新」だけを裏で受ける
-    map.locate({ watch: true, enableHighAccuracy: true }); 
-}
+        map.on('locationfound', (e) => {
+            if (userMarker) map.removeLayer(userMarker);
+            if (userCircle) map.removeLayer(userCircle);
+            userCircle = L.circle(e.latlng, { radius: e.accuracy / 2, color: '#1E88E5', fillOpacity: 0.1, weight: 1 }).addTo(map);
+            userMarker = L.circleMarker(e.latlng, { radius: 8, color: '#fff', fillColor: '#1E88E5', fillOpacity: 1, weight: 3 }).addTo(map);
+        });
+        map.locate({ watch: true, enableHighAccuracy: true });
+    }
 
-function requestLocation() {
-    // ボタンが押された時だけ、現在の位置に画面を飛ばす
-    map.locate({ setView: true, maxZoom: 17, enableHighAccuracy: true });
-}
-    // --- 実行エントリポイント ---
+    function requestLocation() {
+        map.locate({ setView: true, maxZoom: 17, enableHighAccuracy: true });
+    }
+
     window.onload = () => {
         initMap();
         loadPhotoData();
