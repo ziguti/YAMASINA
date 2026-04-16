@@ -278,7 +278,7 @@
         });
     }
 
-  // --- データ読み込み（初期表示の呼び出しを削除） ---
+  // --- データ読み込み（画像URL置換の修正版） ---
 async function loadPhotoData() {
     try {
         const response = await fetch(CSV_URL);
@@ -288,11 +288,12 @@ async function loadPhotoData() {
         archiveData = rows.filter(row => row.trim() !== "").map((row, index) => {
             const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1'));
 
-            // 画像の軽量化：=s400 を付与して読み込みサイズを制限
+            // 画像URLの軽量化（修正：バッククォートと変数の展開を正確に）
             const rawUrl = cols[2] || "";
             let directImg = "";
             const fileIdMatch = rawUrl.match(/[-\w]{25,}/);
             if (fileIdMatch) {
+                // googleusercontent経由でサイズを400pxに制限
                 directImg = `https://lh3.googleusercontent.com/d/${fileIdMatch[0]}=s400`;
             } else {
                 directImg = rawUrl;
@@ -310,8 +311,8 @@ async function loadPhotoData() {
             return {
                 id: index,
                 title: rawTitle,
-                era: cols[7] || "不明",
-                year: cols[8] || "", 
+                era: cols[7] || "",
+                year: cols[8] || "",
                 lat: lat,
                 lng: lng,
                 img: directImg,
@@ -321,32 +322,34 @@ async function loadPhotoData() {
             };
         });
 
-        // ここで renderPhotos を呼ばないことで初期表示を回避
-        addPhotoMarkers(archiveData); // マップのピンはこれまで通り
+        addPhotoMarkers(archiveData);
     } catch (e) {
         console.error("データの読み込みに失敗しました:", e);
     }
 }
 
-// --- 検索機能：キーワードがある時だけカードを表示 ---
+// --- 検索機能：キーワードが空なら何も表示しない ---
 function filterDB() {
     const q = document.getElementById('db-search').value.toLowerCase().trim();
     const era = document.getElementById('era-filter').value;
     const list = document.getElementById('photo-list');
 
-    // 検索語も年代選択もない場合はリストを空にして終了
-    if (q === "" && era === "") {
+    // 【修正】検索キーワード(q)が空の場合は、年代設定に関わらずリストを空にする
+    if (q === "") {
         list.innerHTML = "";
         return;
     }
 
-    const filtered = archiveData.filter(p => 
-        p.title.toLowerCase().includes(q) && (!era || p.era.includes(era))
-    );
+    // キーワードがある場合のみフィルタリングして表示
+    const filtered = archiveData.filter(p => {
+        const matchTitle = p.title.toLowerCase().includes(q);
+        const matchEra = (!era || p.era.includes(era));
+        return matchTitle && matchEra;
+    });
 
     renderPhotos(filtered);
 }
-
+    
     function renderPhotos(data) {
         const list = document.getElementById('photo-list');
         list.innerHTML = data.map(p => `
