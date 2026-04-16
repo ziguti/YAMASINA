@@ -311,7 +311,7 @@
                     id: index,
                     title: cleanTitle,
                     era: cols[7] || "不明",        // H列: 年代
-                    year: cols[9] || "",          // J列: 撮影年
+                    year: cols[8] || "",          // J列: 撮影年
                     lat: lat,
                     lng: lng,
                     img: directImg,
@@ -424,18 +424,22 @@
     }
 
     function startLocationTracking() {
-        map.on('locationfound', (e) => {
-            if (userMarker) map.removeLayer(userMarker);
-            if (userCircle) map.removeLayer(userCircle);
-            userCircle = L.circle(e.latlng, { radius: e.accuracy / 2, color: '#1E88E5', fillOpacity: 0.1, weight: 1 }).addTo(map);
-            userMarker = L.circleMarker(e.latlng, { radius: 8, color: '#fff', fillColor: '#1E88E5', fillOpacity: 1, weight: 3 }).addTo(map);
-        });
-        map.locate({ watch: true, enableHighAccuracy: true });
-    }
+    // 位置が見つかった時のピン表示設定だけ行う
+    map.on('locationfound', (e) => {
+        if (userMarker) map.removeLayer(userMarker);
+        if (userCircle) map.removeLayer(userCircle);
+        userCircle = L.circle(e.latlng, { radius: e.accuracy / 2, color: '#1E88E5', fillOpacity: 0.1, weight: 1 }).addTo(map);
+        userMarker = L.circleMarker(e.latlng, { radius: 8, color: '#fff', fillColor: '#1E88E5', fillOpacity: 1, weight: 3 }).addTo(map);
+    });
+    
+    // 起動時に一回だけ位置を取る（監視はしない）
+    map.locate({ enableHighAccuracy: true });
+}
 
-    function requestLocation() {
-        map.locate({ setView: true, maxZoom: 17, enableHighAccuracy: true });
-    }
+function requestLocation() {
+    // ボタンを押した時だけ画面を飛ばす
+    map.locate({ setView: true, maxZoom: 17, enableHighAccuracy: true });
+}
 
     window.onload = () => {
         initMap();
