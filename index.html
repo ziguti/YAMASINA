@@ -278,55 +278,74 @@
         });
     }
 
-    async function loadPhotoData() {
-        try {
-            const response = await fetch(CSV_URL);
-            const csvText = await response.text();
-            const rows = csvText.split(/\r?\n/).slice(1);
+  // --- データ読み込み（初期表示の呼び出しを削除） ---
+async function loadPhotoData() {
+    try {
+        const response = await fetch(CSV_URL);
+        const csvText = await response.text();
+        const rows = csvText.split(/\r?\n/).slice(1);
 
-            archiveData = rows.filter(row => row.trim() !== "").map((row, index) => {
-                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1'));
+        archiveData = rows.filter(row => row.trim() !== "").map((row, index) => {
+            const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1'));
 
-                // 画像URLの変換処理
-                const rawUrl = cols[2] || "";
-                let directImg = "";
-                const fileIdMatch = rawUrl.match(/[-\w]{25,}/);
-                if (fileIdMatch) {
-                    directImg = `https://lh3.googleusercontent.com/d/${fileIdMatch[0]}`;
-                } else {
-                    directImg = rawUrl;
-                }
+            // 画像の軽量化：=s400 を付与して読み込みサイズを制限
+            const rawUrl = cols[2] || "";
+            let directImg = "";
+            const fileIdMatch = rawUrl.match(/[-\w]{25,}/);
+            if (fileIdMatch) {
+                directImg = `https://lh3.googleusercontent.com/d/${fileIdMatch[0]}=s400`;
+            } else {
+                directImg = rawUrl;
+            }
 
-                let lat = 0, lng = 0;
-                if (cols[6]) {
-                    const coords = cols[6].split(/[\s,]+/);
-                    lat = parseFloat(coords[0]);
-                    lng = parseFloat(coords[1]);
-                }
+            let lat = 0, lng = 0;
+            if (cols[6]) {
+                const coords = cols[6].split(/[\s,]+/);
+                lat = parseFloat(coords[0]);
+                lng = parseFloat(coords[1]);
+            }
 
-                const rawTitle = cols[4] || "名称未設定";
-                const cleanTitle = rawTitle.replace(/\.(jpg|jpeg|png)$/i, '');
+            const rawTitle = (cols[4] || "名称未設定").replace(/\.(jpg|jpeg|png)$/i, '');
 
-                return {
-                    id: index,
-                    title: cleanTitle,
-                    era: cols[7] || "不明",        // H列: 年代
-                    year: cols[8] || "",          // J列: 撮影年
-                    lat: lat,
-                    lng: lng,
-                    img: directImg,
-                    desc: cols[10] || "",         // K列: 説明
-                    source: cols[12] || "",        // M列: 出典
-                    rights: cols[13] || "不明"     // N列: 権利
-                };
-            });
+            return {
+                id: index,
+                title: rawTitle,
+                era: cols[7] || "不明",
+                year: cols[8] || "", 
+                lat: lat,
+                lng: lng,
+                img: directImg,
+                desc: cols[10] || "",
+                source: cols[12] || "",
+                rights: cols[13] || "不明"
+            };
+        });
 
-            renderPhotos(archiveData);
-            addPhotoMarkers(archiveData);
-        } catch (e) {
-            console.error("データの読み込みに失敗しました:", e);
-        }
+        // ここで renderPhotos を呼ばないことで初期表示を回避
+        addPhotoMarkers(archiveData); // マップのピンはこれまで通り
+    } catch (e) {
+        console.error("データの読み込みに失敗しました:", e);
     }
+}
+
+// --- 検索機能：キーワードがある時だけカードを表示 ---
+function filterDB() {
+    const q = document.getElementById('db-search').value.toLowerCase().trim();
+    const era = document.getElementById('era-filter').value;
+    const list = document.getElementById('photo-list');
+
+    // 検索語も年代選択もない場合はリストを空にして終了
+    if (q === "" && era === "") {
+        list.innerHTML = "";
+        return;
+    }
+
+    const filtered = archiveData.filter(p => 
+        p.title.toLowerCase().includes(q) && (!era || p.era.includes(era))
+    );
+
+    renderPhotos(filtered);
+}
 
     function renderPhotos(data) {
         const list = document.getElementById('photo-list');
