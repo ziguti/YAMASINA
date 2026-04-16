@@ -317,23 +317,28 @@
     // --- 4. スプレッドシートからのデータ取得とピン配置 ---
     async function loadPhotoData() {
         try {
-            const response = await fetch(CSV_URL);
-            const csvText = await response.text();
-            
-            // 行ごとに分割
-            const rows = csvText.split(/\r?\n/).slice(1);
+           // archiveDataを作成する map処理の中を修正
+const rawUrl = cols[2] || ""; // C列
+let directImg = "";
 
-            archiveData = rows.filter(row => row.trim() !== "").map((row, index) => {
-                // セル内のカンマを保護して分割
-                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1'));
+if (rawUrl.includes('drive.google.com')) {
+    // IDを抽出して直リンクURLへ変換
+    const fileId = rawUrl.match(/[-\w]{25,}/);
+    if (fileId) directImg = `https://lh3.googleusercontent.com/u/0/d/${fileId[0]}`;
+} else {
+    directImg = rawUrl;
+}
 
-                let lat = 0, lng = 0;
-                if (cols[6]) { // G列: 座標
-                    const coords = cols[6].split(/[\s,]+/);
-                    lat = parseFloat(coords[0]);
-                    lng = parseFloat(coords[1]);
-                }
-
+return {
+    id: index,
+    title: cleanTitle,
+    era: cols[8] || "不明",        // H列（明治・大正・昭和）
+    year: cols[9] || "",          // I列（西暦・撮影年） ★追加
+    lat: lat,
+    lng: lng,
+    img: directImg,               // 変換後のURLを使用
+    // ...以下同じ
+};
                 // E列のタイトルから拡張子を除去
                 const rawTitle = cols[4] || "名称未設定";
                 const cleanTitle = rawTitle.replace(/\.(jpg|jpeg|png)$/i, '');
@@ -374,34 +379,33 @@
             className: 'photo-pin', iconSize: [22, 22]
         });
 
-        data.forEach(p => {
-            if (!isNaN(p.lat) && p.lat !== 0) {
-                L.marker([p.lat, p.lng], { icon: iconCam }).addTo(map).bindPopup(`
-                    <div style="text-align:center; width: 180px;">
-                        <b style="color:var(--primary-brown); font-size:1rem;">${p.title}</b><br>
-                        <img src="${p.img}" style="width:100%; height:100px; object-fit:cover; margin:8px 0; border-radius:4px;" onerror="this.style.display='none'">
-                        <button class="mode-btn" style="width:100%;" onclick="openDetail(${p.id})">詳細を表示</button>
-                    </div>
-                `);
-            }
-        });
+        // addPhotoMarkers内のbindPopup部分
+data.forEach(p => {
+    if (!isNaN(p.lat) && p.lat !== 0) {
+        L.marker([p.lat, p.lng], { icon: iconCam }).addTo(map).bindPopup(`
+            <div style="text-align:center; width: 200px;">
+                <b style="color:var(--primary-brown); font-size:1rem;">${p.title}</b><br>
+                <div style="margin:8px 0; background:#eee; border-radius:4px; overflow:hidden;">
+                    <img src="${p.img}" style="width:100%; height:auto; display:block;" onerror="this.src='https://placehold.jp/200x150.png?text=Loading+Error'">
+                </div>
+                <div style="font-size:0.8rem; margin-bottom:8px;">${p.year ? p.year + '年' : p.era}</div>
+                <button class="mode-btn" style="width:100%;" onclick="openDetail(${p.id})">詳細を表示</button>
+            </div>
+        `);
     }
+});
 
-    // --- 5. UIとモーダル操作 ---
-    function openDetail(id) {
-        const p = archiveData.find(x => x.id === id);
-        if(!p) return;
-        
-        showPage('db'); // データベース画面に切り替え
-        
-        const body = document.getElementById('modal-body');
-        body.innerHTML = `
-            <h2 style="color:var(--primary-brown); border-bottom: 2px solid var(--accent-gold); padding-bottom:10px;">${p.title}</h2>
-            <img src="${p.img}" class="modal-image" onerror="this.src='https://placehold.jp/24/4e342e/ffffff/400x300.png?text=No%20Image'">
-            
-            <div style="font-size:1rem; line-height:1.8;">
-                <p>${p.desc}</p>
-                <div style="background:#f4f1ea; padding:15px; border-radius:4px; margin-top:20px; font-size:0.95rem; border: 1px solid var(--accent-gold);">
+// openDetail内の表示項目に撮影年を追加
+function openDetail(id) {
+    const p = archiveData.find(x => x.id === id);
+    // ...中略
+    body.innerHTML = `
+        <h2 style="...">${p.title}</h2>
+        <img src="${p.img}" class="modal-image" ...>
+        <div style="...">
+            <p>${p.desc}</p>
+            <div style="...">
+                　　<b>撮影年:</b> ${p.year ? p.year + '年' : '不明'} (${p.era}) <br> 
                     <b>年代:</b> ${p.era} <br>
                     <b>所蔵・出典・撮影者:</b> ${p.source} <br>
                     <b>権利・転載:</b> ${p.rights}
@@ -464,20 +468,23 @@
 
     // --- 6. 現在地トラッキング ---
     function startLocationTracking() {
-        map.on('locationfound', (e) => {
-            if (userMarker) map.removeLayer(userMarker);
-            if (userCircle) map.removeLayer(userCircle);
-            
-            userCircle = L.circle(e.latlng, { radius: e.accuracy / 2, color: '#1E88E5', fillOpacity: 0.1, weight: 1 }).addTo(map);
-            userMarker = L.circleMarker(e.latlng, { radius: 8, color: '#fff', fillColor: '#1E88E5', fillOpacity: 1, weight: 3 }).addTo(map);
-        });
-        map.locate({ watch: true, enableHighAccuracy: true });
-    }
+    map.on('locationfound', (e) => {
+        if (userMarker) map.removeLayer(userMarker);
+        if (userCircle) map.removeLayer(userCircle);
+        
+        userCircle = L.circle(e.latlng, { radius: e.accuracy / 2, color: '#1E88E5', fillOpacity: 0.1, weight: 1 }).addTo(map);
+        userMarker = L.circleMarker(e.latlng, { radius: 8, color: '#fff', fillColor: '#1E88E5', fillOpacity: 1, weight: 3 }).addTo(map);
+        
+        // ★ setViewをここで行わない（requestLocationで行う）
+    });
+    // watch: true をやめて、1回限りの取得ではなく「位置情報の更新」だけを裏で受ける
+    map.locate({ watch: true, enableHighAccuracy: true }); 
+}
 
-    function requestLocation() {
-        map.locate({ setView: true, maxZoom: 17, enableHighAccuracy: true });
-    }
-
+function requestLocation() {
+    // ボタンが押された時だけ、現在の位置に画面を飛ばす
+    map.locate({ setView: true, maxZoom: 17, enableHighAccuracy: true });
+}
     // --- 実行エントリポイント ---
     window.onload = () => {
         initMap();
