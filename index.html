@@ -171,22 +171,20 @@
 
 const eras = [
         { name: "明治地籍図", url: "./地籍図tile/{z}/{x}/{y}.png" },
-        // --- 今昔マップ（京阪神圏） yを-yに書き換え ---
         { name: "今昔：1892-1910年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/2man/{z}/{x}/{-y}.png" },
+        { name: "大正測量図", url: "./taisho1922/{z}/{x}/{y}.jpg" },
         { name: "今昔：1922-1923年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/00/{z}/{x}/{-y}.png" },
-        { name: "今昔：1927-1935年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/01/{z}/{x}/{-y}.png" },
+        { name: "今昔：1927-1935年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/01/{z}/{x}/{-y}.png" },  
+        { name: "1946年写真", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png" },
         { name: "今昔：1947-1950年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/02/{z}/{x}/{-y}.png" },
         { name: "今昔：1954-1956年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/03/{z}/{x}/{-y}.png" },
+    　  { name: "1961年写真", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png" },
         { name: "今昔：1961-1964年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/03x/{z}/{x}/{-y}.png" },
         { name: "今昔：1967-1970年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/04/{z}/{x}/{-y}.png" },
+        { name: "1974年写真", url: "https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg" },
         { name: "今昔：1975-1979年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/05/{z}/{x}/{-y}.png" },
         { name: "今昔：1983-1988年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/06/{z}/{x}/{-y}.png" },
         { name: "今昔：1993-1997年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/07/{z}/{x}/{-y}.png" },
-        // --- 既存タイル ---
-        { name: "大正測量図", url: "./taisho1922/{z}/{x}/{y}.jpg" },
-        { name: "1946年写真", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png" },
-        { name: "1961年写真", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png" },
-        { name: "1974年写真", url: "https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg" },
         { name: "現代空中写真", url: "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg" }
     ];
     
@@ -215,47 +213,38 @@ const eras = [
         }).addTo(map);
 
         eras.forEach(era => {
-            layers[era.name] = L.tileLayer(era.url, { 
-                maxNativeZoom: 18, 
-                maxZoom: 22,
-                updateWhenZooming: true 
+            layers[era.name] = L.tileLayer(era.url, {
+                // 今昔マップなどは16までしかタイルがないため、16を指定
+                // 地理院写真は18まであるが、16に統一しても実用上問題ありません
+                maxNativeZoom: 16, 
+                maxZoom: 22,       // 地図としては22まで拡大を許容
+                updateWhenZooming: true
             });
         });
 
-        layerControl = L.control.layers(null, layers, { collapsed: true, position: 'topright' }).addTo(map);
+       const slider = document.getElementById('era-slider');
+        const eraNameDisplay = document.getElementById('era-name');
 
-        map.on('overlayadd', (e) => {
-            activeOverlays = activeOverlays.filter(l => l !== e.layer);
-            activeOverlays.push(e.layer);
-            if (activeOverlays.length > 2) {
-                const oldest = activeOverlays.shift();
-                map.removeLayer(oldest);
-            }
-            activeOverlays.forEach(l => l.bringToFront());
-            updateOpacityUI();
+        // スライダーの最大値を配列の数に合わせる
+        slider.max = eras.length - 1;
+        slider.value = 0; // 初期値
+
+        slider.addEventListener('input', (e) => {
+            const index = e.target.value;
+            const selectedEra = eras[index];
+
+            // 全てのレイヤーを一旦削除
+            Object.values(layers).forEach(layer => map.removeLayer(layer));
+
+            // 選択された年代を表示
+            layers[selectedEra.name].addTo(map);
+            eraNameDisplay.innerText = selectedEra.name;
         });
 
-        map.on('overlayremove', (e) => {
-            activeOverlays = activeOverlays.filter(l => l !== e.layer);
-            updateOpacityUI();
-        });
-
-        document.getElementById('era-slider').oninput = function() {
-            const era = eras[this.value];
-            document.getElementById('era-label').innerText = era.name;
-            activeOverlays.forEach(l => map.removeLayer(l));
-            const nextLayer = layers[era.name];
-            nextLayer.addTo(map).bringToFront();
-            activeOverlays = [nextLayer];
-        };
-
-        document.getElementById('opacity-slider').oninput = function() {
-            if (activeOverlays.length > 0) {
-                const target = activeOverlays[activeOverlays.length - 1];
-                target.setOpacity(this.value);
-            }
-        };
-
+        // 初期表示の設定
+        layers[eras[0].name].addTo(map);
+        eraNameDisplay.innerText = eras[0].name;
+       
         add3DMarkers();
         startLocationTracking();
     }
