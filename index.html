@@ -178,14 +178,18 @@
         { name: "現代空中写真", url: "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg" }
     ];
 
-    function initMap() {
+   function initMap() {
         map = L.map('map', { 
             zoomControl: false, 
             maxZoom: 22,
-            zoomSnap: 0,
-            zoomDelta: 0.5,
+            zoomSnap: 0,           // ズームレベルを小数点で許可（滑らかになる）
+            zoomDelta: 0.5,        // ズームの変化量
+            wheelPxPerZoomLevel: 120, // スクロールでのズーム感度（Googleマップ風）
+            wheelDebounceTime: 40,    // 応答速度
             zoomAnimation: true,
-            fadeAnimation: true
+            fadeAnimation: true,
+            inertia: true,            // 慣性移動を有効化
+            inertiaDeceleration: 3000 // 慣性の強さ
         }).setView([34.992, 135.813], 15);
 
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
@@ -438,30 +442,66 @@ function filterDB() {
         if (leafletControl) leafletControl.style.display = isSlider ? 'none' : 'block';
     }
 
-    function filterDB() {
-        const q = document.getElementById('db-search').value.toLowerCase();
+   function filterDB() {
+        const q = document.getElementById('db-search').value.toLowerCase().trim();
         const era = document.getElementById('era-filter').value;
-        const filtered = archiveData.filter(p => p.title.toLowerCase().includes(q) && (!era || p.era.includes(era)));
-        renderPhotos(filtered);
+        const list = document.getElementById('photo-list');
+
+        // キーワードが空、かつ年代が「全年代」の場合は、重くならないようにリストをクリアする
+        if (q === "" && era === "") {
+            list.innerHTML = `<div style="padding:20px; color:var(--primary-brown); text-align:center;">検索ワードを入力するか、年代を選択してください</div>`;
+            return;
+        }
+
+        // フィルタリング処理
+        const filtered = archiveData.filter(p => {
+            const matchTitle = p.title.toLowerCase().includes(q);
+            const matchEra = (!era || p.era.includes(era));
+            return matchTitle && matchEra;
+        });
+
+        // 該当件数が多すぎる場合の安全策（最初の100件のみ表示など）
+        renderPhotos(filtered.slice(0, 100));
     }
 
-    function startLocationTracking() {
-    // 位置が見つかった時のピン表示設定だけ行う
-    map.on('locationfound', (e) => {
-        if (userMarker) map.removeLayer(userMarker);
-        if (userCircle) map.removeLayer(userCircle);
-        userCircle = L.circle(e.latlng, { radius: e.accuracy / 2, color: '#1E88E5', fillOpacity: 0.1, weight: 1 }).addTo(map);
-        userMarker = L.circleMarker(e.latlng, { radius: 8, color: '#fff', fillColor: '#1E88E5', fillOpacity: 1, weight: 3 }).addTo(map);
-    });
-    
-    // 起動時に一回だけ位置を取る（監視はしない）
-    map.locate({ enableHighAccuracy: true });
-}
+   let watchId = null; // 監視用ID
 
-function requestLocation() {
-    // ボタンを押した時だけ画面を飛ばす
-    map.locate({ setView: true, maxZoom: 17, enableHighAccuracy: true });
-}
+    function startLocationTracking() {
+        if (!("geolocation" in navigator)) return;
+
+        // 既に監視中なら一旦クリア
+        if (watchId) navigator.geolocation.clearWatch(watchId);
+
+        watchId = navigator.geolocation.watchPosition((position) => {
+            const latlng = [position.coords.latitude, position.coords.longitude];
+            const accuracy = position.coords.accuracy;
+
+            if (userMarker) {
+                userMarker.setLatLng(latlng);
+                userCircle.setLatLng(latlng).setRadius(accuracy / 2);
+            } else {
+                // 初回作成
+                userCircle = L.circle(latlng, { radius: accuracy / 2, color: '#1E88E5', fillOpacity: 0.1, weight: 1 }).addTo(map);
+                userMarker = L.circleMarker(latlng, { radius: 8, color: '#fff', fillColor: '#1E88E5', fillOpacity: 1, weight: 3 }).addTo(map);
+            }
+        }, (err) => {
+            console.warn("位置情報の取得に失敗:", err);
+        }, {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout: 10000
+        });
+    }
+
+    function requestLocation() {
+        // ボタンを押した時だけ、現在地に画面を飛ばす（追跡は継続）
+        if (userMarker) {
+            map.flyTo(userMarker.getLatLng(), 17, { animate: true, duration: 1.5 });
+        } else {
+            // マーカーがない場合のみ新規取得を試みる
+            map.locate({ setView: true, maxZoom: 17, enableHighAccuracy: true });
+        }
+    }
 
     window.onload = () => {
         initMap();
