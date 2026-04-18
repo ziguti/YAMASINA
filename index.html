@@ -193,11 +193,12 @@
         }).setView([34.992, 135.813], 15);
 
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
-
+  // ベースレイヤー（地理院タイル 標準地図）
         L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
             attribution: "地理院タイル",
-            maxNativeZoom: 18, 
-            maxZoom: 22,
+            minZoom: 2,
+            maxNativeZoom: 18, // ここが重要！サーバーに画像がある最大レベルを指定
+            maxZoom: 22,       // システムとして拡大を許容するレベル
             updateWhenZooming: true
         }).addTo(map);
 
