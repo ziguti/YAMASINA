@@ -10,7 +10,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-
     <style>
         :root {
             --primary-brown: #4e342e;
@@ -19,7 +18,6 @@
             --header-height: 60px;
             --sub-header-height: 55px;
         }
-
         body, html {
             margin: 0; padding: 0;
             background-color: var(--bg-cream);
@@ -27,7 +25,6 @@
             color: #333;
             height: 100%; overflow: hidden;
         }
-
         header {
             position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height);
             background: #fff; border-bottom: 2px solid var(--accent-gold);
@@ -39,28 +36,24 @@
         .archive-title {
             font-size: 1.4rem; font-weight: bold; color: var(--primary-brown); letter-spacing: 1px;
         }
-
         .sub-header {
             position: fixed; top: var(--header-height); left: 0; width: 100%; height: var(--sub-header-height);
             background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px);
             display: flex; align-items: center; padding: 0 15px; z-index: 2500;
             border-bottom: 1px solid #ddd; box-sizing: border-box; gap: 10px;
         }
-
         .mode-btn {
             border: 1px solid var(--accent-gold); background: #fff;
             font-size: 0.9rem; padding: 6px 16px; cursor: pointer; border-radius: 4px;
             font-family: inherit; transition: all 0.3s; color: var(--primary-brown);
         }
         .mode-btn.active { background: var(--accent-gold); color: #fff; }
-
         .page {
             position: absolute; top: calc(var(--header-height) + var(--sub-header-height));
             bottom: 0; width: 100%; display: none;
         }
         .page.active { display: block; }
         #map { width: 100%; height: 100%; background: #eee; }
-
         .map-overlay-controls {
             position: absolute; bottom: 30px; right: 15px; z-index: 1000;
             background: rgba(255,255,255,0.95); padding: 15px; border-radius: 8px;
@@ -69,7 +62,6 @@
         .control-label {
             font-size: 0.8rem; font-weight: bold; margin-bottom: 8px; color: var(--primary-brown); display: block;
         }
-
         .photo-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 20px; padding: 20px;
@@ -82,7 +74,6 @@
         .photo-card:hover { transform: translateY(-5px); }
         .photo-card img { width: 100%; height: 120px; object-fit: cover; border-bottom: 1px solid #eee; }
         .photo-card p { padding: 10px; margin: 0; font-size: 0.85rem; text-align: center; color: var(--primary-brown); font-weight: bold; }
-
         #detail-modal {
             display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85);
             z-index:5000; justify-content:center; align-items:center; backdrop-filter: blur(5px);
@@ -96,7 +87,6 @@
         .modal-image { width: 100%; max-height: 450px; object-fit: contain; background: #222; margin-bottom: 20px; border-radius: 4px; }
         
         .full-3d-box { width: 100%; height: 60vh; border-radius: 8px; border: 1px solid var(--accent-gold); margin-top: 15px; }
-
         @media (max-width: 600px) {
             .archive-title { font-size: 1.1rem; }
             .mode-btn { padding: 5px 12px; font-size: 0.8rem; }
@@ -105,7 +95,6 @@
     </style>
 </head>
 <body>
-
 <header>
     <div class="archive-title">山科歴史アーカイブ</div>
     <div style="display:flex; gap:10px;">
@@ -113,7 +102,6 @@
         <button id="btn-db" class="mode-btn" onclick="showPage('db')">古写真</button>
     </div>
 </header>
-
 <div id="map-ui" class="sub-header">
     <button id="m-btn-layers" class="mode-btn active" onclick="switchControl('layers')">レイヤ選択</button>
     <button id="m-btn-slider" class="mode-btn" onclick="switchControl('slider')">時代スライダー</button>
@@ -123,7 +111,6 @@
         <span id="era-label" style="font-size:0.9rem; font-weight:bold; min-width:110px; color:var(--primary-brown);">現代空中写真</span>
     </div>
 </div>
-
 <div id="db-ui" class="sub-header" style="display:none;">
     <input type="text" id="db-search" placeholder="資料名で検索..." oninput="filterDB()" style="width:60%; padding:8px 15px; border-radius:20px; border:1px solid var(--accent-gold); font-family:inherit;">
     <select id="era-filter" onchange="filterDB()" style="padding:8px; border-radius:4px; border:1px solid var(--accent-gold); font-family:inherit; color:var(--primary-brown);">
@@ -133,7 +120,6 @@
         <option value="昭和">昭和</option>
     </select>
 </div>
-
 <div id="page-map" class="page active">
     <div id="map"></div>
     <div class="map-overlay-controls">
@@ -145,30 +131,25 @@
         <i class="fa-solid fa-location-crosshairs"></i>
     </button>
 </div>
-
 <div id="page-db" class="page">
     <div style="height:100%; overflow-y:auto;">
         <div id="photo-list" class="photo-grid"></div>
     </div>
 </div>
-
 <div id="detail-modal" onclick="closeModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <button onclick="closeModal()" style="position:absolute; top:15px; right:15px; border:none; background:none; font-size:2rem; cursor:pointer; color:var(--primary-brown);">×</button>
         <div id="modal-body"></div>
     </div>
 </div>
-
 <script>
     const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
     const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
-
     let map, layerControl;
     let archiveData = [];
     let layers = {};
     let activeOverlays = []; 
     let userMarker, userCircle;
-
 const eras = [
         { name: "明治地籍図", url: "./地籍図tile/{z}/{x}/{y}.png" },
         { name: "今昔：1892-1910年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/2man/{z}/{x}/{-y}.png" },
@@ -201,7 +182,6 @@ const eras = [
             inertia: true,            // 慣性移動を有効化
             inertiaDeceleration: 3000 // 慣性の強さ
         }).setView([34.992, 135.813], 15);
-
         L.control.zoom({ position: 'bottomleft' }).addTo(map);
   // ベースレイヤー（地理院タイル 標準地図）
         L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
@@ -211,7 +191,6 @@ const eras = [
             maxZoom: 22,       // システムとして拡大を許容するレベル
             updateWhenZooming: true
         }).addTo(map);
-
         eras.forEach(era => {
             layers[era.name] = L.tileLayer(era.url, {
                 // 今昔マップなどは16までしかタイルがないため、16を指定
@@ -221,34 +200,38 @@ const eras = [
                 updateWhenZooming: true
             });
         });
-
-       const slider = document.getElementById('era-slider');
-        const eraNameDisplay = document.getElementById('era-name');
-
-        // スライダーの最大値を配列の数に合わせる
-        slider.max = eras.length - 1;
-        slider.value = 0; // 初期値
-
-        slider.addEventListener('input', (e) => {
-            const index = e.target.value;
-            const selectedEra = eras[index];
-
-            // 全てのレイヤーを一旦削除
-            Object.values(layers).forEach(layer => map.removeLayer(layer));
-
-            // 選択された年代を表示
-            layers[selectedEra.name].addTo(map);
-            eraNameDisplay.innerText = selectedEra.name;
+        layerControl = L.control.layers(null, layers, { collapsed: true, position: 'topright' }).addTo(map);
+        map.on('overlayadd', (e) => {
+            activeOverlays = activeOverlays.filter(l => l !== e.layer);
+            activeOverlays.push(e.layer);
+            if (activeOverlays.length > 2) {
+                const oldest = activeOverlays.shift();
+                map.removeLayer(oldest);
+            }
+            activeOverlays.forEach(l => l.bringToFront());
+            updateOpacityUI();
         });
-
-        // 初期表示の設定
-        layers[eras[0].name].addTo(map);
-        eraNameDisplay.innerText = eras[0].name;
-       
+        map.on('overlayremove', (e) => {
+            activeOverlays = activeOverlays.filter(l => l !== e.layer);
+            updateOpacityUI();
+        });
+        document.getElementById('era-slider').oninput = function() {
+            const era = eras[this.value];
+            document.getElementById('era-label').innerText = era.name;
+            activeOverlays.forEach(l => map.removeLayer(l));
+            const nextLayer = layers[era.name];
+            nextLayer.addTo(map).bringToFront();
+            activeOverlays = [nextLayer];
+        };
+        document.getElementById('opacity-slider').oninput = function() {
+            if (activeOverlays.length > 0) {
+                const target = activeOverlays[activeOverlays.length - 1];
+                target.setOpacity(this.value);
+            }
+        };
         add3DMarkers();
         startLocationTracking();
     }
-
     function updateOpacityUI() {
         const display = document.getElementById('opacity-target');
         if (activeOverlays.length > 0) {
@@ -260,19 +243,16 @@ const eras = [
             display.innerText = "調整：未選択";
         }
     }
-
     function add3DMarkers() {
         const models = [
             { name: "妙見寺開渠", file: "妙見寺開渠.glb", coords: [34.977573, 135.827704] },
             { name: "両御坊道道標", file: "両御坊道道標.glb", coords: [34.985075, 135.823981] },
             { name: "旧井戸跡地", file: "旧井戸跡地.glb", coords: [34.983122, 135.814421] }
         ];
-
         const icon3d = L.divIcon({
             html: '<i class="fa-solid fa-cube" style="color:#e67e22; font-size:24px; text-shadow: 0 0 4px #fff;"></i>',
             className: 'custom-icon', iconSize: [24, 24]
         });
-
         models.forEach(m => {
             L.marker(m.coords, { icon: icon3d }).addTo(map).bindPopup(`
                 <div style="text-align:center; width:220px;">
@@ -283,17 +263,14 @@ const eras = [
             `);
         });
     }
-
   // --- データ読み込み（画像URL置換の修正版） ---
 async function loadPhotoData() {
     try {
         const response = await fetch(CSV_URL);
         const csvText = await response.text();
         const rows = csvText.split(/\r?\n/).slice(1);
-
         archiveData = rows.filter(row => row.trim() !== "").map((row, index) => {
             const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1'));
-
             // 画像URLの軽量化（修正：バッククォートと変数の展開を正確に）
             const rawUrl = cols[2] || "";
             let directImg = "";
@@ -304,16 +281,13 @@ async function loadPhotoData() {
             } else {
                 directImg = rawUrl;
             }
-
             let lat = 0, lng = 0;
             if (cols[6]) {
                 const coords = cols[6].split(/[\s,]+/);
                 lat = parseFloat(coords[0]);
                 lng = parseFloat(coords[1]);
             }
-
             const rawTitle = (cols[4] || "名称未設定").replace(/\.(jpg|jpeg|png)$/i, '');
-
             return {
                 id: index,
                 title: rawTitle,
@@ -327,32 +301,27 @@ async function loadPhotoData() {
                 rights: cols[13] || "不明"
             };
         });
-
         addPhotoMarkers(archiveData);
     } catch (e) {
         console.error("データの読み込みに失敗しました:", e);
     }
 }
-
 // --- 検索機能：キーワードが空なら何も表示しない ---
 function filterDB() {
     const q = document.getElementById('db-search').value.toLowerCase().trim();
     const era = document.getElementById('era-filter').value;
     const list = document.getElementById('photo-list');
-
     // 【修正】検索キーワード(q)が空の場合は、年代設定に関わらずリストを空にする
     if (q === "") {
         list.innerHTML = "";
         return;
     }
-
     // キーワードがある場合のみフィルタリングして表示
     const filtered = archiveData.filter(p => {
         const matchTitle = p.title.toLowerCase().includes(q);
         const matchEra = (!era || p.era.includes(era));
         return matchTitle && matchEra;
     });
-
     renderPhotos(filtered);
 }
     
@@ -365,13 +334,11 @@ function filterDB() {
             </div>
         `).join('');
     }
-
     function addPhotoMarkers(data) {
         const iconCam = L.divIcon({
             html: '<i class="fa-solid fa-camera" style="color:var(--primary-brown); font-size:22px; text-shadow: 0 0 3px #fff;"></i>',
             className: 'photo-pin', iconSize: [22, 22]
         });
-
         data.forEach(p => {
             if (!isNaN(p.lat) && p.lat !== 0) {
                 L.marker([p.lat, p.lng], { icon: iconCam }).addTo(map).bindPopup(`
@@ -387,7 +354,6 @@ function filterDB() {
             }
         });
     }
-
     function openDetail(id) {
         const p = archiveData.find(x => x.id === id);
         if(!p) return;
@@ -410,21 +376,17 @@ function filterDB() {
         `;
         document.getElementById('detail-modal').style.display = 'flex';
     }
-
     function open3DFullScreen(url) {
         const body = document.getElementById('modal-body');
         body.innerHTML = `<model-viewer src="${url}" auto-rotate camera-controls class="full-3d-box"></model-viewer>`;
         document.getElementById('detail-modal').style.display = 'flex';
     }
-
     function focusOnMap(coords) {
         closeModal();
         showPage('map');
         map.flyTo(coords, 18, { animate: true, duration: 1 });
     }
-
     function closeModal() { document.getElementById('detail-modal').style.display = 'none'; }
-
     function showPage(page) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('header .mode-btn').forEach(b => b.classList.remove('active'));
@@ -434,7 +396,6 @@ function filterDB() {
         document.getElementById('db-ui').style.display = (page === 'db') ? 'flex' : 'none';
         if (page === 'map') setTimeout(() => map.invalidateSize(), 200);
     }
-
     function switchControl(mode) {
         const isSlider = (mode === 'slider');
         document.getElementById('slider-box').style.display = isSlider ? 'flex' : 'none';
@@ -443,41 +404,32 @@ function filterDB() {
         const leafletControl = document.querySelector('.leaflet-control-layers');
         if (leafletControl) leafletControl.style.display = isSlider ? 'none' : 'block';
     }
-
    function filterDB() {
         const q = document.getElementById('db-search').value.toLowerCase().trim();
         const era = document.getElementById('era-filter').value;
         const list = document.getElementById('photo-list');
-
         // キーワードが空、かつ年代が「全年代」の場合は、重くならないようにリストをクリアする
         if (q === "" && era === "") {
             list.innerHTML = `<div style="padding:20px; color:var(--primary-brown); text-align:center;">検索ワードを入力するか、年代を選択してください</div>`;
             return;
         }
-
         // フィルタリング処理
         const filtered = archiveData.filter(p => {
             const matchTitle = p.title.toLowerCase().includes(q);
             const matchEra = (!era || p.era.includes(era));
             return matchTitle && matchEra;
         });
-
         // 該当件数が多すぎる場合の安全策（最初の100件のみ表示など）
         renderPhotos(filtered.slice(0, 100));
     }
-
    let watchId = null; // 監視用ID
-
     function startLocationTracking() {
         if (!("geolocation" in navigator)) return;
-
         // 既に監視中なら一旦クリア
         if (watchId) navigator.geolocation.clearWatch(watchId);
-
         watchId = navigator.geolocation.watchPosition((position) => {
             const latlng = [position.coords.latitude, position.coords.longitude];
             const accuracy = position.coords.accuracy;
-
             if (userMarker) {
                 userMarker.setLatLng(latlng);
                 userCircle.setLatLng(latlng).setRadius(accuracy / 2);
@@ -494,7 +446,6 @@ function filterDB() {
             timeout: 10000
         });
     }
-
     function requestLocation() {
         // ボタンを押した時だけ、現在地に画面を飛ばす（追跡は継続）
         if (userMarker) {
@@ -504,7 +455,6 @@ function filterDB() {
             map.locate({ setView: true, maxZoom: 17, enableHighAccuracy: true });
         }
     }
-
     window.onload = () => {
         initMap();
         loadPhotoData();
@@ -512,3 +462,4 @@ function filterDB() {
 </script>
 </body>
 </html>
+
