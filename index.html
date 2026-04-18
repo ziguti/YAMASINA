@@ -169,15 +169,27 @@
     let activeOverlays = []; 
     let userMarker, userCircle;
 
-    const eras = [
+const eras = [
         { name: "明治地籍図", url: "./地籍図tile/{z}/{x}/{y}.png" },
+        // --- 今昔マップ（京阪神圏） yを-yに書き換え ---
+        { name: "今昔：1892-1910年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/2man/{z}/{x}/{-y}.png" },
+        { name: "今昔：1922-1923年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/00/{z}/{x}/{-y}.png" },
+        { name: "今昔：1927-1935年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/01/{z}/{x}/{-y}.png" },
+        { name: "今昔：1947-1950年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/02/{z}/{x}/{-y}.png" },
+        { name: "今昔：1954-1956年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/03/{z}/{x}/{-y}.png" },
+        { name: "今昔：1961-1964年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/03x/{z}/{x}/{-y}.png" },
+        { name: "今昔：1967-1970年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/04/{z}/{x}/{-y}.png" },
+        { name: "今昔：1975-1979年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/05/{z}/{x}/{-y}.png" },
+        { name: "今昔：1983-1988年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/06/{z}/{x}/{-y}.png" },
+        { name: "今昔：1993-1997年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/07/{z}/{x}/{-y}.png" },
+        // --- 既存タイル ---
         { name: "大正測量図", url: "./taisho1922/{z}/{x}/{y}.jpg" },
         { name: "1946年写真", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png" },
         { name: "1961年写真", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png" },
         { name: "1974年写真", url: "https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg" },
         { name: "現代空中写真", url: "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg" }
     ];
-
+    
    function initMap() {
         map = L.map('map', { 
             zoomControl: false, 
