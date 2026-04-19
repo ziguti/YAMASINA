@@ -240,6 +240,27 @@ const eras = [
             activeOverlays = activeOverlays.filter(l => l !== e.layer);
             updateOpacityUI();
         });
+       // レイヤ選択パネルが開くたびに詳細ボタンを注入する処理
+        map.on('overlayadd overlayremove', () => {
+            setTimeout(() => {
+                const labels = document.querySelectorAll('.leaflet-control-layers-overlays label div span');
+                labels.forEach(span => {
+                    // まだ詳細ボタンがなければ追加
+                    if (!span.parentElement.querySelector('.mini-info-btn')) {
+                        const btn = document.createElement('button');
+                        btn.innerHTML = '詳細';
+                        btn.className = 'mode-btn mini-info-btn';
+                        btn.style = 'padding:2px 6px; font-size:0.6rem; margin-left:8px; cursor:pointer; vertical-align:middle;';
+                        btn.onclick = (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            showPage('map-db');
+                        };
+                        span.after(btn);
+                    }
+                });
+            }, 10);
+        });
        // --- 時代スライダーの制御（詳細ボタン統合版） ---
         const slider = document.getElementById('era-slider');
         const eraLabel = document.getElementById('era-label');
@@ -282,28 +303,7 @@ const eras = [
         add3DMarkers();
         startLocationTracking();
     }
-    // レイヤ選択パネルが開くたびに詳細ボタンを注入する処理
-        map.on('overlayadd overlayremove', () => {
-            setTimeout(() => {
-                const labels = document.querySelectorAll('.leaflet-control-layers-overlays label div span');
-                labels.forEach(span => {
-                    // まだ詳細ボタンがなければ追加
-                    if (!span.parentElement.querySelector('.mini-info-btn')) {
-                        const btn = document.createElement('button');
-                        btn.innerHTML = '詳細';
-                        btn.className = 'mode-btn mini-info-btn';
-                        btn.style = 'padding:2px 6px; font-size:0.6rem; margin-left:8px; cursor:pointer; vertical-align:middle;';
-                        btn.onclick = (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            showPage('map-db');
-                        };
-                        span.after(btn);
-                    }
-                });
-            }, 10);
-        });
-    
+   
     function updateOpacityUI() {
         const display = document.getElementById('opacity-target');
         if (activeOverlays.length > 0) {
