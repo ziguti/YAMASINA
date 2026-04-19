@@ -215,14 +215,30 @@ const eras = [
             activeOverlays = activeOverlays.filter(l => l !== e.layer);
             updateOpacityUI();
         });
-        document.getElementById('era-slider').oninput = function() {
-            const era = eras[this.value];
-            document.getElementById('era-label').innerText = era.name;
-            activeOverlays.forEach(l => map.removeLayer(l));
-            const nextLayer = layers[era.name];
-            nextLayer.addTo(map).bringToFront();
-            activeOverlays = [nextLayer];
-        };
+       
+       const slider = document.getElementById('era-slider');
+        const eraNameDisplay = document.getElementById('era-name');
+
+        // スライダーの最大値を配列の数に合わせる
+        slider.max = eras.length - 1;
+        slider.value = 0; // 初期値
+
+        slider.addEventListener('input', (e) => {
+            const index = e.target.value;
+            const selectedEra = eras[index];
+
+            // 全てのレイヤーを一旦削除
+            Object.values(layers).forEach(layer => map.removeLayer(layer));
+
+            // 選択された年代を表示
+            layers[selectedEra.name].addTo(map);
+            eraNameDisplay.innerText = selectedEra.name;
+        });
+
+        // 初期表示の設定
+        layers[eras[0].name].addTo(map);
+        eraNameDisplay.innerText = eras[0].name;
+       
         document.getElementById('opacity-slider').oninput = function() {
             if (activeOverlays.length > 0) {
                 const target = activeOverlays[activeOverlays.length - 1];
