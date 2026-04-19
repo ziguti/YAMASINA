@@ -180,20 +180,20 @@
     let activeOverlays = []; 
     let userMarker, userCircle;
 const eras = [
-        { name: "1884年", url: "./地籍図tile/{z}/{x}/{y}.png" nativeZoom: 18 },
-        { name: "1897年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/2man/{z}/{x}/{-y}.png" nativeZoom: 16 },
-        { name: "1922年（2）", url: "./taisho1922/{z}/{x}/{y}.jpg" nativeZoom: 18 },
-        { name: "1922年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/00/{z}/{x}/{-y}.png" nativeZoom: 16 },
-        { name: "1930年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/01/{z}/{x}/{-y}.png" nativeZoom: 16 },  
-        { name: "1946年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png" nativeZoom: 17 },
-    　  { name: "1961年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png" nativeZoom: 17 },
-        { name: "1964年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/03x/{z}/{x}/{-y}.png" nativeZoom: 16 },
-        { name: "1968年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/04/{z}/{x}/{-y}.png" nativeZoom: 16 },
-        { name: "1974年", url: "https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg" nativeZoom: 17 },
-        { name: "1975年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/05/{z}/{x}/{-y}.png" nativeZoom: 16 },
-        { name: "1985年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/06/{z}/{x}/{-y}.png" nativeZoom: 16 },
-        { name: "1993年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/07/{z}/{x}/{-y}.png" nativeZoom: 16},
-        { name: "2007年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg" nativeZoom: 18}
+        { name: "1884年", url: "./地籍図tile/{z}/{x}/{y}.png", nativeZoom: 18 },
+        { name: "1897年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/2man/{z}/{x}/{-y}.png", nativeZoom: 16 },
+        { name: "1922年（2）", url: "./taisho1922/{z}/{x}/{y}.jpg", nativeZoom: 18 },
+        { name: "1922年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/00/{z}/{x}/{-y}.png", nativeZoom: 16 },
+        { name: "1930年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/01/{z}/{x}/{-y}.png", nativeZoom: 16 },  
+        { name: "1946年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png", nativeZoom: 17 },
+    　  { name: "1961年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png", nativeZoom: 17 },
+        { name: "1964年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/03x/{z}/{x}/{-y}.png", nativeZoom: 16 },
+        { name: "1968年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/04/{z}/{x}/{-y}.png", nativeZoom: 16 },
+        { name: "1974年", url: "https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg", nativeZoom: 17 },
+        { name: "1975年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/05/{z}/{x}/{-y}.png", nativeZoom: 16 },
+        { name: "1985年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/06/{z}/{x}/{-y}.png", nativeZoom: 16 },
+        { name: "1993年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/07/{z}/{x}/{-y}.png", nativeZoom: 16},
+        { name: "2007年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg", nativeZoom: 18}
     ];
     
    function initMap() {
