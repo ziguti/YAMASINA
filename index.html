@@ -100,6 +100,7 @@
     <div style="display:flex; gap:10px;">
         <button id="btn-map" class="mode-btn active" onclick="showPage('map')">マップ</button>
         <button id="btn-db" class="mode-btn" onclick="showPage('db')">古写真</button>
+        <button id="btn-map-db" class="mode-btn" onclick="showPage('map-db')">古地図DB</button>
     </div>
 </header>
 <div id="map-ui" class="sub-header">
@@ -142,6 +143,12 @@
         <div id="modal-body"></div>
     </div>
 </div>
+<div id="page-map-db" class="page">
+    <div style="padding:40px; text-align:center; color:var(--primary-brown);">
+        <h2>古地図データベース</h2>
+        <p>現在メタデータ構築中...</p>
+    </div>
+</div>
 <script>
     const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
     const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
@@ -151,22 +158,20 @@
     let activeOverlays = []; 
     let userMarker, userCircle;
 const eras = [
-        { name: "明治地籍図", url: "./地籍図tile/{z}/{x}/{y}.png" },
-        { name: "今昔：1892-1910年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/2man/{z}/{x}/{-y}.png" },
-        { name: "大正測量図", url: "./taisho1922/{z}/{x}/{y}.jpg" },
-        { name: "今昔：1922-1923年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/00/{z}/{x}/{-y}.png" },
-        { name: "今昔：1927-1935年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/01/{z}/{x}/{-y}.png" },  
-        { name: "1946年写真", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png" },
-        { name: "今昔：1947-1950年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/02/{z}/{x}/{-y}.png" },
-        { name: "今昔：1954-1956年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/03/{z}/{x}/{-y}.png" },
-    　  { name: "1961年写真", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png" },
-        { name: "今昔：1961-1964年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/03x/{z}/{x}/{-y}.png" },
-        { name: "今昔：1967-1970年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/04/{z}/{x}/{-y}.png" },
-        { name: "1974年写真", url: "https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg" },
-        { name: "今昔：1975-1979年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/05/{z}/{x}/{-y}.png" },
-        { name: "今昔：1983-1988年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/06/{z}/{x}/{-y}.png" },
-        { name: "今昔：1993-1997年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/07/{z}/{x}/{-y}.png" },
-        { name: "現代空中写真", url: "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg" }
+        { name: "1884年", url: "./地籍図tile/{z}/{x}/{y}.png" },
+        { name: "1897年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/2man/{z}/{x}/{-y}.png" },
+        { name: "1922年", url: "./taisho1922/{z}/{x}/{y}.jpg" },
+        { name: "1922年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/00/{z}/{x}/{-y}.png" },
+        { name: "1930年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/01/{z}/{x}/{-y}.png" },  
+        { name: "1946年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png" },
+    　  { name: "1961年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png" },
+        { name: "1964年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/03x/{z}/{x}/{-y}.png" },
+        { name: "1968年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/04/{z}/{x}/{-y}.png" },
+        { name: "1974年", url: "https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg" },
+        { name: "1975年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/05/{z}/{x}/{-y}.png" },
+        { name: "1985年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/06/{z}/{x}/{-y}.png" },
+        { name: "1993年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/07/{z}/{x}/{-y}.png" },
+        { name: "2007年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg" }
     ];
     
    function initMap() {
@@ -191,12 +196,10 @@ const eras = [
             maxZoom: 22,       // システムとして拡大を許容するレベル
             updateWhenZooming: true
         }).addTo(map);
-        eras.forEach(era => {
+       eras.forEach(era => {
             layers[era.name] = L.tileLayer(era.url, {
-                // 今昔マップなどは16までしかタイルがないため、16を指定
-                // 地理院写真は18まであるが、16に統一しても実用上問題ありません
-                maxNativeZoom: 16, 
-                maxZoom: 22,       // 地図としては22まで拡大を許容
+                maxNativeZoom: era.nativeZoom, // 個別に設定した解像度を適用
+                maxZoom: 22,                  // 全て22まで引き延ばし
                 updateWhenZooming: true
             });
         });
