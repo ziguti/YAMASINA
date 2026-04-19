@@ -11,6 +11,28 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     <style>
+.leaflet-control-layers-list {
+    font-family: "Sawarabi Mincho", serif !important;
+    padding: 10px;
+    min-width: 200px;
+}
+
+/* 各レイヤーの行（ラベル）を大きく、間隔を空ける */
+.leaflet-control-layers-overlays label {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between; /* 名前とボタンを両端に */
+    margin-bottom: 12px !important; /* 行間を広く */
+    padding: 5px;
+    font-size: 1.1rem; /* 文字を大きく */
+    cursor: pointer;
+}
+
+/* レイヤ選択内のチェックボックスを少し大きく */
+.leaflet-control-layers-selector {
+    transform: scale(1.3);
+    margin-right: 10px !important;
+}
         :root {
             --primary-brown: #4e342e;
             --accent-gold: #bda06d;
@@ -160,7 +182,7 @@
 const eras = [
         { name: "1884年", url: "./地籍図tile/{z}/{x}/{y}.png" },
         { name: "1897年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/2man/{z}/{x}/{-y}.png" },
-        { name: "1922年", url: "./taisho1922/{z}/{x}/{y}.jpg" },
+        { name: "1922年（2）", url: "./taisho1922/{z}/{x}/{y}.jpg" },
         { name: "1922年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/00/{z}/{x}/{-y}.png" },
         { name: "1930年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/01/{z}/{x}/{-y}.png" },  
         { name: "1946年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png" },
@@ -218,29 +240,38 @@ const eras = [
             activeOverlays = activeOverlays.filter(l => l !== e.layer);
             updateOpacityUI();
         });
-       
-       const slider = document.getElementById('era-slider');
-        const eraNameDisplay = document.getElementById('era-name');
+       // --- 時代スライダーの制御（詳細ボタン統合版） ---
+        const slider = document.getElementById('era-slider');
+        const eraLabel = document.getElementById('era-label');
 
-        // スライダーの最大値を配列の数に合わせる
         slider.max = eras.length - 1;
-        slider.value = 0; // 初期値
+        slider.value = 0; // 必要に応じて初期位置を調整（例：eras.length - 1）
 
-        slider.addEventListener('input', (e) => {
-            const index = e.target.value;
-            const selectedEra = eras[index];
+        // 更新用関数（スライダー移動時と初期化時に使う）
+        const updateEraUI = (index) => {
+            const era = eras[index];
+            // ラベルと詳細ボタンを表示
+            eraLabel.innerHTML = `${era.name} <button id="map-info-btn" class="mode-btn" style="padding:2px 8px; margin-left:10px; font-size:0.7rem; cursor:pointer;">詳細</button>`;
+            
+            // 詳細ボタンにクリックイベントを設定
+            document.getElementById('map-info-btn').onclick = () => showPage('map-db');
 
-            // 全てのレイヤーを一旦削除
-            Object.values(layers).forEach(layer => map.removeLayer(layer));
+            // レイヤーの切り替え
+            activeOverlays.forEach(l => map.removeLayer(l));
+            const nextLayer = layers[era.name];
+            if (nextLayer) {
+                nextLayer.addTo(map).bringToFront();
+                activeOverlays = [nextLayer];
+            }
+            updateOpacityUI();
+        };
 
-            // 選択された年代を表示
-            layers[selectedEra.name].addTo(map);
-            eraNameDisplay.innerText = selectedEra.name;
-        });
+        slider.oninput = function() {
+            updateEraUI(this.value);
+        };
 
-        // 初期表示の設定
-        layers[eras[0].name].addTo(map);
-        eraNameDisplay.innerText = eras[0].name;
+        // 起動時の初期実行
+        updateEraUI(slider.value);
        
         document.getElementById('opacity-slider').oninput = function() {
             if (activeOverlays.length > 0) {
@@ -251,6 +282,28 @@ const eras = [
         add3DMarkers();
         startLocationTracking();
     }
+    // レイヤ選択パネルが開くたびに詳細ボタンを注入する処理
+        map.on('overlayadd overlayremove', () => {
+            setTimeout(() => {
+                const labels = document.querySelectorAll('.leaflet-control-layers-overlays label div span');
+                labels.forEach(span => {
+                    // まだ詳細ボタンがなければ追加
+                    if (!span.parentElement.querySelector('.mini-info-btn')) {
+                        const btn = document.createElement('button');
+                        btn.innerHTML = '詳細';
+                        btn.className = 'mode-btn mini-info-btn';
+                        btn.style = 'padding:2px 6px; font-size:0.6rem; margin-left:8px; cursor:pointer; vertical-align:middle;';
+                        btn.onclick = (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            showPage('map-db');
+                        };
+                        span.after(btn);
+                    }
+                });
+            }, 10);
+        });
+    
     function updateOpacityUI() {
         const display = document.getElementById('opacity-target');
         if (activeOverlays.length > 0) {
