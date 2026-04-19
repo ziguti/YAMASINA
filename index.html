@@ -180,20 +180,20 @@
     let activeOverlays = []; 
     let userMarker, userCircle;
 const eras = [
-        { name: "1884年", url: "./地籍図tile/{z}/{x}/{y}.png" },
-        { name: "1897年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/2man/{z}/{x}/{-y}.png" },
-        { name: "1922年（2）", url: "./taisho1922/{z}/{x}/{y}.jpg" },
-        { name: "1922年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/00/{z}/{x}/{-y}.png" },
-        { name: "1930年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/01/{z}/{x}/{-y}.png" },  
-        { name: "1946年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png" },
-    　  { name: "1961年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png" },
-        { name: "1964年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/03x/{z}/{x}/{-y}.png" },
-        { name: "1968年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/04/{z}/{x}/{-y}.png" },
-        { name: "1974年", url: "https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg" },
-        { name: "1975年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/05/{z}/{x}/{-y}.png" },
-        { name: "1985年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/06/{z}/{x}/{-y}.png" },
-        { name: "1993年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/07/{z}/{x}/{-y}.png" },
-        { name: "2007年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg" }
+        { name: "1884年", url: "./地籍図tile/{z}/{x}/{y}.png" nativeZoom: 18 },
+        { name: "1897年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/2man/{z}/{x}/{-y}.png" nativeZoom: 16 },
+        { name: "1922年（2）", url: "./taisho1922/{z}/{x}/{y}.jpg" nativeZoom: 18 },
+        { name: "1922年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/00/{z}/{x}/{-y}.png" nativeZoom: 16 },
+        { name: "1930年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/01/{z}/{x}/{-y}.png" nativeZoom: 16 },  
+        { name: "1946年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png" nativeZoom: 17 },
+    　  { name: "1961年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png" nativeZoom: 17 },
+        { name: "1964年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/03x/{z}/{x}/{-y}.png" nativeZoom: 16 },
+        { name: "1968年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/04/{z}/{x}/{-y}.png" nativeZoom: 16 },
+        { name: "1974年", url: "https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg" nativeZoom: 17 },
+        { name: "1975年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/05/{z}/{x}/{-y}.png" nativeZoom: 16 },
+        { name: "1985年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/06/{z}/{x}/{-y}.png" nativeZoom: 16 },
+        { name: "1993年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/07/{z}/{x}/{-y}.png" nativeZoom: 16},
+        { name: "2007年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg" nativeZoom: 18}
     ];
     
    function initMap() {
@@ -218,10 +218,13 @@ const eras = [
             maxZoom: 22,       // システムとして拡大を許容するレベル
             updateWhenZooming: true
         }).addTo(map);
-       eras.forEach(era => {
+       // initMap関数の中にあるこのループを探して書き換える
+        eras.forEach(era => {
             layers[era.name] = L.tileLayer(era.url, {
-                maxNativeZoom: era.nativeZoom, // 個別に設定した解像度を適用
-                maxZoom: 22,                  // 全て22まで引き延ばし
+                // 配列で指定した個別の限界値を読み込む。なければ16をデフォルトに。
+                maxNativeZoom: era.nativeZoom || 16, 
+                // 地図の拡大限界。これで全てのタイルが22まで消えずに拡大可能になる。
+                maxZoom: 22,
                 updateWhenZooming: true
             });
         });
