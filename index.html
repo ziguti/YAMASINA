@@ -141,14 +141,66 @@
     box-sizing: border-box;
     text-shadow: 1px 1px 4px rgba(0,0,0,0.8); /* 視認性を上げるための影 */
 }
-        .modal-content {
-            background: var(--bg-cream); width: 95%; max-width: 800px; max-height: 90vh;
-            overflow-y: auto; padding: 30px; border-radius: 8px; position: relative;
-            border: 3px solid var(--accent-gold); box-sizing: border-box;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .modal-image { width: 100%; max-height: 450px; object-fit: contain; background: #222; margin-bottom: 20px; border-radius: 4px; }
-        
+      /* モーダル本体の調整 */
+#detail-modal {
+    padding: 10px; /* スマホで画面端に少し余白を作る */
+    align-items: flex-start; /* 上端から配置し、はみ出しを防止 */
+    padding-top: 5vh; 
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+    /* スマホで閉じられなくなるのを防ぐため、高さを制御してスクロール可能に */
+    max-height: 85vh; 
+    overflow-y: auto;
+}
+
+/* メタデータ項目のリストデザイン */
+.meta-info-list {
+    margin-top: 20px;
+    border-top: 1px solid var(--accent-gold);
+}
+
+.meta-item {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px dotted #ccc; /* 項目ごとの区切り線 */
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.meta-label {
+    width: 100px;
+    font-weight: bold;
+    color: var(--primary-brown);
+    flex-shrink: 0;
+}
+
+.meta-value {
+    flex-grow: 1;
+    color: #333;
+    word-break: break-all;
+}
+
+/* 閉じるボタンをスマホで押しやすく固定 */
+.close-btn {
+    position: sticky; /* スクロールしてもついてくる */
+    top: 0;
+    float: right;
+    z-index: 100;
+    background: var(--bg-cream);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
         .full-3d-box { width: 100%; height: 60vh; border-radius: 8px; border: 1px solid var(--accent-gold); margin-top: 15px; }
         @media (max-width: 600px) {
             .archive-title { font-size: 1.1rem; }
@@ -470,28 +522,34 @@ function renderPhotos(data) {
             }
         });
     }
-    function openDetail(id) {
-        const p = archiveData.find(x => x.id === id);
-        if(!p) return;
+   function openDetail(id) {
+    const p = archiveData.find(x => x.id === id);
+    if(!p) return;
+    
+    const body = document.getElementById('modal-body');
+    body.innerHTML = `
+        <button class="close-btn" onclick="closeModal()">×</button>
+        <h2 style="color:var(--primary-brown); border-bottom: 2px solid var(--accent-gold); padding-bottom:10px; margin-top:0;">${p.title}</h2>
         
-        const body = document.getElementById('modal-body');
-        body.innerHTML = `
-            <h2 style="color:var(--primary-brown); border-bottom: 2px solid var(--accent-gold); padding-bottom:10px;">${p.title}</h2>
-            <img src="${p.img}" class="modal-image" onerror="this.src='https://placehold.jp/24/4e342e/ffffff/400x300.png?text=No+Image'">
-            <div style="font-size:1rem; line-height:1.8;">
-                <p>${p.desc}</p>
-                <div style="background:#f4f1ea; padding:15px; border-radius:4px; margin-top:20px; font-size:0.95rem; border: 1px solid var(--accent-gold);">
-                    <b>撮影年:</b> ${p.year ? p.year + '年' : '不明'} (${p.era}) <br> 
-                    <b>所蔵・出典:</b> ${p.source} <br>
-                    <b>権利・転載:</b> ${p.rights}
-                </div>
-                <button class="mode-btn" style="width:100%; margin-top:25px; padding:12px; font-size:1.1rem;" onclick="focusOnMap([${p.lat}, ${p.lng}])">
-                    地図で場所を確認
-                </button>
-            </div>
-        `;
-        document.getElementById('detail-modal').style.display = 'flex';
-    }
+        <img src="${p.img}" class="modal-image" onerror="this.src='https://placehold.jp/24/4e342e/ffffff/400x300.png?text=No+Image'">
+        
+        <div class="meta-info-list">
+            <div class="meta-item"><span class="meta-label">資料名</span><span class="meta-value">${p.title}</span></div>
+            <div class="meta-item"><span class="meta-label">字姓名</span><span class="meta-value">${p.desc || '－'}</span></div>
+            <div class="meta-item"><span class="meta-label">年代</span><span class="meta-value">${p.era}</span></div>
+            <div class="meta-item"><span class="meta-label">撮影年</span><span class="meta-value">${p.year ? p.year + '年' : '不明'}</span></div>
+            <div class="meta-item"><span class="meta-label">撮影者</span><span class="meta-value">${p.author || '不明'}</span></div>
+            <div class="meta-item"><span class="meta-label">出典</span><span class="meta-value">${p.source}</span></div>
+            <div class="meta-item"><span class="meta-label">権利状態</span><span class="meta-value">${p.rights}</span></div>
+            <div class="meta-item"><span class="meta-label">座標</span><span class="meta-value">${p.lat}, ${p.lng}</span></div>
+        </div>
+
+        <button class="mode-btn" style="width:100%; margin-top:25px; padding:12px; font-size:1.1rem;" onclick="focusOnMap([${p.lat}, ${p.lng}])">
+            地図で場所を確認
+        </button>
+    `;
+    document.getElementById('detail-modal').style.display = 'flex';
+}
     function open3DFullScreen(url) {
         const body = document.getElementById('modal-body');
         body.innerHTML = `<model-viewer src="${url}" auto-rotate camera-controls class="full-3d-box"></model-viewer>`;
