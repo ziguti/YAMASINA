@@ -94,18 +94,53 @@
             display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 20px; padding: 20px;
         }
-        .photo-card {
-            background: #fff; border: 1px solid var(--accent-gold); border-radius: 4px;
-            overflow: hidden; cursor: pointer; transition: transform 0.2s;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-        .photo-card:hover { transform: translateY(-5px); }
-        .photo-card img { width: 100%; height: 120px; object-fit: cover; border-bottom: 1px solid #eee; }
-        .photo-card p { padding: 10px; margin: 0; font-size: 0.85rem; text-align: center; color: var(--primary-brown); font-weight: bold; }
-        #detail-modal {
-            display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85);
-            z-index:5000; justify-content:center; align-items:center; backdrop-filter: blur(5px);
-        }
+      /* 写真カード全体のデザイン */
+.photo-card {
+    position: relative; /* 文字を重ねるための基準 */
+    background: #000; /* 画像読み込み前の背景色 */
+    border: 1px solid var(--accent-gold);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    height: 180px; /* カードの高さを固定（お好みで調整） */
+}
+
+.photo-card:hover { 
+    transform: scale(1.03); 
+}
+
+/* 画像を背景いっぱいに広げる */
+.photo-card img { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+    display: block;
+    opacity: 0.8; /* 文字を見えやすくするため画像を少し暗めに */
+    transition: opacity 0.3s;
+}
+
+.photo-card:hover img {
+    opacity: 1.0;
+}
+
+/* 画像の上に載せる文字のデザイン */
+.photo-card p { 
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    padding: 15px 10px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7)); /* 下からグラデーションをかけて文字を浮き立たせる */
+    color: #fff !important; /* 文字は白 */
+    font-family: "Sawarabi Mincho", serif;
+    font-size: 0.95rem;
+    text-align: center;
+    box-sizing: border-box;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.8); /* 視認性を上げるための影 */
+}
         .modal-content {
             background: var(--bg-cream); width: 95%; max-width: 800px; max-height: 90vh;
             overflow-y: auto; padding: 30px; border-radius: 8px; position: relative;
@@ -406,15 +441,15 @@ function filterDB() {
     renderPhotos(filtered);
 }
     
-    function renderPhotos(data) {
-        const list = document.getElementById('photo-list');
-        list.innerHTML = data.map(p => `
-            <div class="photo-card" onclick="openDetail(${p.id})">
-                <img src="${p.img}" loading="lazy" onerror="this.src='https://placehold.jp/24/4e342e/ffffff/200x150.png?text=No+Image'">
-                <p>${p.title}</p>
-            </div>
-        `).join('');
-    }
+function renderPhotos(data) {
+    const list = document.getElementById('photo-list');
+    list.innerHTML = data.map(p => `
+        <div class="photo-card" onclick="openDetail(${p.id})">
+            <img src="${p.img}" loading="lazy" onerror="this.src='https://placehold.jp/24/4e342e/ffffff/200x150.png?text=No+Image'">
+            <p>${p.title}</p>
+        </div>
+    `).join('');
+}
     function addPhotoMarkers(data) {
         const iconCam = L.divIcon({
             html: '<i class="fa-solid fa-camera" style="color:var(--primary-brown); font-size:22px; text-shadow: 0 0 3px #fff;"></i>',
