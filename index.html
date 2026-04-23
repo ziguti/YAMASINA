@@ -282,6 +282,31 @@
             .mode-btn { padding: 5px 12px; font-size: 0.8rem; }
             .map-overlay-controls { width: 150px; bottom: 20px; }
         }
+        /* ポップアップ内の画像にカーソルを合わせるとポインターにする */
+.clickable-image { cursor: pointer; transition: 0.3s; }
+.clickable-image:hover { opacity: 0.8; }
+
+/* 全画面画像表示用のオーバレイ */
+#full-screen-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9); /* ほぼ真っ黒 */
+    z-index: 20000; /* ポップアップより上に配置 */
+    justify-content: center;
+    align-items: center;
+    cursor: zoom-out; /* クリックで閉じることを示すカーソル */
+}
+
+#full-screen-overlay img {
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+}
     </style>
 </head>
 <body>
@@ -524,25 +549,31 @@ async function loadPhotoData() {
             } else {
                 directImg = rawUrl;
             }
-            let lat = 0, lng = 0;
-            if (cols[6]) {
-                const coords = cols[6].split(/[\s,]+/);
-                lat = parseFloat(coords[0]);
-                lng = parseFloat(coords[1]);
-            }
-            const rawTitle = (cols[4] || "名称未設定").replace(/\.(jpg|jpeg|png)$/i, '');
-            return {
-                id: index,
-                title: rawTitle,
-                era: cols[7] || "",
-                year: cols[8] || "",
-                lat: lat,
-                lng: lng,
-                img: directImg,
-                desc: cols[10] || "",
-                source: cols[12] || "",
-                rights: cols[13] || "不明"
-            };
+           // タイトルをD列（index 3）から取得
+const rawTitle = (cols[4] || "名称未設定").replace(/"/g, ""); 
+
+// 座標をF列（index 5）から取得して分割
+let lat = 0, lng = 0;
+if (cols[5]) {
+    const coords = cols[5].split(/[\s,]+/);
+    lat = parseFloat(coords[0]);
+    lng = parseFloat(coords[1]);
+}
+
+return {
+    id: index,
+    title: cols[4] || "名称未設定", // D列：資料名
+    desc: cols[5] || "",           // E列：字地名（ここをdescとして定義）
+    lat: lat,                      // F列から抽出
+    lng: lng,                      // F列から抽出
+    era: cols[7] || "",            // G列：年代
+    year: cols[9] || "",           // I列：年（西暦）
+    explanation: cols[10] || "",   // J列：説明
+    author: cols[11] || "",        // K列：撮影者
+    source: cols[12] || "",        // L列：出典
+    storage: cols[13] || "",       // M列：所蔵
+    rights: cols[14] || "不明"      // N列：権利状態
+};
         });
         addPhotoMarkers(archiveData);
     } catch (e) {
@@ -602,7 +633,7 @@ function renderPhotos(data) {
     if(!p) return;
     
     const modal = document.getElementById('detail-modal');
-    // HTMLを構築（左に画像、右に情報）
+    // HTMLを構築（image_8.pngのレイアウトを再現、プロパティ名を修正）
     modal.innerHTML = `
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal()">×</button>
@@ -634,6 +665,18 @@ function renderPhotos(data) {
         </div>
     `;
     modal.style.display = 'flex';
+}
+    // 全画面表示を開く関数
+function openFullScreenImage(imgUrl) {
+    const overlay = document.getElementById('full-screen-overlay');
+    const fullImg = overlay.querySelector('img');
+    fullImg.src = imgUrl; // 高画質画像のURLを設定
+    overlay.style.display = 'flex';
+}
+
+// 全画面表示を閉じる関数
+function closeFullScreenImage() {
+    document.getElementById('full-screen-overlay').style.display = 'none';
 }
     function open3DFullScreen(url) {
         const body = document.getElementById('modal-body');
@@ -719,6 +762,9 @@ function renderPhotos(data) {
         loadPhotoData();
     };
 </script>
+    <div id="full-screen-overlay" onclick="closeFullScreenImage()">
+    <img src="" alt="全画面写真">
+</div>
 </body>
 </html>
 
