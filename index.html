@@ -515,21 +515,22 @@ async function loadPhotoData() {
         archiveData = rows.filter(row => row.trim() !== "").map((row, index) => {
             const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1'));
             // 画像URLの軽量化（修正：バッククォートと変数の展開を正確に）
-            const rawUrl = cols[2] || "";
-            let directImg = "";
-            const fileIdMatch = rawUrl.match(/[-\w]{25,}/);
-            if (fileIdMatch) {
-                // googleusercontent経由でサイズを400pxに制限
-                directImg = `https://lh3.googleusercontent.com/d/${fileIdMatch[0]}=s400`;
-            } else {
-                directImg = rawUrl;
-            }
-           // タイトルをD列（index 3）から取得
-const rawTitle = (cols[4] || "名称未設定").replace(/"/g, ""); 
+           const rawUrl = cols[2] || "";
+    let directImg = "";
+    const fileIdMatch = rawUrl.match(/[-\w]{25,}/);
+    if (fileIdMatch) {
+        // ID部分を正しく展開し、末尾に =s800 などをつけて軽量化
+        directImg = `https://lh3.googleusercontent.com/d/${fileIdMatch[0]}=s800`;
+    } else {
+        directImg = rawUrl;
+    }
+    // --- 資料名から拡張子を削除（修正点：.jpg / .png などを一括削除） ---
+    let rawTitle = (cols[4] || "名称未設定").replace(/"/g, "");
+    rawTitle = rawTitle.replace(/\.(jpg|jpeg|png|gif|bmp)$/i, ""); // 拡張子を削除
 // 座標をF列（index 5）から取得して分割
 let lat = 0, lng = 0;
-if (cols[5]) {
-    const coords = cols[5].split(/[\s,]+/);
+if (cols[6]) {
+    const coords = cols[6].split(/[\s,]+/);
     lat = parseFloat(coords[0]);
     lng = parseFloat(coords[1]);
 }
@@ -540,12 +541,14 @@ return {
     lat: lat,                      // F列から抽出
     lng: lng,                      // F列から抽出
     era: cols[7] || "",            // G列：年代
-    year: cols[9] || "",           // I列：年（西暦）
-    explanation: cols[10] || "",   // J列：説明
-    author: cols[11] || "",        // K列：撮影者
-    source: cols[12] || "",        // L列：出典
-    storage: cols[13] || "",       // M列：所蔵
-    rights: cols[14] || "不明"      // N列：権利状態
+    year: cols[8] || "",           // I列：年（西暦）
+    explanation: cols[9] || "",   // J列：説明
+    author: cols[10] || "",        // K列：撮影者
+    source: cols[11] || "",        // L列：出典
+    storage: cols[12] || "",       // M列：所蔵
+    rights: cols[13] || "不明"      // N列：権利状態
+    rights: cols[14] || "不明"
+    rights: cols[15] || "不明"
 };
         });
         addPhotoMarkers(archiveData);
@@ -627,6 +630,8 @@ function renderPhotos(data) {
                         <div class="meta-item"><span class="meta-label">出典</span><span class="meta-value">${p.source || '－'}</span></div>
                         <div class="meta-item"><span class="meta-label">所蔵</span><span class="meta-value">${p.storage || '－'}</span></div>
                         <div class="meta-item"><span class="meta-label">権利状態</span><span class="meta-value">${p.rights || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label"><転載</span><span class="meta-value">${p.rights || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label"><撮影方角</span><span class="meta-value">${p.rights || '－'}</span></div>
                     </div>
                     <button class="mode-btn" style="width:100%; margin-top:25px; padding:12px; background:#4e342e; color:#fff; border:none; border-radius:4px; cursor:pointer;" 
                         onclick="focusOnMap([${p.lat}, ${p.lng}])">
