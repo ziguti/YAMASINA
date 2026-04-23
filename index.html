@@ -514,42 +514,45 @@ async function loadPhotoData() {
         const rows = csvText.split(/\r?\n/).slice(1);
         archiveData = rows.filter(row => row.trim() !== "").map((row, index) => {
             const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1'));
-            // 画像URLの軽量化（修正：バッククォートと変数の展開を正確に）
-           const rawUrl = cols[2] || "";
-    let directImg = "";
-    const fileIdMatch = rawUrl.match(/[-\w]{25,}/);
-    if (fileIdMatch) {
-        // ID部分を正しく展開し、末尾に =s800 などをつけて軽量化
-        directImg = `https://lh3.googleusercontent.com/d/${fileIdMatch[0]}=s800`;
-    } else {
-        directImg = rawUrl;
-    }
-    // --- 資料名から拡張子を削除（修正点：.jpg / .png などを一括削除） ---
-    let rawTitle = (cols[4] || "名称未設定").replace(/"/g, "");
-    rawTitle = rawTitle.replace(/\.(jpg|jpeg|png|gif|bmp)$/i, ""); // 拡張子を削除
-// 座標をF列（index 5）から取得して分割
-let lat = 0, lng = 0;
-if (cols[6]) {
-    const coords = cols[6].split(/[\s,]+/);
-    lat = parseFloat(coords[0]);
-    lng = parseFloat(coords[1]);
-}
-return {
-    id: index,
-    title: cols[4] || "名称未設定", // D列：資料名
-    desc: cols[5] || "",           // E列：字地名（ここをdescとして定義）
-    lat: lat,                      // F列から抽出
-    lng: lng,                      // F列から抽出
-    era: cols[7] || "",            // G列：年代
-    year: cols[8] || "",           // I列：年（西暦）
-    explanation: cols[9] || "",   // J列：説明
-    author: cols[10] || "",        // K列：撮影者
-    source: cols[11] || "",        // L列：出典
-    storage: cols[12] || "",       // M列：所蔵
-    rights: cols[13] || "不明"      // N列：権利状態
-    rights: cols[14] || "不明"
-    rights: cols[15] || "不明"
-};
+            
+            const rawUrl = cols[2] || "";
+            let directImg = "";
+            const fileIdMatch = rawUrl.match(/[-\w]{25,}/);
+            
+            if (fileIdMatch) {
+                // Google Driveの画像IDを直接表示用URLに変換
+                directImg = `https://lh3.googleusercontent.com/d/${fileIdMatch[0]}=s800`;
+            } else {
+                directImg = rawUrl;
+            }
+
+            let rawTitle = (cols[4] || "名称未設定").replace(/"/g, "");
+            rawTitle = rawTitle.replace(/\.(jpg|jpeg|png|gif|bmp)$/i, ""); 
+
+            let lat = 0, lng = 0;
+            if (cols[6]) {
+                const coords = cols[6].split(/[\s,]+/);
+                lat = parseFloat(coords[0]);
+                lng = parseFloat(coords[1]);
+            }
+
+            return {
+                id: index,
+                title: rawTitle,
+                img: directImg,    // imgプロパティをここで定義
+                desc: cols[5] || "",
+                lat: lat,
+                lng: lng,
+                era: cols[7] || "",
+                year: cols[8] || "",
+                explanation: cols[9] || "",
+                author: cols[10] || "",
+                source: cols[11] || "",
+                storage: cols[12] || "",
+                rights: cols[13] || "不明",
+                reprint: cols[14] || "不明",    // 重複していた箇所を整理
+                direction: cols[15] || "不明"   // 重複していた箇所を整理
+            };
         });
         addPhotoMarkers(archiveData);
     } catch (e) {
