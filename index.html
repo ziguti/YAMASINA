@@ -1,241 +1,241 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>山科歴史アーカイブ</title>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&display=swap" rel="stylesheet">
-    <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>山科歴史アーカイブ</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
 <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js');
-  }
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
 </script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-    <style>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+    <style>
 .leaflet-control-layers-list {
-    font-family: "Sawarabi Mincho", serif !important;
-    padding: 10px;
-    min-width: 200px;
+    font-family: "Sawarabi Mincho", serif !important;
+    padding: 10px;
+    min-width: 200px;
 }
 
 /* 各レイヤーの行（ラベル）を大きく、間隔を空ける */
 .leaflet-control-layers-overlays label {
-    display: flex !important;
-    align-items: center;
-    justify-content: space-between; /* 名前とボタンを両端に */
-    margin-bottom: 12px !important; /* 行間を広く */
-    padding: 5px;
-    font-size: 1.1rem; /* 文字を大きく */
-    cursor: pointer;
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between; /* 名前とボタンを両端に */
+    margin-bottom: 12px !important; /* 行間を広く */
+    padding: 5px;
+    font-size: 1.1rem; /* 文字を大きく */
+    cursor: pointer;
 }
 
 /* レイヤ選択内のチェックボックスを少し大きく */
 .leaflet-control-layers-selector {
-    transform: scale(1.3);
-    margin-right: 10px !important;
+    transform: scale(1.3);
+    margin-right: 10px !important;
 }
-        :root {
-            --primary-brown: #4e342e;
-            --accent-gold: #bda06d;
-            --bg-cream: #fdfaf2;
-            --header-height: 60px;
-            --sub-header-height: 55px;
-        }
-        body, html {
-            margin: 0; padding: 0;
-            background-color: var(--bg-cream);
-            font-family: "Sawarabi Mincho", serif;
-            color: #333;
-            height: 100%; overflow: hidden;
-        }
-        header {
-            position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height);
-            background: #fff; border-bottom: 2px solid var(--accent-gold);
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 20px; z-index: 3000; box-sizing: border-box;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .archive-title {
-            font-size: 1.4rem; font-weight: bold; color: var(--primary-brown); letter-spacing: 1px;
-        }
-        .sub-header {
-            position: fixed; top: var(--header-height); left: 0; width: 100%; height: var(--sub-header-height);
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px);
-            display: flex; align-items: center; padding: 0 15px; z-index: 2500;
-            border-bottom: 1px solid #ddd; box-sizing: border-box; gap: 10px;
-        }
-        .mode-btn {
-            border: 1px solid var(--accent-gold); background: #fff;
-            font-size: 0.9rem; padding: 6px 16px; cursor: pointer; border-radius: 4px;
-            font-family: inherit; transition: all 0.3s; color: var(--primary-brown);
-        }
-        .mode-btn.active { background: var(--accent-gold); color: #fff; }
-        .page {
-            position: absolute; top: calc(var(--header-height) + var(--sub-header-height));
-            bottom: 0; width: 100%; display: none;
-        }
-        .page.active { display: block; }
-        #map { width: 100%; height: 100%; background: #eee; }
-        .map-overlay-controls {
-            position: absolute; bottom: 30px; right: 15px; z-index: 1000;
-            background: rgba(255,255,255,0.95); padding: 15px; border-radius: 8px;
-            border: 1px solid var(--accent-gold); width: 180px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .control-label {
-            font-size: 0.8rem; font-weight: bold; margin-bottom: 8px; color: var(--primary-brown); display: block;
-        }
-        .photo-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 20px; padding: 20px;
-        }
-      /* 写真カード全体のデザイン */
+        :root {
+            --primary-brown: #4e342e;
+            --accent-gold: #bda06d;
+            --bg-cream: #fdfaf2;
+            --header-height: 60px;
+            --sub-header-height: 55px;
+        }
+        body, html {
+            margin: 0; padding: 0;
+            background-color: var(--bg-cream);
+            font-family: "Sawarabi Mincho", serif;
+            color: #333;
+            height: 100%; overflow: hidden;
+        }
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: var(--header-height);
+            background: #fff; border-bottom: 2px solid var(--accent-gold);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; z-index: 3000; box-sizing: border-box;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .archive-title {
+            font-size: 1.4rem; font-weight: bold; color: var(--primary-brown); letter-spacing: 1px;
+        }
+        .sub-header {
+            position: fixed; top: var(--header-height); left: 0; width: 100%; height: var(--sub-header-height);
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px);
+            display: flex; align-items: center; padding: 0 15px; z-index: 2500;
+            border-bottom: 1px solid #ddd; box-sizing: border-box; gap: 10px;
+        }
+        .mode-btn {
+            border: 1px solid var(--accent-gold); background: #fff;
+            font-size: 0.9rem; padding: 6px 16px; cursor: pointer; border-radius: 4px;
+            font-family: inherit; transition: all 0.3s; color: var(--primary-brown);
+        }
+        .mode-btn.active { background: var(--accent-gold); color: #fff; }
+        .page {
+            position: absolute; top: calc(var(--header-height) + var(--sub-header-height));
+            bottom: 0; width: 100%; display: none;
+        }
+        .page.active { display: block; }
+        #map { width: 100%; height: 100%; background: #eee; }
+        .map-overlay-controls {
+            position: absolute; bottom: 30px; right: 15px; z-index: 1000;
+            background: rgba(255,255,255,0.95); padding: 15px; border-radius: 8px;
+            border: 1px solid var(--accent-gold); width: 180px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .control-label {
+            font-size: 0.8rem; font-weight: bold; margin-bottom: 8px; color: var(--primary-brown); display: block;
+        }
+        .photo-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 20px; padding: 20px;
+        }
+      /* 写真カード全体のデザイン */
 .photo-card {
-    position: relative; /* 文字を重ねるための基準 */
-    background: #000; /* 画像読み込み前の背景色 */
-    border: 1px solid var(--accent-gold);
-    border-radius: 4px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.3s ease;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    height: 180px; /* カードの高さを固定（お好みで調整） */
+    position: relative; /* 文字を重ねるための基準 */
+    background: #000; /* 画像読み込み前の背景色 */
+    border: 1px solid var(--accent-gold);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    height: 180px; /* カードの高さを固定（お好みで調整） */
 }
 
-.photo-card:hover { 
-    transform: scale(1.03); 
+.photo-card:hover { 
+    transform: scale(1.03); 
 }
 
 /* 画像を背景いっぱいに広げる */
-.photo-card img { 
-    width: 100%; 
-    height: 100%; 
-    object-fit: cover; 
-    display: block;
-    opacity: 0.8; /* 文字を見えやすくするため画像を少し暗めに */
-    transition: opacity 0.3s;
+.photo-card img { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+    display: block;
+    opacity: 0.8; /* 文字を見えやすくするため画像を少し暗めに */
+    transition: opacity 0.3s;
 }
 
 .photo-card:hover img {
-    opacity: 1.0;
+    opacity: 1.0;
 }
 
 /* 画像の上に載せる文字のデザイン */
-.photo-card p { 
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    margin: 0;
-    padding: 15px 10px;
-    background: linear-gradient(transparent, rgba(0,0,0,0.7)); /* 下からグラデーションをかけて文字を浮き立たせる */
-    color: #fff !important; /* 文字は白 */
-    font-family: "Sawarabi Mincho", serif;
-    font-size: 0.95rem;
-    text-align: center;
-    box-sizing: border-box;
-    text-shadow: 1px 1px 4px rgba(0,0,0,0.8); /* 視認性を上げるための影 */
+.photo-card p { 
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    padding: 15px 10px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7)); /* 下からグラデーションをかけて文字を浮き立たせる */
+    color: #fff !important; /* 文字は白 */
+    font-family: "Sawarabi Mincho", serif;
+    font-size: 0.95rem;
+    text-align: center;
+    box-sizing: border-box;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.8); /* 視認性を上げるための影 */
 }
-      /* モーダル本体の調整 */
+      /* モーダル本体の調整 */
 /* モーダル背景の設定（透過しない） */
 #detail-modal {
-    background-color: rgba(0, 0, 0, 0.7); /* 背景の暗転のみ */
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 10000;
-    justify-content: center;
-    align-items: center; /* 中央に配置 */
-    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.7); /* 背景の暗転のみ */
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    justify-content: center;
+    align-items: center; /* 中央に配置 */
+    padding: 10px;
 }
 
 /* カード本体 */
 .modal-content {
-    background-color: #fff; /* 透過しない白背景 */
-    width: 95%;
-    max-width: 900px;
-    max-height: 90vh;
-    border-radius: 8px;
-    position: relative;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    overflow: hidden; /* 角丸を適用 */
-    display: flex;
-    flex-direction: column;
+    background-color: #fff; /* 透過しない白背景 */
+    width: 95%;
+    max-width: 900px;
+    max-height: 90vh;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    overflow: hidden; /* 角丸を適用 */
+    display: flex;
+    flex-direction: column;
 }
 
 /* カード内部のレイアウト（PCは横並び） */
 .modal-body-container {
-    display: flex;
-    flex-direction: row;
-    height: 100%;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    overflow-y: auto;
 }
 
 /* 左側：画像エリア */
 .modal-image-section {
-    flex: 1.2;
-    background-color: #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+    flex: 1.2;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
 }
 
 .modal-image-section img {
-    max-width: 100%;
-    max-height: 70vh;
-    object-fit: contain;
-    border-radius: 4px;
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 4px;
 }
 
 /* 右側：メタデータエリア */
 .modal-info-section {
-    flex: 1;
-    padding: 30px;
-    overflow-y: auto;
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
 }
 
 /* スマホ表示の調整 */
 @media (max-width: 768px) {
-    .modal-body-container {
-        flex-direction: column; /* 縦並びに変更 */
-    }
-    .modal-image-section {
-        flex: none;
-        height: auto;
-        padding: 10px;
-    }
-    .modal-info-section {
-        padding: 20px;
-    }
+    .modal-body-container {
+        flex-direction: column; /* 縦並びに変更 */
+    }
+    .modal-image-section {
+        flex: none;
+        height: auto;
+        padding: 10px;
+    }
+    .modal-info-section {
+        padding: 20px;
+    }
 }
 
 /* 閉じるボタン（右上に固定） */
 .close-btn {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 36px;
-    height: 36px;
-    background: #4e342e;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    font-size: 20px;
-    cursor: pointer;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: 0.2s;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    background: #4e342e;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
 }
 
 .close-btn:hover { background: #000; }
@@ -244,531 +244,526 @@
 .meta-info-list { border-top: 1px solid #4e342e; }
 
 .meta-item {
-    display: flex;
-    padding: 12px 0;
-    border-bottom: 1px solid #eee; /* 薄い区切り線 */
-    font-size: 0.95rem;
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee; /* 薄い区切り線 */
+    font-size: 0.95rem;
 }
 
 .meta-label {
-    width: 90px;
-    font-weight: bold;
-    color: #4e342e;
-    flex-shrink: 0;
+    width: 90px;
+    font-weight: bold;
+    color: #4e342e;
+    flex-shrink: 0;
 }
 
 .meta-value {
-    flex-grow: 1;
-    color: #333;
+    flex-grow: 1;
+    color: #333;
 }
 /* 閉じるボタンをスマホで押しやすく固定 */
 .close-btn {
-    position: sticky; /* スクロールしてもついてくる */
-    top: 0;
-    float: right;
-    z-index: 100;
-    background: var(--bg-cream);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: sticky; /* スクロールしてもついてくる */
+    top: 0;
+    float: right;
+    z-index: 100;
+    background: var(--bg-cream);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
-        .full-3d-box { width: 100%; height: 60vh; border-radius: 8px; border: 1px solid var(--accent-gold); margin-top: 15px; }
-        @media (max-width: 600px) {
-            .archive-title { font-size: 1.1rem; }
-            .mode-btn { padding: 5px 12px; font-size: 0.8rem; }
-            .map-overlay-controls { width: 150px; bottom: 20px; }
-        }
-        /* ポップアップ内の画像にカーソルを合わせるとポインターにする */
+        .full-3d-box { width: 100%; height: 60vh; border-radius: 8px; border: 1px solid var(--accent-gold); margin-top: 15px; }
+        @media (max-width: 600px) {
+            .archive-title { font-size: 1.1rem; }
+            .mode-btn { padding: 5px 12px; font-size: 0.8rem; }
+            .map-overlay-controls { width: 150px; bottom: 20px; }
+        }
+        /* ポップアップ内の画像にカーソルを合わせるとポインターにする */
 .clickable-image { cursor: pointer; transition: 0.3s; }
 .clickable-image:hover { opacity: 0.8; }
 
 /* 全画面画像表示用のオーバレイ */
 #full-screen-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.9); /* ほぼ真っ黒 */
-    z-index: 20000; /* ポップアップより上に配置 */
-    justify-content: center;
-    align-items: center;
-    cursor: zoom-out; /* クリックで閉じることを示すカーソル */
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9); /* ほぼ真っ黒 */
+    z-index: 20000; /* ポップアップより上に配置 */
+    justify-content: center;
+    align-items: center;
+    cursor: zoom-out; /* クリックで閉じることを示すカーソル */
 }
 
 #full-screen-overlay img {
-    max-width: 95%;
-    max-height: 95%;
-    object-fit: contain;
-    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+    box-shadow: 0 0 20px rgba(255,255,255,0.2);
 }
-    </style>
+    </style>
 </head>
 <body>
 <header>
-    <div class="archive-title">山科歴史アーカイブ</div>
-    <div style="display:flex; gap:10px;">
-        <button id="btn-map" class="mode-btn active" onclick="showPage('map')">マップ</button>
-        <button id="btn-db" class="mode-btn" onclick="showPage('db')">古写真</button>
-        <button id="btn-map-db" class="mode-btn" onclick="showPage('map-db')">古地図DB</button>
-    </div>
+    <div class="archive-title">山科歴史アーカイブ</div>
+    <div style="display:flex; gap:10px;">
+        <button id="btn-map" class="mode-btn active" onclick="showPage('map')">マップ</button>
+        <button id="btn-db" class="mode-btn" onclick="showPage('db')">古写真</button>
+        <button id="btn-map-db" class="mode-btn" onclick="showPage('map-db')">古地図DB</button>
+    </div>
 </header>
 <div id="map-ui" class="sub-header">
-    <button id="m-btn-layers" class="mode-btn active" onclick="switchControl('layers')">レイヤ選択</button>
-    <button id="m-btn-slider" class="mode-btn" onclick="switchControl('slider')">時代スライダー</button>
-    
-    <div id="slider-box" style="display:none; flex-grow:1; align-items:center; gap:15px; margin-left:10px;">
-        <input type="range" id="era-slider" min="0" max="5" step="1" value="5" style="flex-grow:1; accent-color:var(--accent-gold);">
-        <span id="era-label" style="font-size:0.9rem; font-weight:bold; min-width:110px; color:var(--primary-brown);">現代空中写真</span>
-    </div>
+    <button id="m-btn-layers" class="mode-btn active" onclick="switchControl('layers')">レイヤ選択</button>
+    <button id="m-btn-slider" class="mode-btn" onclick="switchControl('slider')">時代スライダー</button>
+    
+    <div id="slider-box" style="display:none; flex-grow:1; align-items:center; gap:15px; margin-left:10px;">
+        <input type="range" id="era-slider" min="0" max="5" step="1" value="5" style="flex-grow:1; accent-color:var(--accent-gold);">
+        <span id="era-label" style="font-size:0.9rem; font-weight:bold; min-width:110px; color:var(--primary-brown);">現代空中写真</span>
+    </div>
 </div>
 <div id="db-ui" class="sub-header" style="display:none;">
-    <input type="text" id="db-search" placeholder="資料名で検索..." oninput="filterDB()" style="width:60%; padding:8px 15px; border-radius:20px; border:1px solid var(--accent-gold); font-family:inherit;">
-    <select id="era-filter" onchange="filterDB()" style="padding:8px; border-radius:4px; border:1px solid var(--accent-gold); font-family:inherit; color:var(--primary-brown);">
-        <option value="">全年代</option>
-        <option value="明治">明治</option>
-        <option value="大正">大正</option>
-        <option value="昭和">昭和</option>
-    </select>
+    <input type="text" id="db-search" placeholder="資料名で検索..." oninput="filterDB()" style="width:60%; padding:8px 15px; border-radius:20px; border:1px solid var(--accent-gold); font-family:inherit;">
+    <select id="era-filter" onchange="filterDB()" style="padding:8px; border-radius:4px; border:1px solid var(--accent-gold); font-family:inherit; color:var(--primary-brown);">
+        <option value="">全年代</option>
+        <option value="明治">明治</option>
+        <option value="大正">大正</option>
+        <option value="昭和">昭和</option>
+    </select>
 </div>
 <div id="page-map" class="page active">
-    <div id="map"></div>
-    <div class="map-overlay-controls">
-        <span class="control-label" id="opacity-target">調整：未選択</span>
-        <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="1.0" style="width:100%; accent-color:var(--accent-gold);">
-    </div>
-    
-    <button onclick="requestLocation()" style="position:absolute; bottom:30px; left:15px; z-index:1000; width:50px; height:50px; border-radius:50%; border:2px solid var(--accent-gold); background:#fff; box-shadow:0 4px 10px rgba(0,0,0,0.2); cursor:pointer; color:var(--primary-brown); font-size:1.4rem;">
-        <i class="fa-solid fa-location-crosshairs"></i>
-    </button>
+    <div id="map"></div>
+    <div class="map-overlay-controls">
+        <span class="control-label" id="opacity-target">調整：未選択</span>
+        <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="1.0" style="width:100%; accent-color:var(--accent-gold);">
+    </div>
+    
+    <button onclick="requestLocation()" style="position:absolute; bottom:30px; left:15px; z-index:1000; width:50px; height:50px; border-radius:50%; border:2px solid var(--accent-gold); background:#fff; box-shadow:0 4px 10px rgba(0,0,0,0.2); cursor:pointer; color:var(--primary-brown); font-size:1.4rem;">
+        <i class="fa-solid fa-location-crosshairs"></i>
+    </button>
 </div>
 <div id="page-db" class="page">
-    <div style="height:100%; overflow-y:auto;">
-        <div id="photo-list" class="photo-grid"></div>
-    </div>
+    <div style="height:100%; overflow-y:auto;">
+        <div id="photo-list" class="photo-grid"></div>
+    </div>
 </div>
 <div id="detail-modal" onclick="closeModal()">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <button onclick="closeModal()" style="position:absolute; top:15px; right:15px; border:none; background:none; font-size:2rem; cursor:pointer; color:var(--primary-brown);">×</button>
-        <div id="modal-body"></div>
-    </div>
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <button onclick="closeModal()" style="position:absolute; top:15px; right:15px; border:none; background:none; font-size:2rem; cursor:pointer; color:var(--primary-brown);">×</button>
+        <div id="modal-body"></div>
+    </div>
 </div>
 <div id="page-map-db" class="page">
-    <div style="padding:40px; text-align:center; color:var(--primary-brown);">
-        <h2>古地図データベース</h2>
-        <p>現在メタデータ構築中...</p>
-    </div>
+    <div style="padding:40px; text-align:center; color:var(--primary-brown);">
+        <h2>古地図データベース</h2>
+        <p>現在メタデータ構築中...</p>
+    </div>
 </div>
 <script>
-    const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
-    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
-    let map, layerControl;
-    let archiveData = [];
-    let layers = {};
-    let activeOverlays = []; 
-    let userMarker, userCircle;
+    const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
+    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+    let map, layerControl;
+    let archiveData = [];
+    let layers = {};
+    let activeOverlays = []; 
+    let userMarker, userCircle;
 const eras = [
-        { name: "1884年", url: "./地籍図tile/{z}/{x}/{y}.png", nativeZoom: 18 },
-        { name: "1897年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/2man/{z}/{x}/{-y}.png", nativeZoom: 16 },
-        { name: "1922年（2）", url: "./taisho1922/{z}/{x}/{y}.jpg", nativeZoom: 18 },
-        { name: "1922年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/00/{z}/{x}/{-y}.png", nativeZoom: 16 },
-        { name: "1930年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/01/{z}/{x}/{-y}.png", nativeZoom: 16 },  
-        { name: "1946年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png", nativeZoom: 17 },
-    　  { name: "1961年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png", nativeZoom: 17 },
-        { name: "1964年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/03x/{z}/{x}/{-y}.png", nativeZoom: 16 },
-        { name: "1968年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/04/{z}/{x}/{-y}.png", nativeZoom: 16 },
-        { name: "1974年", url: "https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg", nativeZoom: 17 },
-        { name: "1975年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/05/{z}/{x}/{-y}.png", nativeZoom: 16 },
-        { name: "1985年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/06/{z}/{x}/{-y}.png", nativeZoom: 16 },
-        { name: "1993年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/07/{z}/{x}/{-y}.png", nativeZoom: 16},
-        { name: "2007年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg", nativeZoom: 18},
-    ];
-    
-   function initMap() {
-        map = L.map('map', { 
-            zoomControl: false, 
-            maxZoom: 22,
-            zoomSnap: 0,           // ズームレベルを小数点で許可（滑らかになる）
-            zoomDelta: 0.5,        // ズームの変化量
-            wheelPxPerZoomLevel: 120, // スクロールでのズーム感度（Googleマップ風）
-            wheelDebounceTime: 40,    // 応答速度
-            zoomAnimation: true,
-            fadeAnimation: true,
-            inertia: true,            // 慣性移動を有効化
-            inertiaDeceleration: 3000 // 慣性の強さ
-        }).setView([34.992, 135.813], 15);
-        L.control.zoom({ position: 'bottomleft' }).addTo(map);
-  // ベースレイヤー（地理院タイル 標準地図）
-        L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
-            attribution: "地理院タイル",
-            minZoom: 2,
-            maxNativeZoom: 18, // ここが重要！サーバーに画像がある最大レベルを指定
-            maxZoom: 22,       // システムとして拡大を許容するレベル
-            updateWhenZooming: true
-        }).addTo(map);
-       // initMap関数の中にあるこのループを探して書き換える
-        eras.forEach(era => {
-            layers[era.name] = L.tileLayer(era.url, {
-                // 配列で指定した個別の限界値を読み込む。なければ16をデフォルトに。
-                maxNativeZoom: era.nativeZoom || 16, 
-                // 地図の拡大限界。これで全てのタイルが22まで消えずに拡大可能になる。
-                maxZoom: 22,
-                updateWhenZooming: true
-            });
-        });
-        layerControl = L.control.layers(null, layers, { collapsed: true, position: 'topright' }).addTo(map);
-        map.on('overlayadd', (e) => {
-            activeOverlays = activeOverlays.filter(l => l !== e.layer);
-            activeOverlays.push(e.layer);
-            if (activeOverlays.length > 2) {
-                const oldest = activeOverlays.shift();
-                map.removeLayer(oldest);
-            }
-            activeOverlays.forEach(l => l.bringToFront());
-            updateOpacityUI();
-        });
-        map.on('overlayremove', (e) => {
-            activeOverlays = activeOverlays.filter(l => l !== e.layer);
-            updateOpacityUI();
-        });
-       // レイヤ選択パネルが開くたびに詳細ボタンを注入する処理
-        map.on('overlayadd overlayremove', () => {
-            setTimeout(() => {
-                const labels = document.querySelectorAll('.leaflet-control-layers-overlays label div span');
-                labels.forEach(span => {
-                    // まだ詳細ボタンがなければ追加
-                    if (!span.parentElement.querySelector('.mini-info-btn')) {
-                        const btn = document.createElement('button');
-                        btn.innerHTML = '詳細';
-                        btn.className = 'mode-btn mini-info-btn';
-                        btn.style = 'padding:2px 6px; font-size:0.6rem; margin-left:8px; cursor:pointer; vertical-align:middle;';
-                        btn.onclick = (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            showPage('map-db');
-                        };
-                        span.after(btn);
-                    }
-                });
-            }, 10);
-        });
-       // --- 時代スライダーの制御（詳細ボタン統合版） ---
-        const slider = document.getElementById('era-slider');
-        const eraLabel = document.getElementById('era-label');
+        { name: "1884年", url: "./地籍図tile/{z}/{x}/{y}.png", nativeZoom: 18 },
+        { name: "1897年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/2man/{z}/{x}/{-y}.png", nativeZoom: 16 },
+        { name: "1922年（2）", url: "./taisho1922/{z}/{x}/{y}.jpg", nativeZoom: 18 },
+        { name: "1922年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/00/{z}/{x}/{-y}.png", nativeZoom: 16 },
+        { name: "1930年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/01/{z}/{x}/{-y}.png", nativeZoom: 16 },  
+        { name: "1946年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_USA10/{z}/{x}/{y}.png", nativeZoom: 17 },
+    　  { name: "1961年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort_old10/{z}/{x}/{y}.png", nativeZoom: 17 },
+        { name: "1964年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/03x/{z}/{x}/{-y}.png", nativeZoom: 16 },
+        { name: "1968年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/04/{z}/{x}/{-y}.png", nativeZoom: 16 },
+        { name: "1974年", url: "https://cyberjapandata.gsi.go.jp/xyz/gazo1/{z}/{x}/{y}.jpg", nativeZoom: 17 },
+        { name: "1975年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/05/{z}/{x}/{-y}.png", nativeZoom: 16 },
+        { name: "1985年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/06/{z}/{x}/{-y}.png", nativeZoom: 16 },
+        { name: "1993年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/07/{z}/{x}/{-y}.png", nativeZoom: 16},
+        { name: "2007年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg", nativeZoom: 18},
+    ];
+    
+   function initMap() {
+        map = L.map('map', { 
+            zoomControl: false, 
+            maxZoom: 22,
+            zoomSnap: 0,           // ズームレベルを小数点で許可（滑らかになる）
+            zoomDelta: 0.5,        // ズームの変化量
+            wheelPxPerZoomLevel: 120, // スクロールでのズーム感度（Googleマップ風）
+            wheelDebounceTime: 40,    // 応答速度
+            zoomAnimation: true,
+            fadeAnimation: true,
+            inertia: true,            // 慣性移動を有効化
+            inertiaDeceleration: 3000 // 慣性の強さ
+        }).setView([34.992, 135.813], 15);
+        L.control.zoom({ position: 'bottomleft' }).addTo(map);
+  // ベースレイヤー（地理院タイル 標準地図）
+        L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
+            attribution: "地理院タイル",
+            minZoom: 2,
+            maxNativeZoom: 18, // ここが重要！サーバーに画像がある最大レベルを指定
+            maxZoom: 22,       // システムとして拡大を許容するレベル
+            updateWhenZooming: true
+        }).addTo(map);
+       // initMap関数の中にあるこのループを探して書き換える
+        eras.forEach(era => {
+            layers[era.name] = L.tileLayer(era.url, {
+                // 配列で指定した個別の限界値を読み込む。なければ16をデフォルトに。
+                maxNativeZoom: era.nativeZoom || 16, 
+                // 地図の拡大限界。これで全てのタイルが22まで消えずに拡大可能になる。
+                maxZoom: 22,
+                updateWhenZooming: true
+            });
+        });
+        layerControl = L.control.layers(null, layers, { collapsed: true, position: 'topright' }).addTo(map);
+        map.on('overlayadd', (e) => {
+            activeOverlays = activeOverlays.filter(l => l !== e.layer);
+            activeOverlays.push(e.layer);
+            if (activeOverlays.length > 2) {
+                const oldest = activeOverlays.shift();
+                map.removeLayer(oldest);
+            }
+            activeOverlays.forEach(l => l.bringToFront());
+            updateOpacityUI();
+        });
+        map.on('overlayremove', (e) => {
+            activeOverlays = activeOverlays.filter(l => l !== e.layer);
+            updateOpacityUI();
+        });
+       // レイヤ選択パネルが開くたびに詳細ボタンを注入する処理
+        map.on('overlayadd overlayremove', () => {
+            setTimeout(() => {
+                const labels = document.querySelectorAll('.leaflet-control-layers-overlays label div span');
+                labels.forEach(span => {
+                    // まだ詳細ボタンがなければ追加
+                    if (!span.parentElement.querySelector('.mini-info-btn')) {
+                        const btn = document.createElement('button');
+                        btn.innerHTML = '詳細';
+                        btn.className = 'mode-btn mini-info-btn';
+                        btn.style = 'padding:2px 6px; font-size:0.6rem; margin-left:8px; cursor:pointer; vertical-align:middle;';
+                        btn.onclick = (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            showPage('map-db');
+                        };
+                        span.after(btn);
+                    }
+                });
+            }, 10);
+        });
+       // --- 時代スライダーの制御（詳細ボタン統合版） ---
+        const slider = document.getElementById('era-slider');
+        const eraLabel = document.getElementById('era-label');
 
-        slider.max = eras.length - 1;
-        slider.value = 0; // 必要に応じて初期位置を調整（例：eras.length - 1）
+        slider.max = eras.length - 1;
+        slider.value = 0; // 必要に応じて初期位置を調整（例：eras.length - 1）
 
-        // 更新用関数（スライダー移動時と初期化時に使う）
-        const updateEraUI = (index) => {
-            const era = eras[index];
-            // ラベルと詳細ボタンを表示
-            eraLabel.innerHTML = `${era.name} <button id="map-info-btn" class="mode-btn" style="padding:2px 8px; margin-left:10px; font-size:0.7rem; cursor:pointer;">詳細</button>`;
-            
-            // 詳細ボタンにクリックイベントを設定
-            document.getElementById('map-info-btn').onclick = () => showPage('map-db');
+        // 更新用関数（スライダー移動時と初期化時に使う）
+        const updateEraUI = (index) => {
+            const era = eras[index];
+            // ラベルと詳細ボタンを表示
+            eraLabel.innerHTML = `${era.name} <button id="map-info-btn" class="mode-btn" style="padding:2px 8px; margin-left:10px; font-size:0.7rem; cursor:pointer;">詳細</button>`;
+            
+            // 詳細ボタンにクリックイベントを設定
+            document.getElementById('map-info-btn').onclick = () => showPage('map-db');
 
-            // レイヤーの切り替え
-            activeOverlays.forEach(l => map.removeLayer(l));
-            const nextLayer = layers[era.name];
-            if (nextLayer) {
-                nextLayer.addTo(map).bringToFront();
-                activeOverlays = [nextLayer];
-            }
-            updateOpacityUI();
-        };
+            // レイヤーの切り替え
+            activeOverlays.forEach(l => map.removeLayer(l));
+            const nextLayer = layers[era.name];
+            if (nextLayer) {
+                nextLayer.addTo(map).bringToFront();
+                activeOverlays = [nextLayer];
+            }
+            updateOpacityUI();
+        };
 
-        slider.oninput = function() {
-            updateEraUI(this.value);
-        };
+        slider.oninput = function() {
+            updateEraUI(this.value);
+        };
 
-        // 起動時の初期実行
-        updateEraUI(slider.value);
-       
-        document.getElementById('opacity-slider').oninput = function() {
-            if (activeOverlays.length > 0) {
-                const target = activeOverlays[activeOverlays.length - 1];
-                target.setOpacity(this.value);
-            }
-        };
-        add3DMarkers();
-        startLocationTracking();
-    }
-   
-    function updateOpacityUI() {
-        const display = document.getElementById('opacity-target');
-        if (activeOverlays.length > 0) {
-            const latest = activeOverlays[activeOverlays.length - 1];
-            const name = Object.keys(layers).find(key => layers[key] === latest);
-            display.innerText = `調整：${name}`;
-            document.getElementById('opacity-slider').value = latest.options.opacity || 1.0;
-        } else {
-            display.innerText = "調整：未選択";
-        }
-    }
-    function add3DMarkers() {
-        const models = [
-            { name: "妙見寺開渠", file: "妙見寺開渠.glb", coords: [34.977573, 135.827704] },
-            { name: "両御坊道道標", file: "両御坊道道標.glb", coords: [34.985075, 135.823981] },
-            { name: "旧井戸跡地", file: "旧井戸跡地.glb", coords: [34.983122, 135.814421] }
-        ];
-        const icon3d = L.divIcon({
-            html: '<i class="fa-solid fa-cube" style="color:#e67e22; font-size:24px; text-shadow: 0 0 4px #fff;"></i>',
-            className: 'custom-icon', iconSize: [24, 24]
-        });
-        models.forEach(m => {
-            L.marker(m.coords, { icon: icon3d }).addTo(map).bindPopup(`
-                <div style="text-align:center; width:220px;">
-                    <b style="font-size:1.1rem; color:var(--primary-brown);">${m.name}</b>
-                    <model-viewer src="./${encodeURIComponent(m.file)}" auto-rotate camera-controls style="width:100%;height:160px; margin: 10px 0; background:#eee; border-radius:4px;"></model-viewer>
-                    <button class="mode-btn" style="width:100%;" onclick="open3DFullScreen('./${encodeURIComponent(m.file)}')">全画面表示</button>
-                </div>
-            `);
-        });
-    }
-  // --- データ読み込み（画像URL置換の修正版） ---
+        // 起動時の初期実行
+        updateEraUI(slider.value);
+       
+        document.getElementById('opacity-slider').oninput = function() {
+            if (activeOverlays.length > 0) {
+                const target = activeOverlays[activeOverlays.length - 1];
+                target.setOpacity(this.value);
+            }
+        };
+        add3DMarkers();
+        startLocationTracking();
+    }
+   
+    function updateOpacityUI() {
+        const display = document.getElementById('opacity-target');
+        if (activeOverlays.length > 0) {
+            const latest = activeOverlays[activeOverlays.length - 1];
+            const name = Object.keys(layers).find(key => layers[key] === latest);
+            display.innerText = `調整：${name}`;
+            document.getElementById('opacity-slider').value = latest.options.opacity || 1.0;
+        } else {
+            display.innerText = "調整：未選択";
+        }
+    }
+    function add3DMarkers() {
+        const models = [
+            { name: "妙見寺開渠", file: "妙見寺開渠.glb", coords: [34.977573, 135.827704] },
+            { name: "両御坊道道標", file: "両御坊道道標.glb", coords: [34.985075, 135.823981] },
+            { name: "旧井戸跡地", file: "旧井戸跡地.glb", coords: [34.983122, 135.814421] }
+        ];
+        const icon3d = L.divIcon({
+            html: '<i class="fa-solid fa-cube" style="color:#e67e22; font-size:24px; text-shadow: 0 0 4px #fff;"></i>',
+            className: 'custom-icon', iconSize: [24, 24]
+        });
+        models.forEach(m => {
+            L.marker(m.coords, { icon: icon3d }).addTo(map).bindPopup(`
+                <div style="text-align:center; width:220px;">
+                    <b style="font-size:1.1rem; color:var(--primary-brown);">${m.name}</b>
+                    <model-viewer src="./${encodeURIComponent(m.file)}" auto-rotate camera-controls style="width:100%;height:160px; margin: 10px 0; background:#eee; border-radius:4px;"></model-viewer>
+                    <button class="mode-btn" style="width:100%;" onclick="open3DFullScreen('./${encodeURIComponent(m.file)}')">全画面表示</button>
+                </div>
+            `);
+        });
+    }
+  // --- データ読み込み（画像URL置換の修正版） ---
 async function loadPhotoData() {
-    try {
-        const response = await fetch(CSV_URL);
-        const csvText = await response.text();
-        const rows = csvText.split(/\r?\n/).slice(1);
-       archiveData = rows.filter(row => row.trim() !== "").map((row, index) => {
-    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1'));
+    try {
+        const response = await fetch(CSV_URL);
+        const csvText = await response.text();
+        const rows = csvText.split(/\r?\n/).slice(1);
+        archiveData = rows.filter(row => row.trim() !== "").map((row, index) => {
+            const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1'));
+            // 画像URLの軽量化（修正：バッククォートと変数の展開を正確に）
+            const rawUrl = cols[2] || "";
+            let directImg = "";
+            const fileIdMatch = rawUrl.match(/[-\w]{25,}/);
+            if (fileIdMatch) {
+                // googleusercontent経由でサイズを400pxに制限
+                directImg = `https://lh3.googleusercontent.com/d/${fileIdMatch[0]}=s400`;
+            } else {
+                directImg = rawUrl;
+            }
+           // タイトルをD列（index 3）から取得
+const rawTitle = (cols[4] || "名称未設定").replace(/"/g, ""); 
 
-    // --- 画像URLの生成（修正点：テンプレートリテラルの修正） ---
-    const rawUrl = cols[2] || "";
-    let directImg = "";
-    const fileIdMatch = rawUrl.match(/[-\w]{25,}/);
-    if (fileIdMatch) {
-        // ID部分を正しく展開し、末尾に =s800 などをつけて軽量化
-        directImg = `https://lh3.googleusercontent.com/d/${fileIdMatch[0]}=s800`;
-    } else {
-        directImg = rawUrl;
-    }
+// 座標をF列（index 5）から取得して分割
+let lat = 0, lng = 0;
+if (cols[5]) {
+    const coords = cols[5].split(/[\s,]+/);
+    lat = parseFloat(coords[0]);
+    lng = parseFloat(coords[1]);
+}
 
-    // --- 資料名から拡張子を削除（修正点：.jpg / .png などを一括削除） ---
-    let rawTitle = (cols[4] || "名称未設定").replace(/"/g, "");
-    rawTitle = rawTitle.replace(/\.(jpg|jpeg|png|gif|bmp)$/i, ""); // 拡張子を削除
-
-    // 座標の分割
-    let lat = 0, lng = 0;
-    if (cols[5]) {
-        const coords = cols[5].split(/[\s,]+/);
-        lat = parseFloat(coords[0]);
-        lng = parseFloat(coords[1]);
-    }
-
-    return {
-        id: index,
-        title: rawTitle,               // D列：資料名（拡張子なし）
-        img: directImg,                // 生成した画像URL
-        desc: cols[5] || "",           // E列：字地名
-        lat: lat,                      // F列から抽出
-        lng: lng,                      // F列から抽出
-        era: cols[7] || "",            // G列：年代
-        year: cols[9] || "",           // I列：年（西暦）
-        explanation: cols[10] || "",   // J列：説明
-        author: cols[11] || "",        // K列：撮影者
-        source: cols[12] || "",        // L列：出典
-        storage: cols[13] || "",       // M列：所蔵
-        rights: cols[14] || "不明"      // N列：権利状態
-    };
-        });
-        addPhotoMarkers(archiveData);
-    } catch (e) {
-        console.error("データの読み込みに失敗しました:", e);
-    }
+return {
+    id: index,
+    title: cols[4] || "名称未設定", // D列：資料名
+    desc: cols[5] || "",           // E列：字地名（ここをdescとして定義）
+    lat: lat,                      // F列から抽出
+    lng: lng,                      // F列から抽出
+    era: cols[7] || "",            // G列：年代
+    year: cols[9] || "",           // I列：年（西暦）
+    explanation: cols[10] || "",   // J列：説明
+    author: cols[11] || "",        // K列：撮影者
+    source: cols[12] || "",        // L列：出典
+    storage: cols[13] || "",       // M列：所蔵
+    rights: cols[14] || "不明"      // N列：権利状態
+};
+        });
+        addPhotoMarkers(archiveData);
+    } catch (e) {
+        console.error("データの読み込みに失敗しました:", e);
+    }
 }
 // --- 検索機能：キーワードが空なら何も表示しない ---
 function filterDB() {
-    const q = document.getElementById('db-search').value.toLowerCase().trim();
-    const era = document.getElementById('era-filter').value;
-    const list = document.getElementById('photo-list');
-    // 【修正】検索キーワード(q)が空の場合は、年代設定に関わらずリストを空にする
-    if (q === "") {
-        list.innerHTML = "";
-        return;
-    }
-    // キーワードがある場合のみフィルタリングして表示
-    const filtered = archiveData.filter(p => {
-        const matchTitle = p.title.toLowerCase().includes(q);
-        const matchEra = (!era || p.era.includes(era));
-        return matchTitle && matchEra;
-    });
-    renderPhotos(filtered);
+    const q = document.getElementById('db-search').value.toLowerCase().trim();
+    const era = document.getElementById('era-filter').value;
+    const list = document.getElementById('photo-list');
+    // 【修正】検索キーワード(q)が空の場合は、年代設定に関わらずリストを空にする
+    if (q === "") {
+        list.innerHTML = "";
+        return;
+    }
+    // キーワードがある場合のみフィルタリングして表示
+    const filtered = archiveData.filter(p => {
+        const matchTitle = p.title.toLowerCase().includes(q);
+        const matchEra = (!era || p.era.includes(era));
+        return matchTitle && matchEra;
+    });
+    renderPhotos(filtered);
 }
-    
+    
 function renderPhotos(data) {
-    const list = document.getElementById('photo-list');
-    list.innerHTML = data.map(p => `
-        <div class="photo-card" onclick="openDetail(${p.id})">
-            <img src="${p.img}" loading="lazy" onerror="this.src='https://placehold.jp/24/4e342e/ffffff/200x150.png?text=No+Image'">
-            <p>${p.title}</p>
-        </div>
-    `).join('');
+    const list = document.getElementById('photo-list');
+    list.innerHTML = data.map(p => `
+        <div class="photo-card" onclick="openDetail(${p.id})">
+            <img src="${p.img}" loading="lazy" onerror="this.src='https://placehold.jp/24/4e342e/ffffff/200x150.png?text=No+Image'">
+            <p>${p.title}</p>
+        </div>
+    `).join('');
 }
-    function addPhotoMarkers(data) {
-        const iconCam = L.divIcon({
-            html: '<i class="fa-solid fa-camera" style="color:var(--primary-brown); font-size:22px; text-shadow: 0 0 3px #fff;"></i>',
-            className: 'photo-pin', iconSize: [22, 22]
-        });
-        data.forEach(p => {
-            if (!isNaN(p.lat) && p.lat !== 0) {
-                L.marker([p.lat, p.lng], { icon: iconCam }).addTo(map).bindPopup(`
-                    <div style="text-align:center; width: 200px;">
-                        <b style="color:var(--primary-brown); font-size:1rem;">${p.title}</b><br>
-                        <div style="margin:8px 0; background:#eee; border-radius:4px; overflow:hidden;">
-                            <img src="${p.img}" style="width:100%; height:auto; display:block;" onerror="this.src='https://placehold.jp/200x150.png?text=Loading+Error'">
-                        </div>
-                        <div style="font-size:0.8rem; margin-bottom:8px;">${p.year ? p.year + '年' : p.era}</div>
-                        <button class="mode-btn" style="width:100%;" onclick="openDetail(${p.id})">詳細を表示</button>
-                    </div>
-                `);
-            }
-        });
-    }
-   function openDetail(id) {
-    const p = archiveData.find(x => x.id === id);
-    if(!p) return;
-    
-    const modal = document.getElementById('detail-modal');
-    // HTMLを構築（image_8.pngのレイアウトを再現、プロパティ名を修正）
-    modal.innerHTML = `
-        <div class="modal-content">
-            <button class="close-btn" onclick="closeModal()">×</button>
-            <div class="modal-body-container">
-                <div class="modal-image-section">
-                    <img src="${p.img}" onerror="this.src='https://placehold.jp/400x300.png?text=No+Image'">
-                </div>
-                
-                <div class="modal-info-section">
-                    <h2 style="color:#4e342e; margin-top:0; margin-bottom:20px; font-family:serif;">${p.title}</h2>
-                    
-                    <div class="meta-info-list">
-                　　　　 <div class="meta-item"><span class="meta-label">説明</span><span class="meta-value">${p.explanation || '（説明なし）'}</span></div>
-                        <div class="meta-item"><span class="meta-label">字地名</span><span class="meta-value">${p.desc || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">年代</span><span class="meta-value">${p.era || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">撮影年</span><span class="meta-value">${p.year ? p.year + '年' : '不明'}</span></div>
-                        <div class="meta-item"><span class="meta-label">撮影者</span><span class="meta-value">${p.author || '不明'}</span></div>
-                        <div class="meta-item"><span class="meta-label">出典</span><span class="meta-value">${p.source || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">所蔵</span><span class="meta-value">${p.storage || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">権利状態</span><span class="meta-value">${p.rights || '－'}</span></div>
-                    </div>
+    function addPhotoMarkers(data) {
+        const iconCam = L.divIcon({
+            html: '<i class="fa-solid fa-camera" style="color:var(--primary-brown); font-size:22px; text-shadow: 0 0 3px #fff;"></i>',
+            className: 'photo-pin', iconSize: [22, 22]
+        });
+        data.forEach(p => {
+            if (!isNaN(p.lat) && p.lat !== 0) {
+                L.marker([p.lat, p.lng], { icon: iconCam }).addTo(map).bindPopup(`
+                    <div style="text-align:center; width: 200px;">
+                        <b style="color:var(--primary-brown); font-size:1rem;">${p.title}</b><br>
+                        <div style="margin:8px 0; background:#eee; border-radius:4px; overflow:hidden;">
+                            <img src="${p.img}" style="width:100%; height:auto; display:block;" onerror="this.src='https://placehold.jp/200x150.png?text=Loading+Error'">
+                        </div>
+                        <div style="font-size:0.8rem; margin-bottom:8px;">${p.year ? p.year + '年' : p.era}</div>
+                        <button class="mode-btn" style="width:100%;" onclick="openDetail(${p.id})">詳細を表示</button>
+                    </div>
+                `);
+            }
+        });
+    }
+   function openDetail(id) {
+    const p = archiveData.find(x => x.id === id);
+    if(!p) return;
+    
+    const modal = document.getElementById('detail-modal');
+    // HTMLを構築（image_8.pngのレイアウトを再現、プロパティ名を修正）
+    modal.innerHTML = `
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <div class="modal-body-container">
+                <div class="modal-image-section">
+                    <img src="${p.img}" onerror="this.src='https://placehold.jp/400x300.png?text=No+Image'">
+                </div>
+                
+                <div class="modal-info-section">
+                    <h2 style="color:#4e342e; margin-top:0; margin-bottom:20px; font-family:serif;">${p.title}</h2>
+                    
+                    <div class="meta-info-list">
+                　　　　 <div class="meta-item"><span class="meta-label">説明</span><span class="meta-value">${p.explanation || '（説明なし）'}</span></div>
+                        <div class="meta-item"><span class="meta-label">字地名</span><span class="meta-value">${p.desc || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">年代</span><span class="meta-value">${p.era || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">撮影年</span><span class="meta-value">${p.year ? p.year + '年' : '不明'}</span></div>
+                        <div class="meta-item"><span class="meta-label">撮影者</span><span class="meta-value">${p.author || '不明'}</span></div>
+                        <div class="meta-item"><span class="meta-label">出典</span><span class="meta-value">${p.source || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">所蔵</span><span class="meta-value">${p.storage || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">権利状態</span><span class="meta-value">${p.rights || '－'}</span></div>
+                    </div>
 
-                    <button class="mode-btn" style="width:100%; margin-top:25px; padding:12px; background:#4e342e; color:#fff; border:none; border-radius:4px; cursor:pointer;" 
-                        onclick="focusOnMap([${p.lat}, ${p.lng}])">
-                        地図で場所を確認
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-    modal.style.display = 'flex';
+                    <button class="mode-btn" style="width:100%; margin-top:25px; padding:12px; background:#4e342e; color:#fff; border:none; border-radius:4px; cursor:pointer;" 
+                        onclick="focusOnMap([${p.lat}, ${p.lng}])">
+                        地図で場所を確認
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    modal.style.display = 'flex';
 }
-    // 全画面表示を開く関数
+    // 全画面表示を開く関数
 function openFullScreenImage(imgUrl) {
-    const overlay = document.getElementById('full-screen-overlay');
-    const fullImg = overlay.querySelector('img');
-    fullImg.src = imgUrl; // 高画質画像のURLを設定
-    overlay.style.display = 'flex';
+    const overlay = document.getElementById('full-screen-overlay');
+    const fullImg = overlay.querySelector('img');
+    fullImg.src = imgUrl; // 高画質画像のURLを設定
+    overlay.style.display = 'flex';
 }
 
 // 全画面表示を閉じる関数
 function closeFullScreenImage() {
-    document.getElementById('full-screen-overlay').style.display = 'none';
+    document.getElementById('full-screen-overlay').style.display = 'none';
 }
-    function open3DFullScreen(url) {
-        const body = document.getElementById('modal-body');
-        body.innerHTML = `<model-viewer src="${url}" auto-rotate camera-controls class="full-3d-box"></model-viewer>`;
-        document.getElementById('detail-modal').style.display = 'flex';
-    }
-    function focusOnMap(coords) {
-        closeModal();
-        showPage('map');
-        map.flyTo(coords, 18, { animate: true, duration: 1 });
-    }
-    function closeModal() { document.getElementById('detail-modal').style.display = 'none'; }
-    function showPage(page) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('header .mode-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('page-' + page).classList.add('active');
-        document.getElementById('btn-' + page).classList.add('active');
-        document.getElementById('map-ui').style.display = (page === 'map') ? 'flex' : 'none';
-        document.getElementById('db-ui').style.display = (page === 'db') ? 'flex' : 'none';
-        if (page === 'map') setTimeout(() => map.invalidateSize(), 200);
-    }
-    function switchControl(mode) {
-        const isSlider = (mode === 'slider');
-        document.getElementById('slider-box').style.display = isSlider ? 'flex' : 'none';
-        document.getElementById('m-btn-layers').classList.toggle('active', !isSlider);
-        document.getElementById('m-btn-slider').classList.toggle('active', isSlider);
-        const leafletControl = document.querySelector('.leaflet-control-layers');
-        if (leafletControl) leafletControl.style.display = isSlider ? 'none' : 'block';
-    }
-   function filterDB() {
-        const q = document.getElementById('db-search').value.toLowerCase().trim();
-        const era = document.getElementById('era-filter').value;
-        const list = document.getElementById('photo-list');
-        // キーワードが空、かつ年代が「全年代」の場合は、重くならないようにリストをクリアする
-        if (q === "" && era === "") {
-            list.innerHTML = `<div style="padding:20px; color:var(--primary-brown); text-align:center;">検索ワードを入力するか、年代を選択してください</div>`;
-            return;
-        }
-        // フィルタリング処理
-        const filtered = archiveData.filter(p => {
-            const matchTitle = p.title.toLowerCase().includes(q);
-            const matchEra = (!era || p.era.includes(era));
-            return matchTitle && matchEra;
-        });
-        // 該当件数が多すぎる場合の安全策（最初の100件のみ表示など）
-        renderPhotos(filtered.slice(0, 100));
-    }
-   let watchId = null; // 監視用ID
-    function startLocationTracking() {
-        if (!("geolocation" in navigator)) return;
-        // 既に監視中なら一旦クリア
-        if (watchId) navigator.geolocation.clearWatch(watchId);
-        watchId = navigator.geolocation.watchPosition((position) => {
-            const latlng = [position.coords.latitude, position.coords.longitude];
-            const accuracy = position.coords.accuracy;
-            if (userMarker) {
-                userMarker.setLatLng(latlng);
-                userCircle.setLatLng(latlng).setRadius(accuracy / 2);
-            } else {
-                // 初回作成
-                userCircle = L.circle(latlng, { radius: accuracy / 2, color: '#1E88E5', fillOpacity: 0.1, weight: 1 }).addTo(map);
-                userMarker = L.circleMarker(latlng, { radius: 8, color: '#fff', fillColor: '#1E88E5', fillOpacity: 1, weight: 3 }).addTo(map);
-            }
-        }, (err) => {
-            console.warn("位置情報の取得に失敗:", err);
-        }, {
-            enableHighAccuracy: true,
-            maximumAge: 0,
-            timeout: 10000
-        });
-    }
-    function requestLocation() {
-        // ボタンを押した時だけ、現在地に画面を飛ばす（追跡は継続）
-        if (userMarker) {
-            map.flyTo(userMarker.getLatLng(), 17, { animate: true, duration: 1.5 });
-        } else {
-            // マーカーがない場合のみ新規取得を試みる
-            map.locate({ setView: true, maxZoom: 17, enableHighAccuracy: true });
-        }
-    }
-    window.onload = () => {
-        initMap();
-        loadPhotoData();
-    };
+    function open3DFullScreen(url) {
+        const body = document.getElementById('modal-body');
+        body.innerHTML = `<model-viewer src="${url}" auto-rotate camera-controls class="full-3d-box"></model-viewer>`;
+        document.getElementById('detail-modal').style.display = 'flex';
+    }
+    function focusOnMap(coords) {
+        closeModal();
+        showPage('map');
+        map.flyTo(coords, 18, { animate: true, duration: 1 });
+    }
+    function closeModal() { document.getElementById('detail-modal').style.display = 'none'; }
+    function showPage(page) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('header .mode-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('page-' + page).classList.add('active');
+        document.getElementById('btn-' + page).classList.add('active');
+        document.getElementById('map-ui').style.display = (page === 'map') ? 'flex' : 'none';
+        document.getElementById('db-ui').style.display = (page === 'db') ? 'flex' : 'none';
+        if (page === 'map') setTimeout(() => map.invalidateSize(), 200);
+    }
+    function switchControl(mode) {
+        const isSlider = (mode === 'slider');
+        document.getElementById('slider-box').style.display = isSlider ? 'flex' : 'none';
+        document.getElementById('m-btn-layers').classList.toggle('active', !isSlider);
+        document.getElementById('m-btn-slider').classList.toggle('active', isSlider);
+        const leafletControl = document.querySelector('.leaflet-control-layers');
+        if (leafletControl) leafletControl.style.display = isSlider ? 'none' : 'block';
+    }
+   function filterDB() {
+        const q = document.getElementById('db-search').value.toLowerCase().trim();
+        const era = document.getElementById('era-filter').value;
+        const list = document.getElementById('photo-list');
+        // キーワードが空、かつ年代が「全年代」の場合は、重くならないようにリストをクリアする
+        if (q === "" && era === "") {
+            list.innerHTML = `<div style="padding:20px; color:var(--primary-brown); text-align:center;">検索ワードを入力するか、年代を選択してください</div>`;
+            return;
+        }
+        // フィルタリング処理
+        const filtered = archiveData.filter(p => {
+            const matchTitle = p.title.toLowerCase().includes(q);
+            const matchEra = (!era || p.era.includes(era));
+            return matchTitle && matchEra;
+        });
+        // 該当件数が多すぎる場合の安全策（最初の100件のみ表示など）
+        renderPhotos(filtered.slice(0, 100));
+    }
+   let watchId = null; // 監視用ID
+    function startLocationTracking() {
+        if (!("geolocation" in navigator)) return;
+        // 既に監視中なら一旦クリア
+        if (watchId) navigator.geolocation.clearWatch(watchId);
+        watchId = navigator.geolocation.watchPosition((position) => {
+            const latlng = [position.coords.latitude, position.coords.longitude];
+            const accuracy = position.coords.accuracy;
+            if (userMarker) {
+                userMarker.setLatLng(latlng);
+                userCircle.setLatLng(latlng).setRadius(accuracy / 2);
+            } else {
+                // 初回作成
+                userCircle = L.circle(latlng, { radius: accuracy / 2, color: '#1E88E5', fillOpacity: 0.1, weight: 1 }).addTo(map);
+                userMarker = L.circleMarker(latlng, { radius: 8, color: '#fff', fillColor: '#1E88E5', fillOpacity: 1, weight: 3 }).addTo(map);
+            }
+        }, (err) => {
+            console.warn("位置情報の取得に失敗:", err);
+        }, {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout: 10000
+        });
+    }
+    function requestLocation() {
+        // ボタンを押した時だけ、現在地に画面を飛ばす（追跡は継続）
+        if (userMarker) {
+            map.flyTo(userMarker.getLatLng(), 17, { animate: true, duration: 1.5 });
+        } else {
+            // マーカーがない場合のみ新規取得を試みる
+            map.locate({ setView: true, maxZoom: 17, enableHighAccuracy: true });
+        }
+    }
+    window.onload = () => {
+        initMap();
+        loadPhotoData();
+    };
 </script>
-    <div id="full-screen-overlay" onclick="closeFullScreenImage()">
-    <img src="" alt="全画面写真">
+    <div id="full-screen-overlay" onclick="closeFullScreenImage()">
+    <img src="" alt="全画面写真">
 </div>
 </body>
 </html>
-
