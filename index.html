@@ -607,23 +607,28 @@ function renderPhotos(data) {
             }
         });
     }
-   function openDetail(id) {
+   // openDetail関数内の画像表示部分を修正
+function openDetail(id) {
     const p = archiveData.find(x => x.id === id);
     if(!p) return;
     
     const modal = document.getElementById('detail-modal');
-    // HTMLを構築（image_8.pngのレイアウトを再現、プロパティ名を修正）
     modal.innerHTML = `
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal()">×</button>
             <div class="modal-body-container">
                 <div class="modal-image-section">
-                    <img src="${p.img}" onerror="this.src='https://placehold.jp/400x300.png?text=No+Image'">
+                    <img src="${p.img}" 
+                         class="clickable-image" 
+                         onclick="openFullScreenImage('${p.img}')" 
+                         style="cursor: zoom-in;"
+                         onerror="this.src='https://placehold.jp/400x300.png?text=No+Image'">
                 </div>
                 
                 <div class="modal-info-section">
-                    <h2 style="color:#4e342e; margin-top:0; margin-bottom:20px; font-family:serif;">${p.title}</h2>
-                    
+                    <h2 style="color:#4e342e; margin-top:0; margin-bottom:20px;">${p.title}</h2>
+                    </div>
+          
                     <div class="meta-info-list">
                 　　　　 <div class="meta-item"><span class="meta-label">説明</span><span class="meta-value">${p.explanation || '（説明なし）'}</span></div>
                         <div class="meta-item"><span class="meta-label">字地名</span><span class="meta-value">${p.desc || '－'}</span></div>
@@ -633,8 +638,8 @@ function renderPhotos(data) {
                         <div class="meta-item"><span class="meta-label">出典</span><span class="meta-value">${p.source || '－'}</span></div>
                         <div class="meta-item"><span class="meta-label">所蔵</span><span class="meta-value">${p.storage || '－'}</span></div>
                         <div class="meta-item"><span class="meta-label">権利状態</span><span class="meta-value">${p.rights || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label"><転載</span><span class="meta-value">${p.rights || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label"><撮影方角</span><span class="meta-value">${p.rights || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">転載</span><span class="meta-value">${p.rights || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">撮影方角</span><span class="meta-value">${p.rights || '－'}</span></div>
                     </div>
                     <button class="mode-btn" style="width:100%; margin-top:25px; padding:12px; background:#4e342e; color:#fff; border:none; border-radius:4px; cursor:pointer;" 
                         onclick="focusOnMap([${p.lat}, ${p.lng}])">
@@ -657,11 +662,38 @@ function openFullScreenImage(imgUrl) {
 function closeFullScreenImage() {
     document.getElementById('full-screen-overlay').style.display = 'none';
 }
-    function open3DFullScreen(url) {
-        const body = document.getElementById('modal-body');
-        body.innerHTML = `<model-viewer src="${url}" auto-rotate camera-controls class="full-3d-box"></model-viewer>`;
-        document.getElementById('detail-modal').style.display = 'flex';
+   function open3DFullScreen(url) {
+    const body = document.getElementById('modal-body');
+    body.innerHTML = `
+        <div style="position:relative;">
+            <model-viewer id="mv-logic" src="${url}" auto-rotate camera-controls class="full-3d-box"></model-viewer>
+            <div style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.8); padding:8px; border-radius:4px; z-index:100;">
+                <label style="font-size:0.8rem; color:#4e342e; cursor:pointer;">
+                    <input type="checkbox" id="texture-toggle" onchange="toggleTexture(this.checked)"> 形状確認モード(テクスチャOFF)
+                </label>
+            </div>
+        </div>
+    `;
+    document.getElementById('detail-modal').style.display = 'flex';
+}
+
+// テクスチャの表示・非表示を切り替える関数
+async function toggleTexture(isOff) {
+    const mv = document.querySelector('#mv-logic');
+    // モデルの読み込み完了を待ってから操作
+    const material = mv.model.materials[0];
+    
+    if (isOff) {
+        // テクスチャを無効化（ベースカラーをグレーにし、テクスチャをNULLに）
+        material.pbrMetallicRoughness.setBaseColorFactor([0.7, 0.7, 0.7, 1.0]);
+        material.pbrMetallicRoughness.baseColorTexture.setTexture(null);
+    } else {
+        // ページをリロードせずに戻すのは複雑なため、元の状態を反映させるには再読み込みが確実
+        // または、特定のテクスチャオブジェクトを保持しておく必要がありますが、
+        // 簡易的には一度閉じて開き直すか、srcを再設定するのがスムーズです。
+        mv.src = mv.src; 
     }
+}
     function focusOnMap(coords) {
         closeModal();
         showPage('map');
