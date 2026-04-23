@@ -142,50 +142,125 @@
     text-shadow: 1px 1px 4px rgba(0,0,0,0.8); /* 視認性を上げるための影 */
 }
       /* モーダル本体の調整 */
+/* モーダル背景の設定（透過しない） */
 #detail-modal {
-    padding: 10px; /* スマホで画面端に少し余白を作る */
-    align-items: flex-start; /* 上端から配置し、はみ出しを防止 */
-    padding-top: 5vh; 
+    background-color: rgba(0, 0, 0, 0.7); /* 背景の暗転のみ */
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    justify-content: center;
+    align-items: center; /* 中央に配置 */
+    padding: 10px;
 }
 
+/* カード本体 */
 .modal-content {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
+    background-color: #fff; /* 透過しない白背景 */
+    width: 95%;
+    max-width: 900px;
+    max-height: 90vh;
+    border-radius: 8px;
     position: relative;
-    /* スマホで閉じられなくなるのを防ぐため、高さを制御してスクロール可能に */
-    max-height: 85vh; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    overflow: hidden; /* 角丸を適用 */
+    display: flex;
+    flex-direction: column;
+}
+
+/* カード内部のレイアウト（PCは横並び） */
+.modal-body-container {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
     overflow-y: auto;
 }
 
-/* メタデータ項目のリストデザイン */
-.meta-info-list {
-    margin-top: 20px;
-    border-top: 1px solid var(--accent-gold);
+/* 左側：画像エリア */
+.modal-image-section {
+    flex: 1.2;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
 }
+
+.modal-image-section img {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+/* 右側：メタデータエリア */
+.modal-info-section {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+/* スマホ表示の調整 */
+@media (max-width: 768px) {
+    .modal-body-container {
+        flex-direction: column; /* 縦並びに変更 */
+    }
+    .modal-image-section {
+        flex: none;
+        height: auto;
+        padding: 10px;
+    }
+    .modal-info-section {
+        padding: 20px;
+    }
+}
+
+/* 閉じるボタン（右上に固定） */
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    background: #4e342e;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+.close-btn:hover { background: #000; }
+
+/* メタデータ項目の区切り線 */
+.meta-info-list { border-top: 1px solid #4e342e; }
 
 .meta-item {
     display: flex;
-    padding: 10px 0;
-    border-bottom: 1px dotted #ccc; /* 項目ごとの区切り線 */
-    font-size: 0.9rem;
-    line-height: 1.5;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee; /* 薄い区切り線 */
+    font-size: 0.95rem;
 }
 
 .meta-label {
-    width: 100px;
+    width: 90px;
     font-weight: bold;
-    color: var(--primary-brown);
+    color: #4e342e;
     flex-shrink: 0;
 }
 
 .meta-value {
     flex-grow: 1;
     color: #333;
-    word-break: break-all;
 }
-
 /* 閉じるボタンをスマホで押しやすく固定 */
 .close-btn {
     position: sticky; /* スクロールしてもついてくる */
@@ -526,29 +601,39 @@ function renderPhotos(data) {
     const p = archiveData.find(x => x.id === id);
     if(!p) return;
     
-    const body = document.getElementById('modal-body');
-    body.innerHTML = `
-        <button class="close-btn" onclick="closeModal()">×</button>
-        <h2 style="color:var(--primary-brown); border-bottom: 2px solid var(--accent-gold); padding-bottom:10px; margin-top:0;">${p.title}</h2>
-        
-        <img src="${p.img}" class="modal-image" onerror="this.src='https://placehold.jp/24/4e342e/ffffff/400x300.png?text=No+Image'">
-        
-        <div class="meta-info-list">
-            <div class="meta-item"><span class="meta-label">資料名</span><span class="meta-value">${p.title}</span></div>
-            <div class="meta-item"><span class="meta-label">字姓名</span><span class="meta-value">${p.desc || '－'}</span></div>
-            <div class="meta-item"><span class="meta-label">年代</span><span class="meta-value">${p.era}</span></div>
-            <div class="meta-item"><span class="meta-label">撮影年</span><span class="meta-value">${p.year ? p.year + '年' : '不明'}</span></div>
-            <div class="meta-item"><span class="meta-label">撮影者</span><span class="meta-value">${p.author || '不明'}</span></div>
-            <div class="meta-item"><span class="meta-label">出典</span><span class="meta-value">${p.source}</span></div>
-            <div class="meta-item"><span class="meta-label">権利状態</span><span class="meta-value">${p.rights}</span></div>
-            <div class="meta-item"><span class="meta-label">座標</span><span class="meta-value">${p.lat}, ${p.lng}</span></div>
-        </div>
+    const modal = document.getElementById('detail-modal');
+    // HTMLを構築（左に画像、右に情報）
+    modal.innerHTML = `
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <div class="modal-body-container">
+                <div class="modal-image-section">
+                    <img src="${p.img}" onerror="this.src='https://placehold.jp/400x300.png?text=No+Image'">
+                </div>
+                
+                <div class="modal-info-section">
+                    <h2 style="color:#4e342e; margin-top:0; margin-bottom:20px; font-family:serif;">${p.title}</h2>
+                    
+                    <div class="meta-info-list">
+                　　　　 <div class="meta-item"><span class="meta-label">説明</span><span class="meta-value">${p.explanation || '（説明なし）'}</span></div>
+                        <div class="meta-item"><span class="meta-label">字地名</span><span class="meta-value">${p.desc || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">年代</span><span class="meta-value">${p.era || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">撮影年</span><span class="meta-value">${p.year ? p.year + '年' : '不明'}</span></div>
+                        <div class="meta-item"><span class="meta-label">撮影者</span><span class="meta-value">${p.author || '不明'}</span></div>
+                        <div class="meta-item"><span class="meta-label">出典</span><span class="meta-value">${p.source || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">所蔵</span><span class="meta-value">${p.storage || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">権利状態</span><span class="meta-value">${p.rights || '－'}</span></div>
+                    </div>
 
-        <button class="mode-btn" style="width:100%; margin-top:25px; padding:12px; font-size:1.1rem;" onclick="focusOnMap([${p.lat}, ${p.lng}])">
-            地図で場所を確認
-        </button>
+                    <button class="mode-btn" style="width:100%; margin-top:25px; padding:12px; background:#4e342e; color:#fff; border:none; border-radius:4px; cursor:pointer;" 
+                        onclick="focusOnMap([${p.lat}, ${p.lng}])">
+                        地図で場所を確認
+                    </button>
+                </div>
+            </div>
+        </div>
     `;
-    document.getElementById('detail-modal').style.display = 'flex';
+    modal.style.display = 'flex';
 }
     function open3DFullScreen(url) {
         const body = document.getElementById('modal-body');
