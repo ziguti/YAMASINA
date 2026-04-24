@@ -712,20 +712,35 @@ function openFullScreenImage(imgUrl) {
 function closeFullScreenImage() {
     document.getElementById('full-screen-overlay').style.display = 'none';
 }
-   function open3DFullScreen(url) {
-    const body = document.getElementById('modal-body');
-    body.innerHTML = `
-        <div style="position:relative;">
-            <model-viewer id="mv-logic" src="${url}" auto-rotate camera-controls class="full-3d-box"></model-viewer>
-            <div style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.8); padding:8px; border-radius:4px; z-index:100;">
-                <label style="font-size:0.8rem; color:#4e342e; cursor:pointer;">
-                    <input type="checkbox" id="texture-toggle" onchange="toggleTexture(this.checked)"> 形状確認モード(テクスチャOFF)
-                </label>
+  window.open3DFullScreen = function(url) {
+    // modal-body を探すのではなく、確実に存在する detail-modal を使う
+    const modal = document.getElementById('detail-modal');
+    if (!modal) {
+        console.error("detail-modalが見つかりません");
+        return;
+    }
+
+    // モーダルの内容を3D表示用に書き換える
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width:95vw; height:90vh; background:#fff;">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <div style="position:relative; width:100%; height:100%;">
+                <model-viewer id="mv-logic" src="${url}" auto-rotate camera-controls 
+                    style="width:100%; height:100%; background:#eee;" shadow-intensity="1">
+                </model-viewer>
+                
+                <div style="position:absolute; bottom:20px; left:20px; background:rgba(255,255,255,0.9); 
+                            padding:10px; border-radius:8px; border:1px solid #4e342e; z-index:10001;">
+                    <label style="font-size:0.9rem; color:#4e342e; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" id="texture-toggle" onchange="toggleTexture(this.checked)" style="transform:scale(1.2);"> 
+                        形状確認モード (テクスチャ非表示)
+                    </label>
+                </div>
             </div>
         </div>
     `;
-    document.getElementById('detail-modal').style.display = 'flex';
-}
+    modal.style.display = 'flex';
+};
 
 // テクスチャの表示・非表示を切り替える関数
 async function toggleTexture(isOff) {
