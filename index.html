@@ -753,11 +753,14 @@ window.open3DFullScreen = function(url) {
     const modal = document.getElementById('detail-modal');
     if (!modal) return;
 
-    // 「active-3d」クラスを付与し、高さを強制的に確保する構造にする
+    // 3Dモード時は背景クリックで閉じないようにする
+    modal.onclick = null; 
+
     modal.innerHTML = `
         <div class="modal-content active-3d">
-            <button class="close-btn" onclick="closeModal()">×</button>
-            <div class="modal-body-container is-3d-layout">
+            <span class="custom-close-btn" onclick="closeModal(event)">×</span>
+            
+            <div class="modal-body-container layout-3d">
                 <model-viewer id="mv-logic" src="${url}" auto-rotate camera-controls 
                     style="width:100%; height:100%; background:#eee;" shadow-intensity="1">
                 </model-viewer>
@@ -772,6 +775,20 @@ window.open3DFullScreen = function(url) {
         </div>
     `;
     modal.style.display = 'flex';
+};
+
+// モーダルを閉じる共通関数
+window.closeModal = function(event) {
+    if (event) event.stopPropagation();
+    const modal = document.getElementById('detail-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.innerHTML = '';
+        // 閉じた後は、古写真用に背景クリックで閉じる設定を戻しておく（必要に応じて）
+        modal.onclick = function(e) {
+            if (e.target === modal) closeModal();
+        };
+    }
 };
 // テクスチャの表示・非表示を切り替える関数
 async function toggleTexture(isOff, event) {
