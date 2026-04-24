@@ -326,32 +326,24 @@
 }
 
 /* 右側：テキストエリア */
+/* 右側：テキストエリア全体の箱 */
 .modal-info-section {
-    flex: 0 0 50%; /* 残り50% */
-    padding: 30px;
+    flex: 1;
     display: flex;
     flex-direction: column;
-    box-sizing: border-box;
+    padding: 30px;
+    min-width: 0; /* これがないとはみ出す原因になります */
 }
 
-.modal-title {
-    font-family: serif;
-    color: #4e342e;
-    margin: 0 0 20px 0;
-    border-bottom: 2px solid #4e342e;
-    padding-bottom: 10px;
-}
-
-/* メタデータリストの整形 */
+/* メタデータリスト（スライドさせる部分） */
 .meta-info-list {
-    flex-grow: 1;
-}
-
-.meta-item {
-    display: flex;
-    margin-bottom: 12px;
-    font-size: 0.95rem;
-    line-height: 1.5;
+    flex: 1; /* 親の余った高さをすべて使う */
+    overflow-y: auto; /* ここで縦スライドを有効化 */
+    border-top: 1px solid #4e342e;
+    padding-top: 10px;
+    
+    /* URLの改行対策（これも必須） */
+    word-break: break-all;
 }
 
 .meta-label {
