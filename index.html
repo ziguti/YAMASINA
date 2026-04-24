@@ -137,101 +137,88 @@
 }
       /* モーダル本体の調整 */
 /* モーダル背景の設定（透過しない） */
+/* モーダル背景（画面高を超えた場合はここがスクロールする） */
 #detail-modal {
-    background-color: rgba(0, 0, 0, 0.7); /* 背景の暗転のみ */
     display: none;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0; /* top/left/right/bottom: 0 と同義 */
+    background: rgba(0, 0, 0, 0.85);
     z-index: 10000;
-    justify-content: center;
-    align-items: center; /* 中央に配置 */
-    padding: 10px;
+    overflow-y: auto; 
+    padding: 20px;
+    box-sizing: border-box;
 }
-/* カード本体 */
-/* モーダル本体：中身に合わせて高さが変わるように設定 */
+
+/* モーダル本体（1枚のパネル） */
 .modal-content {
     background: #fff;
-    width: 90%;
+    width: 100%;
     max-width: 1000px;
-    /* max-height と overflow を解除して1枚の板にする */
-    max-height: none; 
-    overflow: visible; 
+    margin: auto; /* 上下中央寄せ、画面高を超える場合は上から開始 */
+    min-height: min-content;
     border-radius: 12px;
-    position: relative;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
     display: flex;
-    flex-direction: column;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    overflow: hidden; /* 角丸を維持して画像を切り抜く */
 }
 
-/* PC：左右分割レイアウト（高さは右側のテキスト量に依存） */
-.modal-body-container {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch; /* 左右の高さを揃える */
-}
-
-/* 左側：画像エリア */
+/* 左側：画像エリア（PCデフォルト） */
 .modal-image-section {
-    flex: 1; /* 左右均等、またはお好みで 1.2 等に */
-    background: #1a1a1a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px 0 0 12px;
-    overflow: hidden;
+    flex: 1;
+    background: #111;
 }
 
 .modal-image-section img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* 隙間なく埋めて1枚のパネル感を出す */
+    object-fit: cover; /* パネルの高さに合わせて隙間なく埋める */
     display: block;
 }
 
-/* 右側：テキストエリア（スクロールなし） */
+/* 右側：テキストエリア（PCデフォルト） */
 .modal-info-section {
     flex: 1;
     padding: 40px;
-    background: #fff;
-    border-radius: 0 12px 12px 0;
     display: flex;
     flex-direction: column;
-    justify-content: center; /* 中央寄せで整った印象に */
+    justify-content: center;
+    min-width: 0; /* Flexbox内でのテキスト突き抜け防止 */
 }
 
-/* メタデータリスト（スクロール設定を削除） */
 .meta-info-list {
     margin-top: 20px;
     border-top: 1px solid #4e342e;
-    overflow: visible; /* スクロールさせない */
-    height: auto;      /* 高さを固定しない */
+}
+
+.meta-item {
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    word-break: break-all; /* 長いURLの改行 */
+}
+
+.meta-label {
+    flex: 0 0 90px;
+    font-weight: bold;
+    color: #8d6e63;
 }
 
 .meta-value {
-    word-break: break-all; /* URLの改行は維持 */
+    flex: 1;
+    color: #333;
 }
 
-/* スマホ：縦に並べて1枚の長いカードにする */
+/* スマホ・タブレット表示（768px以下で上下分割に強制切り替え） */
 @media (max-width: 768px) {
-    .modal-body-container {
+    .modal-content {
         flex-direction: column;
     }
     .modal-image-section {
-        height: 300px;
-        border-radius: 12px 12px 0 0;
+        height: 40vh; /* スマホ画面の40%を画像領域に */
+        min-height: 250px;
     }
     .modal-info-section {
-        padding: 25px;
-        border-radius: 0 0 12px 12px;
-    }
-    #detail-modal {
-        /* スマホで全体が長い場合に備え、外側の背景でスクロールさせる */
-        overflow-y: auto; 
-        align-items: flex-start;
-        padding: 20px 10px;
+        padding: 20px;
     }
 }
         /* ポップアップ内の画像にカーソルを合わせるとポインターにする */
