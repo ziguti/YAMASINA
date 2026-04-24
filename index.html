@@ -380,6 +380,53 @@
     border: 1px solid #4e342e;
     z-index: 10002; /* model-viewerより上に */
 }
+        /* --- 閉じボタンの共通スタイル --- */
+.custom-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 35px;
+    font-weight: bold;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.6);
+    width: 45px;
+    height: 45px;
+    line-height: 40px;
+    text-align: center;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 99999 !important; /* 圧倒的最前面 */
+    display: block !important;
+}
+
+/* 古写真モード（active-3dがない時）の調整 */
+.modal-content:not(.active-3d) {
+    background: none !important; /* 背景を透明にして画像だけ浮かせる */
+    box-shadow: none !important;
+}
+
+.modal-content:not(.active-3d) img {
+    max-width: 90vw;
+    max-height: 80vh;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+/* --- 3Dモード専用の修正 --- */
+.modal-content.active-3d {
+    width: 95vw !important;
+    height: 85vh !important;
+    max-width: none !important;
+    background: #fff !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.layout-3d {
+    flex: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+}
     </style>
 </head>
 <body>
