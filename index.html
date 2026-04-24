@@ -713,9 +713,9 @@ window.open3DFullScreen = function(url) {
     const modal = document.getElementById('detail-modal');
     if (!modal) return;
 
-    // クラス名を数字始まりでない名称「is-3d-active」に変更
+    // 「active-3d」クラスを付与し、高さを強制的に確保する構造にする
     modal.innerHTML = `
-        <div class="modal-content is-3d-active">
+        <div class="modal-content active-3d">
             <button class="close-btn" onclick="closeModal()">×</button>
             <div class="modal-body-container is-3d-layout">
                 <model-viewer id="mv-logic" src="${url}" auto-rotate camera-controls 
@@ -724,8 +724,7 @@ window.open3DFullScreen = function(url) {
                 
                 <div class="texture-control-panel">
                     <label class="control-label">
-<input type="checkbox" id="texture-toggle" 
-       onchange="toggleTexture(this.checked, event)">
+                        <input type="checkbox" id="texture-toggle" onchange="toggleTexture(this.checked, event)"> 
                         形状確認モード
                     </label>
                 </div>
