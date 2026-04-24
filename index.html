@@ -151,58 +151,111 @@
     padding: 10px;
 }
 /* カード本体 */
+/* モーダル全体の基本設定 */
 .modal-content {
-    background-color: #fff; /* 透過しない白背景 */
-    width: 95%;
-    max-width: 900px;
+    background: #fff;
+    width: 90%;
+    max-width: 1000px; /* PCでの最大幅 */
     max-height: 90vh;
-    border-radius: 8px;
+    border-radius: 12px;
     position: relative;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    overflow: hidden; /* 角丸を適用 */
+    overflow: hidden; /* はみ出し防止 */
     display: flex;
     flex-direction: column;
 }
-/* カード内部のレイアウト（PCは横並び） */
+
+/* コンテナをFlexboxにして横並びを制御 */
 .modal-body-container {
     display: flex;
-    flex-direction: row;
-    height: 100%;
-    overflow-y: auto;
+    flex-direction: row; /* 横並び */
+    flex: 1;
+    overflow-y: auto; /* 内容が多い場合にスクロール */
 }
+
 /* 左側：画像エリア */
 .modal-image-section {
-    flex: 1.2;
-    background-color: #f0f0f0;
+    flex: 0 0 50%; /* 幅を50%で固定 */
+    background: #f0f0f0;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    border-right: 1px solid #eee;
 }
+
 .modal-image-section img {
-    max-width: 100%;
-    max-height: 70vh;
-    object-fit: contain;
-    border-radius: 4px;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* アスペクト比を維持して収める */
+    cursor: zoom-in;
 }
-/* 右側：メタデータエリア */
+
+/* 右側：テキストエリア */
 .modal-info-section {
-    flex: 1;
+    flex: 0 0 50%; /* 残り50% */
     padding: 30px;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
 }
-/* スマホ表示の調整 */
+
+.modal-title {
+    font-family: serif;
+    color: #4e342e;
+    margin: 0 0 20px 0;
+    border-bottom: 2px solid #4e342e;
+    padding-bottom: 10px;
+}
+
+/* メタデータリストの整形 */
+.meta-info-list {
+    flex-grow: 1;
+}
+
+.meta-item {
+    display: flex;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.meta-label {
+    flex: 0 0 80px; /* ラベル幅を固定 */
+    font-weight: bold;
+    color: #8d6e63;
+}
+
+.meta-value {
+    flex: 1;
+    color: #333;
+}
+
+.map-focus-btn {
+    margin-top: 20px;
+    padding: 12px;
+    background: #4e342e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.map-focus-btn:hover {
+    background: #6d4c41;
+}
+
+/* レスポンシブ：スマホ表示（画面幅768px以下） */
 @media (max-width: 768px) {
     .modal-body-container {
-        flex-direction: column; /* 縦並びに変更 */
+        flex-direction: column; /* 縦並びに切り替え */
+    }
+    .modal-image-section, .modal-info-section {
+        flex: 0 0 auto; /* 幅固定を解除 */
+        width: 100%;
     }
     .modal-image-section {
-        flex: none;
-        height: auto;
-        padding: 10px;
-    }
-    .modal-info-section {
-        padding: 20px;
+        height: 300px; /* スマホでの画像高さ */
     }
 }
 /* 閉じるボタン（右上に固定） */
@@ -621,7 +674,6 @@ function openDetail(id) {
                     <img src="${p.img}" 
                          class="clickable-image" 
                          onclick="openFullScreenImage('${p.img}')" 
-                         style="cursor: zoom-in;"
                          onerror="this.src='https://placehold.jp/400x300.png?text=No+Image'">
                 </div>
                 
@@ -638,8 +690,8 @@ function openDetail(id) {
                         <div class="meta-item"><span class="meta-label">出典</span><span class="meta-value">${p.source || '－'}</span></div>
                         <div class="meta-item"><span class="meta-label">所蔵</span><span class="meta-value">${p.storage || '－'}</span></div>
                         <div class="meta-item"><span class="meta-label">権利状態</span><span class="meta-value">${p.rights || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">転載</span><span class="meta-value">${p.rights || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">撮影方角</span><span class="meta-value">${p.rights || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">転載</span><span class="meta-value">${p.reprint || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">撮影方角</span><span class="meta-value">${p.direction || '－'}</span></div>
                     </div>
                     <button class="mode-btn" style="width:100%; margin-top:25px; padding:12px; background:#4e342e; color:#fff; border:none; border-radius:4px; cursor:pointer;" 
                         onclick="focusOnMap([${p.lat}, ${p.lng}])">
