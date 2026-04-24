@@ -709,24 +709,23 @@ function openFullScreenImage(imgUrl) {
     overlay.style.display = 'flex';
 }
 // 全画面表示を閉じる関数
-function closeFullScreenImage() {
-    document.getElementById('full-screen-overlay').style.display = 'none';
-}
-  window.open3DFullScreen = function(url) {
+window.open3DFullScreen = function(url) {
     const modal = document.getElementById('detail-modal');
     if (!modal) return;
 
+    // クラス名を数字始まりでない名称「is-3d-active」に変更
     modal.innerHTML = `
-        <div class="modal-content 3d-full-mode">
+        <div class="modal-content is-3d-active">
             <button class="close-btn" onclick="closeModal()">×</button>
-            <div class="modal-body-container 3d-container">
+            <div class="modal-body-container is-3d-layout">
                 <model-viewer id="mv-logic" src="${url}" auto-rotate camera-controls 
                     style="width:100%; height:100%; background:#eee;" shadow-intensity="1">
                 </model-viewer>
                 
                 <div class="texture-control-panel">
                     <label class="control-label">
-                        <input type="checkbox" id="texture-toggle" onchange="toggleTexture(this.checked)"> 
+<input type="checkbox" id="texture-toggle" 
+       onchange="toggleTexture(this.checked, event)">
                         形状確認モード
                     </label>
                 </div>
@@ -735,22 +734,27 @@ function closeFullScreenImage() {
     `;
     modal.style.display = 'flex';
 };
-
 // テクスチャの表示・非表示を切り替える関数
-async function toggleTexture(isOff) {
+async function toggleTexture(isOff, event) {
+    // イベントの伝播を止める（これでモーダルが閉じなくなる）
+    if (event) event.stopPropagation();
+
     const mv = document.querySelector('#mv-logic');
-    // モデルの読み込み完了を待ってから操作
+    if (!mv || !mv.model || !mv.model.materials) return;
+
     const material = mv.model.materials[0];
     
     if (isOff) {
-        // テクスチャを無効化（ベースカラーをグレーにし、テクスチャをNULLに）
+        // テクスチャOFF：グレーのマットな質感にする
+        if (material.pbrMetallicRoughness.baseColorTexture) {
+            material.pbrMetallicRoughness.baseColorTexture.setTexture(null);
+        }
         material.pbrMetallicRoughness.setBaseColorFactor([0.7, 0.7, 0.7, 1.0]);
-        material.pbrMetallicRoughness.baseColorTexture.setTexture(null);
     } else {
-        // ページをリロードせずに戻すのは複雑なため、元の状態を反映させるには再読み込みが確実
-        // または、特定のテクスチャオブジェクトを保持しておく必要がありますが、
-        // 簡易的には一度閉じて開き直すか、srcを再設定するのがスムーズです。
-        mv.src = mv.src; 
+        // テクスチャON：モデルを再ロードして復元
+        const currentSrc = mv.src;
+        mv.src = '';
+        mv.src = currentSrc;
     }
 }
     function focusOnMap(coords) {
