@@ -151,56 +151,58 @@
     padding: 10px;
 }
 /* カード本体 */
-/* モーダル全体の基本設定 */
 .modal-content {
-    background: #fff;
-    width: 90%;
-    max-width: 1000px; /* PCでの最大幅 */
+    background-color: #fff; /* 透過しない白背景 */
+    width: 95%;
+    max-width: 900px;
     max-height: 90vh;
-    border-radius: 12px;
+    border-radius: 8px;
     position: relative;
-    overflow: hidden; /* はみ出し防止 */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    overflow: hidden; /* 角丸を適用 */
     display: flex;
     flex-direction: column;
 }
-
-/* メタデータテーブルの基本設定 */
-.detail-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed; /* これで列幅を固定し、はみ出しを防ぐ */
-}
-
-.detail-table th {
-    width: 80px; /* 項目名の幅を固定 */
-    text-align: left;
-    vertical-align: top;
-    padding: 8px 5px;
-    font-weight: bold;
-    color: #555;
-}
-
-.detail-table td {
-    padding: 8px 5px;
-    vertical-align: top;
-    line-height: 1.5;
-    /* 【重要】長いURLや文字列を強制的に改行させる */
-    word-break: break-all; 
-    overflow-wrap: break-word;
-}
-
-/* モーダル内の画像と情報のコンテナ */
-.modal-detail-container {
+/* カード内部のレイアウト（PCは横並び） */
+.modal-body-container {
     display: flex;
-    flex-direction: row; /* 横並び */
-    gap: 20px;
-    align-items: flex-start;
+    flex-direction: row;
+    height: 100%;
+    overflow-y: auto;
 }
-
-/* スマホなど画面が狭い時は縦並びにする */
+/* 左側：画像エリア */
+.modal-image-section {
+    flex: 1.2;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.modal-image-section img {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 4px;
+}
+/* 右側：メタデータエリア */
+.modal-info-section {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+/* スマホ表示の調整 */
 @media (max-width: 768px) {
-    .modal-detail-container {
-        flex-direction: column;
+    .modal-body-container {
+        flex-direction: column; /* 縦並びに変更 */
+    }
+    .modal-image-section {
+        flex: none;
+        height: auto;
+        padding: 10px;
+    }
+    .modal-info-section {
+        padding: 20px;
     }
 }
 /* 閉じるボタン（右上に固定） */
@@ -285,22 +287,6 @@
     object-fit: contain;
     box-shadow: 0 0 20px rgba(255,255,255,0.2);
 }
-        
-const fullScreenContainer = document.getElementById('full-screen-container');
-
-fullScreenContainer.addEventListener('click', function(event) {
-    // 画像そのものではなく、背景（コンテナ）をクリックした場合に閉じる
-    // あるいは、全画面時はどこをクリックしても閉じる設定にするなら simple に hide()
-    this.style.display = 'none';
-});
-
-// 通常の詳細モーダルの背景クリック
-window.addEventListener('click', function(event) {
-    const modal = document.getElementById('detail-modal'); // モーダルのIDに合わせて変更
-    if (event.target === modal) {
-        modal.style.display = 'none';
-    }
-});
     </style>
 </head>
 <body>
@@ -652,8 +638,8 @@ function openDetail(id) {
                         <div class="meta-item"><span class="meta-label">出典</span><span class="meta-value">${p.source || '－'}</span></div>
                         <div class="meta-item"><span class="meta-label">所蔵</span><span class="meta-value">${p.storage || '－'}</span></div>
                         <div class="meta-item"><span class="meta-label">権利状態</span><span class="meta-value">${p.rights || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">転載</span><span class="meta-value">${p.reprint || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">撮影方角</span><span class="meta-value">${p.direction || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">転載</span><span class="meta-value">${p.rights || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">撮影方角</span><span class="meta-value">${p.rights || '－'}</span></div>
                     </div>
                     <button class="mode-btn" style="width:100%; margin-top:25px; padding:12px; background:#4e342e; color:#fff; border:none; border-radius:4px; cursor:pointer;" 
                         onclick="focusOnMap([${p.lat}, ${p.lng}])">
@@ -786,43 +772,6 @@ async function toggleTexture(isOff) {
         initMap();
         loadPhotoData();
     };
-    // 詳細を表示する関数内のHTML生成部分のイメージ
-function showDetail(data) {
-    const modalBody = document.querySelector('.modal-body'); // 既存のクラス名に合わせて変更
-    
-    modalBody.innerHTML = `
-        <div class="modal-detail-container">
-            <div style="flex: 1.2; min-width: 0;">
-                <img src="${data.url}" 
-                     style="width: 100%; height: auto; border-radius: 4px; cursor: zoom-in;" 
-                     onclick="openFullScreen('${data.url}')">
-            </div>
-            
-            <div style="flex: 1; min-width: 0;">
-                <h2 style="margin-top: 0; border-bottom: 2px solid #8d6e63; padding-bottom: 10px;">
-                    ${data.title}
-                </h2>
-               <table class="detail-table">
-    <tr><th>説明</th><td>${p.explanation || '（説明なし）'}</td></tr>
-    <tr><th>字地名</th><td>${p.desc || '－'}</td></tr>
-    <tr><th>年代</th><td>${p.era || '－'}</td></tr>
-    <tr><th>撮影年</th><td>${p.year ? p.year + '年' : '不明'}</td></tr>
-    <tr><th>撮影者</th><td>${p.author || '不明'}</td></tr>
-    <tr><th>出典</th><td>${p.source || '－'}</td></tr>
-    <tr><th>所蔵</th><td>${p.storage || '－'}</td></tr>
-    <tr><th>権利状態</th><td>${p.rights || '－'}</td></tr>
-    <tr><th>転載</th><td>${p.reprint　|| '－'}</td></tr>
-    <tr><th>撮影方角</th><td>${p.direction || '－'}</td></tr>
-</table>
-                
-                <button class="map-check-btn" onclick="zoomToPhoto('${data.id}')" 
-                        style="margin-top: 20px; width: 100%; padding: 10px; background: #8d6e63; color: white; border: none; cursor: pointer;">
-                    地図で場所を確認
-                </button>
-            </div>
-        </div>
-    `;
-}
 </script>
     <div id="full-screen-overlay" onclick="closeFullScreenImage()">
     <img src="" alt="全画面写真">
