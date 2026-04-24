@@ -151,7 +151,143 @@
     padding: 10px;
 }
 /* カード本体 */
-/* モーダル全体の基本設定 */
+.modal-content {
+    background-color: #fff; /* 透過しない白背景 */
+    width: 95%;
+    max-width: 900px;
+    max-height: 90vh;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    overflow: hidden; /* 角丸を適用 */
+    display: flex;
+    flex-direction: column;
+}
+/* カード内部のレイアウト（PCは横並び） */
+.modal-body-container {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    overflow-y: auto;
+}
+/* 左側：画像エリア */
+.modal-image-section {
+    flex: 1.2;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.modal-image-section img {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 4px;
+}
+/* 右側：メタデータエリア */
+.modal-info-section {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+/* スマホ表示の調整 */
+@media (max-width: 768px) {
+    .modal-body-container {
+        flex-direction: column; /* 縦並びに変更 */
+    }
+    .modal-image-section {
+        flex: none;
+        height: auto;
+        padding: 10px;
+    }
+    .modal-info-section {
+        padding: 20px;
+    }
+}
+/* 閉じるボタン（右上に固定） */
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 36px;
+    height: 36px;
+    background: #4e342e;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+.close-btn:hover { background: #000; }
+/* メタデータ項目の区切り線 */
+.meta-info-list { border-top: 1px solid #4e342e; }
+.meta-item {
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee; /* 薄い区切り線 */
+    font-size: 0.95rem;
+}
+.meta-label {
+    width: 90px;
+    font-weight: bold;
+    color: #4e342e;
+    flex-shrink: 0;
+}
+.meta-value {
+    flex-grow: 1;
+    color: #333;
+}
+/* 閉じるボタンをスマホで押しやすく固定 */
+.close-btn {
+    position: sticky; /* スクロールしてもついてくる */
+    top: 0;
+    float: right;
+    z-index: 100;
+    background: var(--bg-cream);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+        .full-3d-box { width: 100%; height: 60vh; border-radius: 8px; border: 1px solid var(--accent-gold); margin-top: 15px; }
+        @media (max-width: 600px) {
+            .archive-title { font-size: 1.1rem; }
+            .mode-btn { padding: 5px 12px; font-size: 0.8rem; }
+            .map-overlay-controls { width: 150px; bottom: 20px; }
+        }
+        /* ポップアップ内の画像にカーソルを合わせるとポインターにする */
+.clickable-image { cursor: pointer; transition: 0.3s; }
+.clickable-image:hover { opacity: 0.8; }
+/* 全画面画像表示用のオーバレイ */
+#full-screen-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9); /* ほぼ真っ黒 */
+    z-index: 20000; /* ポップアップより上に配置 */
+    justify-content: center;
+    align-items: center;
+    cursor: zoom-out; /* クリックで閉じることを示すカーソル */
+}
+#full-screen-overlay img {
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+    box-shadow: 0 0 20px rgba(255,255,255,0.2);
+}
+        /* モーダル全体の基本設定 */
 .modal-content {
     background: #fff;
     width: 90%;
@@ -257,88 +393,6 @@
     .modal-image-section {
         height: 300px; /* スマホでの画像高さ */
     }
-}
-/* 閉じるボタン（右上に固定） */
-.close-btn {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 36px;
-    height: 36px;
-    background: #4e342e;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    font-size: 20px;
-    cursor: pointer;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: 0.2s;
-}
-.close-btn:hover { background: #000; }
-/* メタデータ項目の区切り線 */
-.meta-info-list { border-top: 1px solid #4e342e; }
-.meta-item {
-    display: flex;
-    padding: 12px 0;
-    border-bottom: 1px solid #eee; /* 薄い区切り線 */
-    font-size: 0.95rem;
-}
-.meta-label {
-    width: 90px;
-    font-weight: bold;
-    color: #4e342e;
-    flex-shrink: 0;
-}
-.meta-value {
-    flex-grow: 1;
-    color: #333;
-}
-/* 閉じるボタンをスマホで押しやすく固定 */
-.close-btn {
-    position: sticky; /* スクロールしてもついてくる */
-    top: 0;
-    float: right;
-    z-index: 100;
-    background: var(--bg-cream);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-        .full-3d-box { width: 100%; height: 60vh; border-radius: 8px; border: 1px solid var(--accent-gold); margin-top: 15px; }
-        @media (max-width: 600px) {
-            .archive-title { font-size: 1.1rem; }
-            .mode-btn { padding: 5px 12px; font-size: 0.8rem; }
-            .map-overlay-controls { width: 150px; bottom: 20px; }
-        }
-        /* ポップアップ内の画像にカーソルを合わせるとポインターにする */
-.clickable-image { cursor: pointer; transition: 0.3s; }
-.clickable-image:hover { opacity: 0.8; }
-/* 全画面画像表示用のオーバレイ */
-#full-screen-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.9); /* ほぼ真っ黒 */
-    z-index: 20000; /* ポップアップより上に配置 */
-    justify-content: center;
-    align-items: center;
-    cursor: zoom-out; /* クリックで閉じることを示すカーソル */
-}
-#full-screen-overlay img {
-    max-width: 95%;
-    max-height: 95%;
-    object-fit: contain;
-    box-shadow: 0 0 20px rgba(255,255,255,0.2);
 }
     </style>
 </head>
