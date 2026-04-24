@@ -151,111 +151,58 @@
     padding: 10px;
 }
 /* カード本体 */
-/* モーダル全体の基本設定 */
 .modal-content {
-    background: #fff;
-    width: 90%;
-    max-width: 1000px; /* PCでの最大幅 */
+    background-color: #fff; /* 透過しない白背景 */
+    width: 95%;
+    max-width: 900px;
     max-height: 90vh;
-    border-radius: 12px;
+    border-radius: 8px;
     position: relative;
-    overflow: hidden; /* はみ出し防止 */
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    overflow: hidden; /* 角丸を適用 */
     display: flex;
     flex-direction: column;
 }
-
-/* コンテナをFlexboxにして横並びを制御 */
+/* カード内部のレイアウト（PCは横並び） */
 .modal-body-container {
     display: flex;
-    flex-direction: row; /* 横並び */
-    flex: 1;
-    overflow-y: auto; /* 内容が多い場合にスクロール */
+    flex-direction: row;
+    height: 100%;
+    overflow-y: auto;
 }
-
 /* 左側：画像エリア */
 .modal-image-section {
-    flex: 0 0 50%; /* 幅を50%で固定 */
-    background: #f0f0f0;
+    flex: 1.2;
+    background-color: #f0f0f0;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-right: 1px solid #eee;
+    padding: 20px;
 }
-
 .modal-image-section img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain; /* アスペクト比を維持して収める */
-    cursor: zoom-in;
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 4px;
 }
-
-/* 右側：テキストエリア */
+/* 右側：メタデータエリア */
 .modal-info-section {
-    flex: 0 0 50%; /* 残り50% */
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-}
-
-.modal-title {
-    font-family: serif;
-    color: #4e342e;
-    margin: 0 0 20px 0;
-    border-bottom: 2px solid #4e342e;
-    padding-bottom: 10px;
-}
-
-/* メタデータリストの整形 */
-.meta-info-list {
-    flex-grow: 1;
-}
-
-.meta-item {
-    display: flex;
-    margin-bottom: 12px;
-    font-size: 0.95rem;
-    line-height: 1.5;
-}
-
-.meta-label {
-    flex: 0 0 80px; /* ラベル幅を固定 */
-    font-weight: bold;
-    color: #8d6e63;
-}
-
-.meta-value {
     flex: 1;
-    color: #333;
+    padding: 30px;
+    overflow-y: auto;
 }
-
-.map-focus-btn {
-    margin-top: 20px;
-    padding: 12px;
-    background: #4e342e;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background 0.3s;
-}
-
-.map-focus-btn:hover {
-    background: #6d4c41;
-}
-
-/* レスポンシブ：スマホ表示（画面幅768px以下） */
+/* スマホ表示の調整 */
 @media (max-width: 768px) {
     .modal-body-container {
-        flex-direction: column; /* 縦並びに切り替え */
-    }
-    .modal-image-section, .modal-info-section {
-        flex: 0 0 auto; /* 幅固定を解除 */
-        width: 100%;
+        flex-direction: column; /* 縦並びに変更 */
     }
     .modal-image-section {
-        height: 300px; /* スマホでの画像高さ */
+        flex: none;
+        height: auto;
+        padding: 10px;
+    }
+    .modal-info-section {
+        padding: 20px;
     }
 }
 /* 閉じるボタン（右上に固定） */
@@ -339,84 +286,6 @@
     max-height: 95%;
     object-fit: contain;
     box-shadow: 0 0 20px rgba(255,255,255,0.2);
-}
-        /* --- 3Dモード専用の設定 --- */
-/* クラス名をJSと完全一致させる */
-.modal-content.active-3d {
-    width: 95vw !important;
-    height: 85vh !important; /* スマホのツールバーを考慮して少し余裕を持たせる */
-    max-width: none !important;
-    display: flex !important;
-    flex-direction: column !important;
-}
-
-/* 3Dコンテナ内のレイアウト崩れを防止 */
-.layout-3d {
-    flex: 1 !important;
-    display: block !important; /* Flexの影響を打ち消す */
-    position: relative !important;
-    width: 100% !important;
-    height: 100% !important;
-    overflow: hidden !important;
-}
-
-/* --- チェックボックス用（クリックしても消えないように） --- */
-.texture-control-panel {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 8px 15px;
-    border-radius: 20px;
-    border: 1px solid #4e342e;
-    z-index: 10002; /* model-viewerより上に */
-}
-        /* --- 閉じボタンの共通スタイル --- */
-.custom-close-btn {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 35px;
-    font-weight: bold;
-    color: #fff;
-    background: rgba(0, 0, 0, 0.6);
-    width: 45px;
-    height: 45px;
-    line-height: 40px;
-    text-align: center;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 99999 !important; /* 圧倒的最前面 */
-    display: block !important;
-}
-
-/* 古写真モード（active-3dがない時）の調整 */
-.modal-content:not(.active-3d) {
-    background: none !important; /* 背景を透明にして画像だけ浮かせる */
-    box-shadow: none !important;
-}
-
-.modal-content:not(.active-3d) img {
-    max-width: 90vw;
-    max-height: 80vh;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-}
-
-/* --- 3Dモード専用の修正 --- */
-.modal-content.active-3d {
-    width: 95vw !important;
-    height: 85vh !important;
-    max-width: none !important;
-    background: #fff !important;
-    display: flex !important;
-    flex-direction: column !important;
-}
-
-.layout-3d {
-    flex: 1 !important;
-    width: 100% !important;
-    height: 100% !important;
-    display: block !important;
 }
     </style>
 </head>
@@ -752,11 +621,14 @@ function openDetail(id) {
                     <img src="${p.img}" 
                          class="clickable-image" 
                          onclick="openFullScreenImage('${p.img}')" 
+                         style="cursor: zoom-in;"
                          onerror="this.src='https://placehold.jp/400x300.png?text=No+Image'">
                 </div>
                 
                 <div class="modal-info-section">
-                    <h2 class="modal-title">${p.title}</h2>
+                    <h2 style="color:#4e342e; margin-top:0; margin-bottom:20px;">${p.title}</h2>
+                    </div>
+          
                     <div class="meta-info-list">
                 　　　　 <div class="meta-item"><span class="meta-label">説明</span><span class="meta-value">${p.explanation || '（説明なし）'}</span></div>
                         <div class="meta-item"><span class="meta-label">字地名</span><span class="meta-value">${p.desc || '－'}</span></div>
@@ -787,68 +659,39 @@ function openFullScreenImage(imgUrl) {
     overlay.style.display = 'flex';
 }
 // 全画面表示を閉じる関数
-window.open3DFullScreen = function(url) {
-    const modal = document.getElementById('detail-modal');
-    if (!modal) return;
-
-    // 3Dモード時は背景クリックで閉じないようにする
-    modal.onclick = null; 
-
-    modal.innerHTML = `
-        <div class="modal-content active-3d">
-            <span class="custom-close-btn" onclick="closeModal(event)">×</span>
-            
-            <div class="modal-body-container layout-3d">
-                <model-viewer id="mv-logic" src="${url}" auto-rotate camera-controls 
-                    style="width:100%; height:100%; background:#eee;" shadow-intensity="1">
-                </model-viewer>
-                
-                <div class="texture-control-panel">
-                    <label class="control-label">
-                        <input type="checkbox" id="texture-toggle" onchange="toggleTexture(this.checked, event)"> 
-                        形状確認モード
-                    </label>
-                </div>
+function closeFullScreenImage() {
+    document.getElementById('full-screen-overlay').style.display = 'none';
+}
+   function open3DFullScreen(url) {
+    const body = document.getElementById('modal-body');
+    body.innerHTML = `
+        <div style="position:relative;">
+            <model-viewer id="mv-logic" src="${url}" auto-rotate camera-controls class="full-3d-box"></model-viewer>
+            <div style="position:absolute; top:10px; left:10px; background:rgba(255,255,255,0.8); padding:8px; border-radius:4px; z-index:100;">
+                <label style="font-size:0.8rem; color:#4e342e; cursor:pointer;">
+                    <input type="checkbox" id="texture-toggle" onchange="toggleTexture(this.checked)"> 形状確認モード(テクスチャOFF)
+                </label>
             </div>
         </div>
     `;
-    modal.style.display = 'flex';
-};
+    document.getElementById('detail-modal').style.display = 'flex';
+}
 
-// モーダルを閉じる共通関数
-window.closeModal = function(event) {
-    if (event) event.stopPropagation();
-    const modal = document.getElementById('detail-modal');
-    if (modal) {
-        modal.style.display = 'none';
-        modal.innerHTML = '';
-        // 閉じた後は、古写真用に背景クリックで閉じる設定を戻しておく（必要に応じて）
-        modal.onclick = function(e) {
-            if (e.target === modal) closeModal();
-        };
-    }
-};
 // テクスチャの表示・非表示を切り替える関数
-async function toggleTexture(isOff, event) {
-    // イベントの伝播を止める（これでモーダルが閉じなくなる）
-    if (event) event.stopPropagation();
-
+async function toggleTexture(isOff) {
     const mv = document.querySelector('#mv-logic');
-    if (!mv || !mv.model || !mv.model.materials) return;
-
+    // モデルの読み込み完了を待ってから操作
     const material = mv.model.materials[0];
     
     if (isOff) {
-        // テクスチャOFF：グレーのマットな質感にする
-        if (material.pbrMetallicRoughness.baseColorTexture) {
-            material.pbrMetallicRoughness.baseColorTexture.setTexture(null);
-        }
+        // テクスチャを無効化（ベースカラーをグレーにし、テクスチャをNULLに）
         material.pbrMetallicRoughness.setBaseColorFactor([0.7, 0.7, 0.7, 1.0]);
+        material.pbrMetallicRoughness.baseColorTexture.setTexture(null);
     } else {
-        // テクスチャON：モデルを再ロードして復元
-        const currentSrc = mv.src;
-        mv.src = '';
-        mv.src = currentSrc;
+        // ページをリロードせずに戻すのは複雑なため、元の状態を反映させるには再読み込みが確実
+        // または、特定のテクスチャオブジェクトを保持しておく必要がありますが、
+        // 簡易的には一度閉じて開き直すか、srcを再設定するのがスムーズです。
+        mv.src = mv.src; 
     }
 }
     function focusOnMap(coords) {
@@ -935,3 +778,5 @@ async function toggleTexture(isOff, event) {
 </div>
 </body>
 </html>
+
+
