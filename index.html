@@ -340,6 +340,46 @@
     object-fit: contain;
     box-shadow: 0 0 20px rgba(255,255,255,0.2);
 }
+        /* --- 3Dモード専用の設定 --- */
+/* クラス名をJSと完全一致させる */
+.modal-content.active-3d {
+    width: 95vw !important;
+    height: 85vh !important; /* スマホのツールバーを考慮して少し余裕を持たせる */
+    max-width: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* 3Dコンテナ内のレイアウト崩れを防止 */
+.layout-3d {
+    flex: 1 !important;
+    display: block !important; /* Flexの影響を打ち消す */
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+/* PC（769px以上）の写真DB用設定。3Dモード時は除外する */
+@media (min-width: 769px) {
+    .modal-body-container:not(.layout-3d) {
+        display: flex;
+        flex-direction: row;
+        height: 80vh;
+    }
+}
+
+/* --- チェックボックス用（クリックしても消えないように） --- */
+.texture-control-panel {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 1px solid #4e342e;
+    z-index: 10002; /* model-viewerより上に */
+}
     </style>
 </head>
 <body>
