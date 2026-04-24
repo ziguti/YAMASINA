@@ -135,90 +135,100 @@
     box-sizing: border-box;
     text-shadow: 1px 1px 4px rgba(0,0,0,0.8); /* 視認性を上げるための影 */
 }
-      /* モーダル本体の調整 */
-/* モーダル背景の設定（透過しない） */
-/* モーダル背景（画面高を超えた場合はここがスクロールする） */
+/* モーダル背景：中央配置 */
 #detail-modal {
-    display: none;
+    display: none; /* JSで display: flex; にされる想定 */
     position: fixed;
-    inset: 0; /* top/left/right/bottom: 0 と同義 */
+    inset: 0;
     background: rgba(0, 0, 0, 0.85);
     z-index: 10000;
-    overflow-y: auto; 
+    align-items: center;
+    justify-content: center;
     padding: 20px;
     box-sizing: border-box;
 }
 
-/* モーダル本体（1枚のパネル） */
+/* モーダル本体：GridでPCは完全に左右二等分に固定 */
 .modal-content {
-    background: #fff;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 左右50%ずつに強制分割 */
     width: 100%;
     max-width: 1000px;
-    margin: auto; /* 上下中央寄せ、画面高を超える場合は上から開始 */
-    min-height: min-content;
+    background: #fff;
     border-radius: 12px;
+    overflow: hidden; /* 角丸のはみ出し防止 */
     box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-    display: flex;
-    overflow: hidden; /* 角丸を維持して画像を切り抜く */
 }
 
-/* 左側：画像エリア（PCデフォルト） */
+/* 左側：画像エリア */
 .modal-image-section {
-    flex: 1;
-    background: #111;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0; /* 突き抜け防止 */
 }
 
 .modal-image-section img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* パネルの高さに合わせて隙間なく埋める */
+    max-height: 85vh; /* 画面高の85%を上限とする（スクロール防止） */
+    object-fit: contain; /* 画像を切り抜かずに全体を表示 */
     display: block;
 }
 
-/* 右側：テキストエリア（PCデフォルト） */
+/* 右側：テキストエリア */
 .modal-info-section {
-    flex: 1;
     padding: 40px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    min-width: 0; /* Flexbox内でのテキスト突き抜け防止 */
+    justify-content: center; /* 上下中央寄せ */
+    min-width: 0; /* 文字の突き抜け防止 */
 }
 
+/* メタデータリストの整形 */
 .meta-info-list {
-    margin-top: 20px;
+    margin-top: 15px;
     border-top: 1px solid #4e342e;
+    padding-top: 10px;
 }
 
+/* 各項目もGrid化し、レイアウト崩れを防ぐ */
 .meta-item {
-    display: flex;
-    padding: 12px 0;
+    display: grid;
+    grid-template-columns: 80px 1fr; /* 左のラベル幅を80pxに固定 */
+    padding: 10px 0;
     border-bottom: 1px solid #eee;
-    word-break: break-all; /* 長いURLの改行 */
+    font-size: 0.95rem;
+    word-break: break-all; /* 長いURL対策 */
 }
 
 .meta-label {
-    flex: 0 0 90px;
     font-weight: bold;
     color: #8d6e63;
 }
 
 .meta-value {
-    flex: 1;
     color: #333;
+    line-height: 1.4;
 }
 
-/* スマホ・タブレット表示（768px以下で上下分割に強制切り替え） */
+/* スマホ・タブレット（768px以下で縦並びの1枚カードに変更） */
 @media (max-width: 768px) {
-    .modal-content {
-        flex-direction: column;
+    #detail-modal {
+        align-items: flex-start; /* スマホでは画面上部から配置 */
+        overflow-y: auto; /* スマホのみ、画面に収まらない場合に外側の背景ごとスクロール許可 */
     }
-    .modal-image-section {
-        height: 40vh; /* スマホ画面の40%を画像領域に */
-        min-height: 250px;
+    .modal-content {
+        grid-template-columns: 1fr; /* 1カラム（上下）に切り替え */
+        margin: auto;
+    }
+    .modal-image-section img {
+        max-height: 40vh; /* スマホでの画像の高さを制限し、下のテキストを見せる */
     }
     .modal-info-section {
-        padding: 20px;
+        padding: 25px;
+        justify-content: flex-start;
     }
 }
         /* ポップアップ内の画像にカーソルを合わせるとポインターにする */
