@@ -394,6 +394,21 @@
         height: 300px; /* スマホでの画像高さ */
     }
 }
+        /* メタデータリストの整形（ここを修正） */
+.meta-info-list {
+    flex-grow: 1;
+    
+    /* 【重要】ここを追加：高さを固定して、中身を縦スクロールさせる */
+    height: 300px; /* お好みの高さに調整してください */
+    overflow-y: auto; /* 縦方向のスクロールバーを自動表示 */
+    
+    /* スムーズなスクロールのための設定（スマホ用） */
+    -webkit-overflow-scrolling: touch;
+    
+    /* デザイン調整（必要に応じて） */
+    padding-right: 10px; /* スクロールバーと文字の重なり防止 */
+    border-top: 1px solid #4e342e;
+}
     </style>
 </head>
 <body>
