@@ -164,98 +164,43 @@
     flex-direction: column;
 }
 
-/* コンテナをFlexboxにして横並びを制御 */
-.modal-body-container {
+/* メタデータテーブルの基本設定 */
+.detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* これで列幅を固定し、はみ出しを防ぐ */
+}
+
+.detail-table th {
+    width: 80px; /* 項目名の幅を固定 */
+    text-align: left;
+    vertical-align: top;
+    padding: 8px 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.detail-table td {
+    padding: 8px 5px;
+    vertical-align: top;
+    line-height: 1.5;
+    /* 【重要】長いURLや文字列を強制的に改行させる */
+    word-break: break-all; 
+    overflow-wrap: break-word;
+}
+
+/* モーダル内の画像と情報のコンテナ */
+.modal-detail-container {
     display: flex;
     flex-direction: row; /* 横並び */
-    flex: 1;
-    overflow-y: auto; /* 内容が多い場合にスクロール */
+    gap: 20px;
+    align-items: flex-start;
 }
 
-/* 左側：画像エリア */
-.modal-image-section {
-    flex: 0 0 50%; /* 幅を50%で固定 */
-    background: #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-right: 1px solid #eee;
-}
-
-.modal-image-section img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain; /* アスペクト比を維持して収める */
-    cursor: zoom-in;
-}
-
-/* 右側：テキストエリア */
-.modal-info-section {
-    flex: 0 0 50%; /* 残り50% */
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-}
-
-.modal-title {
-    font-family: serif;
-    color: #4e342e;
-    margin: 0 0 20px 0;
-    border-bottom: 2px solid #4e342e;
-    padding-bottom: 10px;
-}
-
-/* メタデータリストの整形 */
-.meta-info-list {
-    flex-grow: 1;
-}
-
-.meta-item {
-    display: flex;
-    margin-bottom: 12px;
-    font-size: 0.95rem;
-    line-height: 1.5;
-}
-
-.meta-label {
-    flex: 0 0 80px; /* ラベル幅を固定 */
-    font-weight: bold;
-    color: #8d6e63;
-}
-
-.meta-value {
-    flex: 1;
-    color: #333;
-}
-
-.map-focus-btn {
-    margin-top: 20px;
-    padding: 12px;
-    background: #4e342e;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background 0.3s;
-}
-
-.map-focus-btn:hover {
-    background: #6d4c41;
-}
-
-/* レスポンシブ：スマホ表示（画面幅768px以下） */
+/* スマホなど画面が狭い時は縦並びにする */
 @media (max-width: 768px) {
-    .modal-body-container {
-        flex-direction: column; /* 縦並びに切り替え */
-    }
-    .modal-image-section, .modal-info-section {
-        flex: 0 0 auto; /* 幅固定を解除 */
-        width: 100%;
-    }
-    .modal-image-section {
-        height: 300px; /* スマホでの画像高さ */
+    .modal-detail-container {
+        flex-direction: column;
     }
 }
 /* 閉じるボタン（右上に固定） */
@@ -707,8 +652,8 @@ function openDetail(id) {
                         <div class="meta-item"><span class="meta-label">出典</span><span class="meta-value">${p.source || '－'}</span></div>
                         <div class="meta-item"><span class="meta-label">所蔵</span><span class="meta-value">${p.storage || '－'}</span></div>
                         <div class="meta-item"><span class="meta-label">権利状態</span><span class="meta-value">${p.rights || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">転載</span><span class="meta-value">${p.rights || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">撮影方角</span><span class="meta-value">${p.rights || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">転載</span><span class="meta-value">${p.reprint || '－'}</span></div>
+                        <div class="meta-item"><span class="meta-label">撮影方角</span><span class="meta-value">${p.direction || '－'}</span></div>
                     </div>
                     <button class="mode-btn" style="width:100%; margin-top:25px; padding:12px; background:#4e342e; color:#fff; border:none; border-radius:4px; cursor:pointer;" 
                         onclick="focusOnMap([${p.lat}, ${p.lng}])">
@@ -843,16 +788,37 @@ async function toggleTexture(isOff) {
     };
     // 詳細を表示する関数内のHTML生成部分のイメージ
 function showDetail(data) {
-    const modalBody = document.querySelector('.modal-body');
+    const modalBody = document.querySelector('.modal-body'); // 既存のクラス名に合わせて変更
+    
     modalBody.innerHTML = `
-        <div style="display: flex; flex-wrap: wrap; gap: 20px;">
-            <div style="flex: 1; min-width: 300px;">
-                <img src="${data.url}" style="width: 100%; cursor: zoom-in;" onclick="openFullScreen('${data.url}')">
+        <div class="modal-detail-container">
+            <div style="flex: 1.2; min-width: 0;">
+                <img src="${data.url}" 
+                     style="width: 100%; height: auto; border-radius: 4px; cursor: zoom-in;" 
+                     onclick="openFullScreen('${data.url}')">
             </div>
-            <div style="flex: 1; min-width: 300px;">
-                <h3>${data.title}</h3>
-                <table class="detail-table">
-                    </table>
+            
+            <div style="flex: 1; min-width: 0;">
+                <h2 style="margin-top: 0; border-bottom: 2px solid #8d6e63; padding-bottom: 10px;">
+                    ${data.title}
+                </h2>
+               <table class="detail-table">
+    <tr><th>説明</th><td>${p.explanation || '（説明なし）'}</td></tr>
+    <tr><th>字地名</th><td>${p.desc || '－'}</td></tr>
+    <tr><th>年代</th><td>${p.era || '－'}</td></tr>
+    <tr><th>撮影年</th><td>${p.year ? p.year + '年' : '不明'}</td></tr>
+    <tr><th>撮影者</th><td>${p.author || '不明'}</td></tr>
+    <tr><th>出典</th><td>${p.source || '－'}</td></tr>
+    <tr><th>所蔵</th><td>${p.storage || '－'}</td></tr>
+    <tr><th>権利状態</th><td>${p.rights || '－'}</td></tr>
+    <tr><th>転載</th><td>${p.reprint　|| '－'}</td></tr>
+    <tr><th>撮影方角</th><td>${p.direction || '－'}</td></tr>
+</table>
+                
+                <button class="map-check-btn" onclick="zoomToPhoto('${data.id}')" 
+                        style="margin-top: 20px; width: 100%; padding: 10px; background: #8d6e63; color: white; border: none; cursor: pointer;">
+                    地図で場所を確認
+                </button>
             </div>
         </div>
     `;
