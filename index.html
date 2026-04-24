@@ -287,6 +287,55 @@
     object-fit: contain;
     box-shadow: 0 0 20px rgba(255,255,255,0.2);
 }
+        /* モーダル本体のスタイル修正 */
+.modal-content {
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto; /* コンテンツが多い場合にスクロール可能にする */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+}
+
+/* 全画面画像表示用のコンテナ */
+#full-screen-container {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer; /* 背景がクリック可能であることを示す */
+}
+
+#full-screen-container img {
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+}
+        // 全画面画像コンテナのクリックイベント
+const fullScreenContainer = document.getElementById('full-screen-container');
+
+fullScreenContainer.addEventListener('click', function(event) {
+    // 画像そのものではなく、背景（コンテナ）をクリックした場合に閉じる
+    // あるいは、全画面時はどこをクリックしても閉じる設定にするなら simple に hide()
+    this.style.display = 'none';
+});
+
+// 通常の詳細モーダルの背景クリック
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('detail-modal'); // モーダルのIDに合わせて変更
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+});
     </style>
 </head>
 <body>
@@ -772,6 +821,22 @@ async function toggleTexture(isOff) {
         initMap();
         loadPhotoData();
     };
+    // 詳細を表示する関数内のHTML生成部分のイメージ
+function showDetail(data) {
+    const modalBody = document.querySelector('.modal-body');
+    modalBody.innerHTML = `
+        <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+            <div style="flex: 1; min-width: 300px;">
+                <img src="${data.url}" style="width: 100%; cursor: zoom-in;" onclick="openFullScreen('${data.url}')">
+            </div>
+            <div style="flex: 1; min-width: 300px;">
+                <h3>${data.title}</h3>
+                <table class="detail-table">
+                    </table>
+            </div>
+        </div>
+    `;
+}
 </script>
     <div id="full-screen-overlay" onclick="closeFullScreenImage()">
     <img src="" alt="全画面写真">
