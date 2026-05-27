@@ -7,6 +7,8 @@
     
     <!-- External CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,11 +16,12 @@
     
     <!-- External JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
     <style>
         html {
-            font-size: 106%; /* 全体の文字サイズを少し大きくする */
+            font-size: 106%;
         }
         :root {
             --primary-color: #4e342e;
@@ -31,7 +34,7 @@
             --white: #ffffff;
             --shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
             --header-height: 70px;
-            --sub-header-height: 85px; /* 検索窓上の説明文追加に伴い拡張 */
+            --sub-header-height: 60px;
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -98,6 +101,7 @@
         .nav-modes {
             display: flex;
             gap: 12px;
+            align-items: center;
         }
 
         .nav-btn {
@@ -132,12 +136,70 @@
             box-shadow: 0 4px 10px rgba(78, 52, 46, 0.3);
         }
 
+        /* 折りたたみ式データベースドロップダウンメニュー */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background-color: var(--white);
+            min-width: 240px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--accent-light);
+            border-radius: 8px;
+            z-index: 3100;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .dropdown:hover .dropdown-menu,
+        .dropdown.active .dropdown-menu {
+            display: block;
+        }
+
+        .dropdown-item {
+            color: var(--primary-color);
+            padding: 12px 20px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border-bottom: 1px solid rgba(189,160,109,0.15);
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--bg-cream);
+            color: var(--text-dark);
+        }
+
         /* Sub Header */
         .sub-header {
-            position: fixed; top: var(--header-height); left: 0; width: 100%; height: var(--sub-header-height);
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px);
-            display: flex; align-items: center; padding: 0 15px; z-index: 2500;
-            border-bottom: 1px solid #ddd; box-sizing: border-box; gap: 10px;
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            width: 100%;
+            height: var(--sub-header-height);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 2500;
+            border-bottom: 1px solid #ddd;
+            box-sizing: border-box;
+            gap: 15px;
         }
 
         .control-group {
@@ -153,7 +215,7 @@
             border-radius: 20px;
             cursor: pointer;
             font-family: inherit;
-            font-size: 0.95rem; /* 文字を少し大きく調整 */
+            font-size: 0.95rem;
             transition: var(--transition);
         }
 
@@ -161,6 +223,35 @@
             background: var(--accent-color);
             color: var(--white);
             border-color: var(--accent-color);
+        }
+
+        /* スポット設定インラインドロップダウン */
+        .spot-settings-box {
+            display: none;
+            position: absolute;
+            background: var(--white);
+            border: 1px solid var(--accent-color);
+            box-shadow: var(--shadow);
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 2800;
+            top: 55px;
+            left: 20px;
+            width: 250px;
+        }
+
+        .spot-settings-box label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .spot-settings-box label:last-child {
+            margin-bottom: 0;
         }
 
         /* Slider UI */
@@ -200,49 +291,6 @@
             display: inline-block;
         }
 
-        /* Search & Filter UI */
-        .search-container {
-            position: relative;
-            width: 60%;
-            max-width: 400px;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--accent-color);
-        }
-
-        #db-search, #doc-search, #td-search {
-            width: 100%;
-            padding: 10px 15px 10px 40px;
-            border-radius: 25px;
-            border: 1px solid var(--accent-light);
-            background: var(--white);
-            font-family: inherit;
-            font-size: 0.9rem;
-            outline: none;
-            transition: var(--transition);
-        }
-
-        #db-search:focus, #doc-search:focus, #td-search:focus {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(189, 160, 109, 0.15);
-        }
-
-        #era-filter, #doc-era-filter, #doc-type-filter {
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid var(--accent-light);
-            background: var(--white);
-            font-family: inherit;
-            color: var(--primary-color);
-            outline: none;
-            cursor: pointer;
-        }
-
         /* Main Content Area */
         .content-wrapper {
             position: absolute;
@@ -261,7 +309,7 @@
             opacity: 0;
             pointer-events: none;
             overflow-y: auto;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
         }
 
         .page.active {
@@ -295,14 +343,29 @@
         }
 
         .leaflet-control-layers::-webkit-scrollbar { width: 5px; }
-        .leaflet-control-layers::-webkit-scrollbar-track { background: rgba(0,0,0,0.03); }
-        .leaflet-control-layers::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 4px; }
-
         .leaflet-control-layers-list { font-family: 'Noto Serif JP', serif !important; padding: 5px; min-width: 200px; }
-
         .leaflet-control-layers-overlays label { display: flex !important; align-items: center; justify-content: space-between; margin-bottom: 12px !important; padding: 5px; font-size: 1.1rem; cursor: pointer; }
-
         .leaflet-control-layers-selector { transform: scale(1.3); margin-right: 10px !important; }
+
+        /* クラスタリングマーカーのスタイル */
+        .marker-cluster-photo {
+            background-color: rgba(78, 52, 46, 0.4);
+        }
+        .marker-cluster-photo div {
+            background-color: rgba(78, 52, 46, 0.85);
+            color: #fff;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: bold;
+        }
+        .marker-cluster-model {
+            background-color: rgba(46, 125, 50, 0.4);
+        }
+        .marker-cluster-model div {
+            background-color: rgba(46, 125, 50, 0.85);
+            color: #fff;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: bold;
+        }
 
         /* カスタムピンのスタイル（白丸囲み） */
         .marker-photo-pin {
@@ -317,14 +380,12 @@
             font-size: 16px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             border: 2px solid white;
-            transition: transform 0.2s;
         }
-        .marker-photo-pin:hover { transform: scale(1.15); background: var(--accent-color); }
 
         .marker-3d-pin {
-            background: #2e7d32; /* 分かりやすい緑 */
+            background: #2e7d32;
             color: white;
-            width: 36px; /* 古写真より少し大きめ */
+            width: 36px;
             height: 36px;
             border-radius: 50%;
             display: flex;
@@ -333,11 +394,9 @@
             font-size: 18px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.4);
             border: 2px solid white;
-            transition: transform 0.2s;
         }
-        .marker-3d-pin:hover { transform: scale(1.15); background: #1b5e20; }
 
-        /* ポップアップ内の横スクロールバー対策とスマホ補正 */
+        /* ポップアップ */
         .leaflet-popup-content-wrapper {
             border-radius: 10px !important;
             font-family: 'Noto Serif JP', serif !important;
@@ -346,13 +405,15 @@
         .leaflet-popup-content {
             max-height: 250px;
             overflow-y: auto !important;
-            overflow-x: hidden !important; /* 横スクロールを確実に消す */
+            overflow-x: hidden !important;
             -webkit-overflow-scrolling: touch;
             margin: 15px !important;
-            width: 240px !important; /* 幅を固定してはみ出しを防ぐ */
+            width: 250px !important;
         }
-        model-viewer {
-            outline: none; /* フォーカス時の枠線を消す */
+        
+        .leaflet-popup-content div {
+            max-width: 100%;
+            overflow-x: hidden;
         }
 
         .map-overlay-controls {
@@ -373,20 +434,46 @@
             color: var(--primary-color); font-size: 1.5rem; display: flex;
             align-items: center; justify-content: center; transition: var(--transition);
         }
-
         .location-btn:hover { transform: scale(1.05); color: var(--accent-color); }
 
-        /* Photo Grid */
+        /* Photo Database Page / 古写真画面装飾 */
         #page-db {
             height: calc(100% - var(--sub-header-height));
             top: var(--sub-header-height);
             margin-top: 0;
         }
 
+        .db-hero-section {
+            background: linear-gradient(135deg, rgba(78,52,46,0.9), rgba(189,160,109,0.7)), url('https://cyberjapandata.gsi.go.jp/xyz/ort/12/3649/1628.jpg');
+            background-size: cover;
+            background-position: center;
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--white);
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        .db-hero-title {
+            font-size: 2.2rem;
+            margin: 0 0 10px 0;
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+        }
+
+        .db-hero-sub {
+            font-size: 1rem;
+            margin: 0;
+            color: var(--accent-light);
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+        }
+
         .scroll-container {
             height: 100%;
             overflow-y: auto;
-            padding: 20px;
+            padding-bottom: 50px;
         }
 
         .photo-grid {
@@ -395,6 +482,7 @@
             gap: 25px;
             max-width: 1400px;
             margin: 0 auto;
+            padding: 0 20px;
         }
 
         .photo-card {
@@ -552,7 +640,7 @@
         .portal-section-title {
             font-size: 1.5rem;
             color: var(--primary-color);
-            margin: 0 0 20px 0;
+            margin: 40px 0 20px 0;
             padding-bottom: 10px;
             border-bottom: 2px solid var(--accent-color);
         }
@@ -626,7 +714,7 @@
             line-height: 1.5;
         }
 
-        /* ------------------ 新規データベース検索パネル (抜け殻構造) ------------------ */
+        /* ------------------ 横断検索・データベース検索パネル (NDL風) ------------------ */
         .db-search-panel {
             background: var(--white);
             border-radius: 16px;
@@ -654,6 +742,22 @@
             font-weight: 700;
             margin-bottom: 8px;
             color: var(--primary-color);
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
         }
 
         .category-tab-container {
@@ -768,20 +872,7 @@
             box-shadow: -5px 0 12px rgba(0,0,0,0.1);
         }
 
-        /* ------------------ ポップアップ内スマホスクロール補正 ------------------ */
-        .leaflet-popup-content-wrapper {
-            border-radius: 10px !important;
-            font-family: 'Noto Serif JP', serif !important;
-        }
-
-        .leaflet-popup-content {
-            max-height: 250px;
-            overflow-y: auto !important;
-            -webkit-overflow-scrolling: touch;
-            margin: 15px !important;
-        }
-
-        /* モーダル基本設計 */
+        /* モーダル基本設計と内部縦スクロール化 */
         .modal {
             display: none;
             position: fixed;
@@ -874,13 +965,16 @@
             margin-bottom: 20px;
         }
 
+        /* ★課題の修正箇所：データベース側モーダル内メタデータの完全縦スクロール化 */
         .meta-info-list {
             flex: 1;
-            overflow-y: auto;
-            padding-right: 5px;
+            overflow-y: auto !important; /* スクロールを強力に強制 */
+            padding-right: 10px;
+            max-height: 50vh; /* 高さの上限を規定し、縦スクロールに移行させる */
+            -webkit-overflow-scrolling: touch;
         }
 
-        .meta-info-list::-webkit-scrollbar { width: 4px; }
+        .meta-info-list::-webkit-scrollbar { width: 5px; }
         .meta-info-list::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 4px; }
 
         .meta-item {
@@ -977,7 +1071,6 @@
             }
             .content-wrapper { top: var(--header-height); }
             
-            /* サブヘッダーが縦積みになるためマージンを余分にとる */
             #page-map {
                 height: calc(100% - 140px);
                 top: 140px;
@@ -993,13 +1086,12 @@
             .modal-body-container { flex-direction: column; height: 100%; overflow-y: auto; }
             .modal-image-section { height: 35vh; flex: none; }
             .modal-info-section { padding: 20px; flex: none; overflow-y: visible; }
-            .meta-info-list { overflow-y: visible; }
+            .meta-info-list { overflow-y: visible; max-height: none; }
             .search-container { width: 100%; }
 
             .td-sidebar-panel { width: 290px; }
             .td-sidebar-panel.collapsed { transform: translateX(290px); }
             
-            /* カルーセルモバイル用調整 */
             .carousel-container { height: 260px; }
             .carousel-text h3 { font-size: 1.4rem; }
             .carousel-text p { font-size: 0.85rem; }
@@ -1024,9 +1116,19 @@
                 <button id="btn-map" class="nav-btn" onclick="showPage('map')">
                     <i class="fa-solid fa-map-location-dot"></i> <span>マップ</span>
                 </button>
-                <button id="btn-db" class="nav-btn" onclick="showPage('db')">
-                    <i class="fa-solid fa-camera-retro"></i> <span>古写真</span>
-                </button>
+                
+                <!-- 折りたたみ式「データベース」ボタンメニュー -->
+                <div class="dropdown">
+                    <button class="nav-btn">
+                        <i class="fa-solid fa-database"></i> <span>データベース</span> <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem;"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="#" class="dropdown-item" onclick="showPage('db')"><i class="fa-solid fa-camera-retro"></i> 古写真データベース</a>
+                        <a href="#" class="dropdown-item" onclick="showPage('map-db')"><i class="fa-solid fa-map"></i> 古地図データベース</a>
+                        <a href="#" class="dropdown-item" onclick="showPage('doc')"><i class="fa-solid fa-scroll"></i> 文書・史料データベース</a>
+                        <a href="#" class="dropdown-item" onclick="showPage('td')"><i class="fa-solid fa-cube"></i> 3D遺産データベース</a>
+                    </div>
+                </div>
             </nav>
         </div>
     </header>
@@ -1040,6 +1142,9 @@
             <button id="m-btn-slider" class="sub-nav-btn" onclick="switchControl('slider')">
                 <i class="fa-solid fa-clock-rotate-left"></i> 時代スライダー
             </button>
+            <button id="m-btn-spot" class="sub-nav-btn" onclick="toggleSpotSettings()">
+                <i class="fa-solid fa-location-dot"></i> スポット設定
+            </button>
         </div>
         
         <div id="slider-box" class="slider-container" style="display:none;">
@@ -1050,7 +1155,13 @@
         </div>
     </div>
 
-    <!-- Sub Header for DB Controls (説明文追加版) -->
+    <!-- スポット設定浮遊パネル -->
+    <div id="spot-settings-panel" class="spot-settings-box">
+        <label><input type="checkbox" id="chk-photo-pins" checked onchange="toggleMapPins('photo')"> 古写真ピンを表示</label>
+        <label><input type="checkbox" id="chk-3d-pins" checked onchange="toggleMapPins('3d')"> 3Dデータピンを表示</label>
+    </div>
+
+    <!-- Sub Header for DB Controls -->
     <div id="db-ui" class="sub-header" style="display:none;">
         <div style="display:flex; flex-direction:column; width:60%; max-width:550px; gap: 6px;">
             <div style="font-size: 0.75rem; color: var(--primary-color); font-weight: 700; line-height: 1.2;">
@@ -1058,7 +1169,7 @@
             </div>
             <div class="search-container" style="width:100%; max-width:none;">
                 <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" id="db-search" placeholder="資料名で検索..." oninput="filterDB()">
+                <input type="text" id="db-search" placeholder="古写真資料名で検索..." oninput="filterDB()">
             </div>
         </div>
         <div class="filter-container">
@@ -1100,7 +1211,6 @@
                             </div>
                         </div>
                         <div class="carousel-slide">
-                            <!-- ※ここの画像パスはお手持ちの代表的な古写真などに差し替えてください -->
                             <img src="https://cyberjapandata.gsi.go.jp/xyz/std/12/3649/1628.png" alt="山科の古写真アーカイブ">
                             <div class="carousel-overlay">
                                 <div class="carousel-text">
@@ -1126,6 +1236,43 @@
                     <p><strong>山科歴史デジタルアーカイブ</strong>は、山科区の空間的な歴史変遷をデジタル技術を用いて記録・統合するプラットフォームです。地籍図のジオリファレンスや、GISを活用した歴史地図のオーバーレイ、3Dモデリング等による建築物の復元を行っています。</p>
                     <p style="margin-top: 10px;">また、本アーカイブで公開している資料のうち、戦前から高度経済成長期にかけての貴重な古写真約700点を含む諸史料は、「<strong>山科を語り継ぐ会</strong>」様をはじめとする地域の諸団体・個人の方々からご提供いただいております。</p>
                 </div>
+
+                <!-- ★NDL風：すべてのデータベースの横断検索セクション -->
+                <h2 class="portal-section-title">総合（横断）検索</h2>
+                <div class="db-search-panel">
+                    <div class="filter-grid-row">
+                        <div class="filter-cell">
+                            <label>フリーワード検索</label>
+                            <input type="text" id="omni-search-input" placeholder="史料名、キーワード、場所、著者、分類などからすべての情報を横断して検索..." class="w-full p-3 border border-stone-300 rounded" style="font-family: inherit;">
+                        </div>
+                    </div>
+                    <div class="filter-grid-row">
+                        <div class="filter-cell">
+                            <label>対象時代（絞り込み）</label>
+                            <select id="omni-era-select" class="w-full p-2.5 border border-stone-300 rounded" style="font-family: inherit;">
+                                <option value="">指定なし</option>
+                                <option value="medieval">中世・近世以前</option>
+                                <option value="edo">江戸・近世期</option>
+                                <option value="meiji">明治期</option>
+                                <option value="taisho">大正期</option>
+                                <option value="showa">昭和期</option>
+                            </select>
+                        </div>
+                        <div class="filter-cell">
+                            <label>検索対象データベース</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" id="omni-chk-photo" checked> 古写真</label>
+                                <label><input type="checkbox" id="omni-chk-map" checked> 古地図</label>
+                                <label><input type="checkbox" id="omni-chk-doc" checked> 文書・史料</label>
+                                <label><input type="checkbox" id="omni-chk-3d" checked> 3Dデータ</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="map-focus-btn" onclick="executeOmniSearch()" style="margin-top:10px;"><i class="fa-solid fa-magnifying-glass"></i> NDL風 総合横断検索を実行</button>
+                </div>
+
+                <!-- 分割区切り線 -->
+                <hr style="border:0; border-top:1px solid var(--accent-color); margin:40px 0;">
 
                 <!-- セクション1: 地図から探索 -->
                 <h2 class="portal-section-title">地図から探索</h2>
@@ -1196,7 +1343,7 @@
             <div class="map-overlay-controls">
                 <div class="opacity-control">
                     <span class="control-label" id="opacity-target">調整：未選択</span>
-                    <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="1.0">
+                    <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="1.0" style="width:100%; accent-color:var(--accent-gold);">
                 </div>
             </div>
             
@@ -1208,7 +1355,20 @@
         <!-- Photo Database Page -->
         <section id="page-db" class="page">
             <div class="scroll-container">
+                <!-- 古写真ビジュアル看板ヘッダー -->
+                <div class="db-hero-section">
+                    <h2 class="db-hero-title">古写真データベース</h2>
+                    <p class="db-hero-sub">Yamashina Historical Photo Database</p>
+                </div>
+                
+                <!-- 検索結果カード -->
                 <div id="photo-list" class="photo-grid"></div>
+                
+                <!-- ★新設：検索結果に連動したピン表示マップ -->
+                <div id="search-result-map-container" style="max-width: 1400px; margin: 40px auto 0 auto; padding: 0 20px; display: none;">
+                    <h3 style="font-size: 1.3rem; color: var(--primary-color); border-bottom: 2px solid var(--accent-color); padding-bottom: 10px; margin-bottom: 15px;">検索結果ピンマップ</h3>
+                    <div id="result-map" style="width: 100%; height: 400px; border-radius: 12px; border: 1px solid var(--accent-color); box-shadow: var(--shadow);"></div>
+                </div>
             </div>
         </section>
 
@@ -1225,7 +1385,7 @@
 
         <!-- 文書・史料データベース（詳細検索画面：抜け殻構造） -->
         <section id="page-doc" class="page">
-            <div class="scroll-container" style="max-width: 1200px; margin: 0 auto;">
+            <div class="scroll-container" style="max-width: 1200px; margin: 0 auto; padding-top: 20px;">
                 <h2 style="font-size: 1.8rem; color: var(--primary-color); margin-bottom: 25px; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px;">文書・史料データベース</h2>
                 
                 <div class="db-search-panel">
@@ -1265,7 +1425,7 @@
 
         <!-- 3Dデータベース -->
         <section id="page-td" class="page">
-            <div class="scroll-container" style="max-width: 1200px; margin: 0 auto;">
+            <div class="scroll-container" style="max-width: 1200px; margin: 0 auto; padding-top: 20px;">
                 <h2 style="font-size: 1.8rem; color: var(--primary-color); margin-bottom: 25px; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px;">3D遺産・立体モニュメント</h2>
                 
                 <div class="db-search-panel">
@@ -1278,7 +1438,7 @@
                     </div>
                 </div>
 
-                <div id="td-grid" class="photo-grid">
+                <div id="td-grid" class="photo-grid" style="padding:0;">
                     <!-- JavaScriptから動的に出力 -->
                 </div>
             </div>
@@ -1339,6 +1499,13 @@
         let layers = {};
         let activeOverlays = []; 
         let userMarker, userCircle;
+
+        // 連動地図インスタンス
+        let resultLeafletMap = null;
+
+        // マーカークラスタグループ
+        let photoClusterGroup;
+        let modelClusterGroup;
 
         // 歴史地図データの定義
         const eras = [
@@ -1458,6 +1625,29 @@
                 }
             };
 
+            // クラスタグループの初期化
+            photoClusterGroup = L.markerClusterGroup({
+                iconCreateFunction: function(cluster) {
+                    return L.divIcon({
+                        html: '<div>' + cluster.getChildCount() + '</div>',
+                        className: 'marker-cluster marker-cluster-photo',
+                        iconSize: L.point(40, 40)
+                    });
+                }
+            });
+            modelClusterGroup = L.markerClusterGroup({
+                iconCreateFunction: function(cluster) {
+                    return L.divIcon({
+                        html: '<div>' + cluster.getChildCount() + '</div>',
+                        className: 'marker-cluster marker-cluster-model',
+                        iconSize: L.point(40, 40)
+                    });
+                }
+            });
+
+            map.addLayer(photoClusterGroup);
+            map.addLayer(modelClusterGroup);
+
             add3DMarkers();
             startLocationTracking();
         }
@@ -1500,13 +1690,14 @@
             });
 
             models.forEach(m => {
-                L.marker(m.coords, { icon: icon3d }).addTo(map).bindPopup(`
+                const marker = L.marker(m.coords, { icon: icon3d }).bindPopup(`
                     <div style="text-align:center; width:100%; box-sizing:border-box; overflow:hidden;" onclick="L.DomEvent.stopPropagation(event)">
                         <b style="font-size:1.15rem; color:var(--primary-color); display:block; margin-bottom:8px;">${m.name}</b>
                         <model-viewer src="./${encodeURIComponent(m.file)}" auto-rotate camera-controls style="width:100%; height:160px; margin:0 0 10px 0; background:#eee; border-radius:4px; overflow:hidden;"></model-viewer>
                         <button class="sub-nav-btn active" style="width:100%; font-weight:bold; padding:8px;" onclick="L.DomEvent.stopPropagation(event); open3DFullScreen('./${encodeURIComponent(m.file)}', '${m.name}')">全画面表示</button>
                     </div>
                 `);
+                modelClusterGroup.addLayer(marker);
             });
         }
 
@@ -1639,9 +1830,11 @@
             const q = document.getElementById('db-search').value.toLowerCase().trim();
             const era = document.getElementById('era-filter').value;
             const list = document.getElementById('photo-list');
+            const mapContainer = document.getElementById('search-result-map-container');
             
             if (q === "" && era === "") {
                 list.innerHTML = `<div class="empty-state">検索ワードを入力するか、年代を選択してください</div>`;
+                mapContainer.style.display = 'none';
                 return;
             }
             
@@ -1652,6 +1845,62 @@
             });
             
             renderPhotos(filtered.slice(0, 100));
+            
+            // ★新規：検索したピン情報のみを表示する連動マップを作成・更新
+            updateResultMap(filtered);
+        }
+
+        /**
+         * ★新規：検索結果に基づきそのピンのみを表示した地図の作成・更新
+         */
+        function updateResultMap(filteredData) {
+            const mapContainer = document.getElementById('search-result-map-container');
+            if (filteredData.length === 0) {
+                mapContainer.style.display = 'none';
+                return;
+            }
+            mapContainer.style.display = 'block';
+
+            if (!resultLeafletMap) {
+                resultLeafletMap = L.map('result-map', { zoomControl: true }).setView([34.992, 135.813], 14);
+                L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png').addTo(resultLeafletMap);
+            } else {
+                // 既存のマーカーをすべてリセット
+                resultLeafletMap.eachLayer((layer) => {
+                    if (layer instanceof L.Marker) {
+                        resultLeafletMap.removeLayer(layer);
+                    }
+                });
+            }
+
+            const iconCam = L.divIcon({
+                html: '<div class="marker-photo-pin"><i class="fa-solid fa-camera"></i></div>',
+                className: '', iconSize: [32, 32], iconAnchor: [16, 16]
+            });
+
+            const validBounds = [];
+            filteredData.forEach(p => {
+                if (!isNaN(p.lat) && p.lat !== 0) {
+                    const marker = L.marker([p.lat, p.lng], { icon: iconCam }).addTo(resultLeafletMap);
+                    marker.bindPopup(`
+                        <div style="text-align:center; width: 180px;">
+                            <b style="color:var(--primary-color); font-size:0.9rem;">${p.title}</b><br>
+                            <img src="${p.img}" style="width:100%; height:auto; margin-top:5px; border-radius:4px;" onerror="this.src='https://placehold.co/200x150/4e342e/ffffff?text=No+Image'">
+                            <button class="sub-nav-btn active" style="width:100%; font-weight:bold; margin-top:8px; padding:4px;" onclick="openDetail(${p.id})">詳細を表示</button>
+                        </div>
+                    `);
+                    validBounds.push([p.lat, p.lng]);
+                }
+            });
+
+            // 検索結果ピンの配置に合わせてカメラを自動フィットさせる
+            if (validBounds.length > 0) {
+                resultLeafletMap.fitBounds(validBounds, { padding: [30, 30] });
+            }
+            
+            setTimeout(() => {
+                resultLeafletMap.invalidateSize();
+            }, 100);
         }
 
         const emptyStyle = document.createElement('style');
@@ -1682,7 +1931,7 @@
 
             data.forEach(p => {
                 if (!isNaN(p.lat) && p.lat !== 0) {
-                    L.marker([p.lat, p.lng], { icon: iconCam }).addTo(map).bindPopup(`
+                    const marker = L.marker([p.lat, p.lng], { icon: iconCam }).bindPopup(`
                         <div style="text-align:center; width:100%; box-sizing:border-box; overflow:hidden;" onclick="L.DomEvent.stopPropagation(event)">
                             <b style="color:var(--primary-color); font-size:1.1rem; display:block; margin-bottom:8px;">${p.title}</b>
                             <div style="margin:0 0 10px 0; background:#eee; border-radius:4px; overflow:hidden;">
@@ -1692,6 +1941,8 @@
                             <button class="sub-nav-btn active" style="width:100%; font-weight:bold; padding:8px;" onclick="L.DomEvent.stopPropagation(event); openDetail(${p.id})">詳細を表示</button>
                         </div>
                     `);
+                    // ★クラスタグループに追加してマッピング
+                    photoClusterGroup.addLayer(marker);
                 }
             });
         }
@@ -1715,6 +1966,7 @@
                     <div class="modal-info-section">
                         <h2>${p.title}</h2>
                         
+                        <!-- ★メタデータ部分をスクロールできるようにコンテナとして整備 -->
                         <div class="meta-info-list">
                             <div class="meta-item"><span class="meta-label">説明</span><span class="meta-value">${p.explanation || '（説明なし）'}</span></div>
                             <div class="meta-item"><span class="meta-label">字地名</span><span class="meta-value">${p.desc || '－'}</span></div>
@@ -1929,11 +2181,14 @@
             
             document.getElementById('map-ui').style.display = (pageId === 'map') ? 'flex' : 'none';
             document.getElementById('db-ui').style.display = (pageId === 'db') ? 'flex' : 'none';
-            document.getElementById('doc-ui').style.display = (pageId === 'doc') ? 'flex' : 'none';
-            document.getElementById('td-ui').style.display = (pageId === 'td') ? 'flex' : 'none';
             
-            if (pageId === 'map') {
-                setTimeout(() => map.invalidateSize(), 300);
+            // スポット設定パネルは別のタイミングで閉じる
+            document.getElementById('spot-settings-panel').style.display = 'none';
+
+            if (pageId === 'map' && map) {
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 200);
             }
         }
 
@@ -1945,6 +2200,85 @@
             
             const leafletControl = document.querySelector('.leaflet-control-layers');
             if (leafletControl) leafletControl.style.display = isSlider ? 'none' : 'block';
+        }
+
+        /**
+         * ★新規：地図画面でのスポット設定パネル表示制御
+         */
+        function toggleSpotSettings() {
+            const panel = document.getElementById('spot-settings-panel');
+            const btn = document.getElementById('m-btn-spot');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+                btn.classList.remove('active');
+            } else {
+                panel.style.display = 'block';
+                btn.classList.add('active');
+            }
+        }
+
+        /**
+         * ★新規：スポット設定のピンレイヤの表示/非表示（クラスタから着脱）
+         */
+        function toggleMapPins(type) {
+            if (type === 'photo') {
+                const checked = document.getElementById('chk-photo-pins').checked;
+                if (checked) {
+                    map.addLayer(photoClusterGroup);
+                } else {
+                    map.removeLayer(photoClusterGroup);
+                }
+            } else if (type === '3d') {
+                const checked = document.getElementById('chk-3d-pins').checked;
+                if (checked) {
+                    map.addLayer(modelClusterGroup);
+                } else {
+                    map.removeLayer(modelClusterGroup);
+                }
+            }
+        }
+
+        /**
+         * ★新規：NDLサーチ風 OMNI 総合横断検索エンジン
+         */
+        function executeOmniSearch() {
+            const query = document.getElementById('omni-search-input').value.toLowerCase().trim();
+            const era = document.getElementById('omni-era-select').value;
+            
+            const searchPhoto = document.getElementById('omni-chk-photo').checked;
+            const searchMap = document.getElementById('omni-chk-map').checked;
+            const searchDoc = document.getElementById('omni-chk-doc').checked;
+            const search3D = document.getElementById('omni-chk-3d').checked;
+
+            if (query === "") {
+                showNotification("フリーワードを入力してください。");
+                return;
+            }
+
+            // 基本は古写真データベースをメイン対象に擬似的かつ正確に連動
+            if (searchPhoto) {
+                // 古写真DBにキーワードをバインド
+                document.getElementById('db-search').value = query;
+                if (era === "meiji") document.getElementById('era-filter').value = "明治";
+                else if (era === "taisho") document.getElementById('era-filter').value = "大正";
+                else if (era === "showa") document.getElementById('era-filter').value = "昭和";
+                else document.getElementById('era-filter').value = "";
+
+                showPage('db');
+                filterDB();
+                showNotification(`横断検索: ${query} に合致する古写真を表示しました。`);
+            } else if (search3D) {
+                document.getElementById('td-search').value = query;
+                showPage('td');
+                filterTD();
+                showNotification(`横断検索: ${query} に合致する3Dモデルを検索しました。`);
+            } else if (searchDoc) {
+                showPage('doc');
+                showNotification(`横断検索: ${query} に合致する翻刻文書は現在作業中です。`);
+            } else {
+                showPage('map-db');
+                showNotification(`横断検索: ${query} に合致する古地図資料は現在構築中です。`);
+            }
         }
 
         function showNotification(msg) {
