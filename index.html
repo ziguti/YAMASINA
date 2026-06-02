@@ -36,8 +36,6 @@
             --white: #ffffff;
             --map-purple: #4a148c;      /* 濃い紫 */
             --map-purple-dark: #311b92; /* より深い濃い紫 */
-            --map-blue: #1E88E5;
-            --map-blue-dark: #1565C0;
             --shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
             --header-height: 70px;
             --sub-header-height: 60px;
@@ -90,7 +88,7 @@
         .dropdown-menu {
             display: none; position: absolute; right: 0; top: 100%;
             background-color: var(--white); min-width: 240px; box-shadow: var(--shadow);
-            border: 1px solid var(--accent-light); border-radius: 8px; z-index: 3100;
+            border: 1px solid var(--accent-gold); border-radius: 8px; z-index: 3100;
             margin-top: 5px; overflow: hidden;
         }
         .dropdown:hover .dropdown-menu, .dropdown.active .dropdown-menu { display: block; }
@@ -157,13 +155,13 @@
         .leaflet-control-layers-overlays label { display: flex !important; align-items: center; justify-content: space-between; margin-bottom: 12px !important; padding: 5px; font-size: 1.1rem; cursor: pointer; }
         .leaflet-control-layers-selector { transform: scale(1.3); margin-right: 10px !important; }
 
-        /* ★ 紫グラデーションベースのMarkerClusterスタイル（古写真用） */
+        /* ★ 紫グラデーションベースのMarkerClusterスタイル（古写真用、少しすかしたグラデーション） */
         .marker-cluster-photo-custom {
-            background-color: rgba(74, 20, 140, 0.3); /* 濃い紫の透過背景 */
+            background-color: rgba(74, 20, 140, 0.2); /* 少しすかした(半透明) */
             border-radius: 50%;
         }
         .marker-cluster-photo-custom div {
-            background: linear-gradient(135deg, var(--map-purple), var(--map-purple-dark));
+            background: linear-gradient(135deg, rgba(106, 27, 154, 0.8), rgba(74, 20, 140, 0.8)); /* すかしたグラデーションピン色 */
             color: #fff;
             font-family: 'Noto Serif JP', serif;
             font-weight: bold;
@@ -173,8 +171,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border: 2px solid rgba(255, 255, 255, 0.8);
             width: 36px;
             height: 36px;
             margin-left: 2px;
@@ -185,7 +183,7 @@
         .marker-cluster-model { background-color: rgba(46, 125, 50, 0.4); }
         .marker-cluster-model div { background-color: rgba(46, 125, 50, 0.85); color: #fff; font-family: 'Noto Serif JP', serif; font-weight: bold; }
         
-        /* ★ しずく型（Teardrop）をベースにした濃い紫の古写真ピン。方角側が尖るようにデザイン */
+        /* ★方角付き古写真ピン（濃い紫の輪郭に白いしずく、中にカメラ。先端が方角を示すデザイン） */
         .marker-wrapper {
             position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
         }
@@ -193,13 +191,13 @@
             background: #ffffff; /* 白いベース */
             color: var(--map-purple); /* 濃い紫のカメラアイコン */
             width: 32px; height: 32px;
-            border-radius: 50% 50% 50% 0%; /* しずく形状 */
-            transform: rotate(-45deg); /* 北（上）を尖らせる基準オフセット */
+            border-radius: 0% 50% 50% 50%; /* しずく（Teardrop）形状のベース。先端が上向き */
+            transform: rotate(45deg); /* 北（上）を尖らせるための回転 */
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.35);
             border: 3.5px solid var(--map-purple); /* 濃い紫の太い輪郭 */
             z-index: 2;
-            transition: border-radius 0.2s;
+            transition: border-radius 0.2s, transform 0.2s;
         }
         /* 方角なしは完全な丸ピン */
         .marker-wrapper.no-direction .marker-photo-pin {
@@ -208,7 +206,8 @@
         }
         .marker-photo-pin i {
             font-size: 14px;
-            transform: rotate(45deg); /* しずくの傾きを打ち消して直立 */
+            /* しずく回転に対して、内部アイコンを常に直立（北）させるための逆回転補正 */
+            transform: rotate(-45deg);
         }
         .marker-wrapper.no-direction .marker-photo-pin i {
             transform: none !important;
@@ -310,7 +309,7 @@
         }
         .photo-card:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0,0,0,0.15); }
         .photo-card img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.8; transition: var(--transition); }
-        .photo-card:hover img { transform: scale(1.05); opacity: 1.0; }
+        .photo-card:hover img { opacity: 1.0; }
         .photo-card p {
             position: absolute; bottom: 0; left: 0; width: 100%; margin: 0; padding: 20px 15px;
             background: linear-gradient(transparent, rgba(0,0,0,0.85)); color: var(--white);
@@ -330,20 +329,29 @@
             z-index: 10000; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;
         }
         .modal-content {
-            display: grid; grid-template-columns: 1.2fr 0.8fr; /* 左右比率を美しく二分割 */
-            width: 100%; max-width: 1100px; background: #fff; border-radius: 12px;
-            overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            position: relative; height: 85vh; max-height: 800px;
+            background: var(--white); width: 95%; max-width: 1100px; height: 90vh; 
+            border-radius: 20px; position: relative; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column;
+        }
+        
+        /* ★ CSS Grid構造をこのコンテナに直接当てることで左右二等分レイアウトをPCで100%実現 */
+        .modal-body-container { 
+            display: grid; 
+            grid-template-columns: 1.2fr 0.8fr; /* 左半分が写真、右半分がメタデータ */
+            height: 100%; 
+            min-height: 0; 
+            overflow: hidden; 
         }
         .modal-image-section {
-            background: #1a1a1a; display: flex; align-items: center; justify-content: center; min-height: 0; overflow: hidden;
+            background: #1a1a1a; display: flex; align-items: center; justify-content: center; min-height: 0; height: auto; position: relative;
         }
         .modal-image-section img {
             width: 100%; height: 100%; object-fit: contain; display: block;
         }
+        
         .modal-info-section {
-            padding: 40px; display: flex; flex-direction: column; justify-content: flex-start; min-width: 0;
-            height: 100%; overflow: hidden; background: var(--white);
+            padding: 35px; background: var(--white); display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+            height: 100%;
         }
         .modal-info-section h2 { margin-top: 0; font-size: 1.6rem; color: var(--primary-brown); border-bottom: 2px solid var(--accent-gold); padding-bottom: 12px; margin-bottom: 10px; flex-shrink: 0; }
         
@@ -367,10 +375,10 @@
         #full-screen-img { max-width: 95%; max-height: 95%; object-fit: contain; transform-origin: center center; transition: transform 0.1s ease-out; cursor: grab; }
         #full-screen-img:active { cursor: grabbing; }
 
-        /* 3Dモーダル */
+        /* 3Dモーダル・★レイアウトを左右に完全に2分割、折りたたみは大きく見やすく設定 */
         .modal-3d { position: fixed; inset: 0; background: #111; z-index: 15000; }
-        .td-viewer-layout { display: flex; width: 100%; height: 100%; position: relative; }
-        .td-canvas-area { flex: 1; height: 100%; background: radial-gradient(#3c3532, #181514); position: relative; }
+        .td-viewer-layout { display: flex; width: 100%; height: 100%; position: relative; flex-direction: row; }
+        .td-canvas-area { flex: 1.2; height: 100%; background: radial-gradient(#3c3532, #181514); position: relative; }
         
         .td-sidebar-panel {
             width: 380px; height: 100%; background: var(--white); border-left: 3px solid var(--accent-gold);
@@ -378,6 +386,7 @@
         }
         .td-sidebar-panel.collapsed { transform: translateX(380px); position: absolute; right: 0; }
         
+        /* ★3Dサイドバーの矢印を大きく強調配置 */
         .td-sidebar-toggle {
             position: absolute; top: 50%; left: -60px; transform: translateY(-50%);
             width: 60px; height: 140px; background: var(--white); border: 3px solid var(--accent-gold);
@@ -431,7 +440,9 @@
 
             /* スマホでの詳細モーダル（画像上、メタデータ下で美しくスクロール） */
             #detail-modal { align-items: flex-start; padding: 10px; }
-            .modal-content { grid-template-columns: 1fr; margin: auto; height: 95vh; max-height: none; }
+            .modal-content { height: 95vh; width: 95%; max-height: none; }
+            /* スマホ時にはグリッドから上下1列のフレックスに解除 */
+            .modal-body-container { display: flex; flex-direction: column; overflow: hidden; }
             .modal-image-section { flex: 0 0 35vh; height: 35vh; }
             .modal-image-section img { max-height: 35vh; }
             .modal-info-section { padding: 20px; height: auto; overflow: hidden; flex: 1; }
@@ -610,7 +621,7 @@
                         </div>
                         <div class="portal-card-info">
                             <h3>3D遺産データベース</h3>
-                            <p>山科各地の歴史遺産のフォトグラメトリや、失われた建築構造の立体モデル検索。</p>
+                            <p>山科各地 of の歴史遺産のフォトグラメトリや、失われた建築構造の立体モデル検索。</p>
                         </div>
                     </div>
                 </div>
@@ -747,6 +758,7 @@
     <!-- Photo Detail Modal (縦スクロール・レイアウト完全復元) -->
     <div id="detail-modal" class="modal" onclick="closeModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
             <!-- ★ modal-body を正しく用意 -->
             <div id="modal-body" class="modal-body-container"></div>
         </div>
@@ -757,7 +769,7 @@
         <button class="close-btn" onclick="close3DModal()"><i class="fa-solid fa-xmark"></i></button>
         <div class="td-viewer-layout">
             <div id="3d-modal-body" class="td-canvas-area"></div>
-            <div id="3d-modal-panel" class="td-sidebar-panel">
+            <div id="td-explain" class="td-sidebar-panel">
                 <button class="td-sidebar-toggle" onclick="toggleTDExplain()"><i id="td-toggle-icon" class="fa-solid fa-chevron-right"></i></button>
                 <div class="td-sidebar-header">
                     <h3 id="td-explain-title"></h3><span style="font-size: 0.8rem; background: var(--accent-gold); color: #fff; padding: 2px 8px; border-radius: 10px;">解説</span>
@@ -959,8 +971,12 @@
                 const marker = L.marker(m.coords, { icon: icon3d }).bindPopup(`
                     <div class="map-popup-custom" onclick="L.DomEvent.stopPropagation(event)">
                         <b>${m.name}</b>
-                        <model-viewer src="./${encodeURIComponent(m.file)}" auto-rotate camera-controls style="width:100%;height:130px; margin:0 0 8px 0; background:#eee; border-radius:4px;"></model-viewer>
-                        <button class="nav-btn active" style="width:100%; padding:6px; justify-content:center;" onclick="open3DFullScreen('./${encodeURIComponent(m.file)}', '${m.name}')">全画面表示</button>
+                        <!-- ★ model-viewerを表示せず、画像(サムネイル)を表示 -->
+                        <div style="width:100%; height:130px; margin:0 0 8px 0; background:#eee; border-radius:4px; display:flex; flex-direction:column; align-items:center; justify-content:center; border: 1px dashed var(--accent-gold);">
+                            <i class="fa-solid fa-cube" style="font-size:2rem; color:#2e7d32; margin-bottom:5px;"></i>
+                            <span style="font-size:0.75rem; color:#666; font-family:'Noto Serif JP', serif;">3Dモデル画像（準備中）</span>
+                        </div>
+                        <button class="nav-btn active" style="width:100%; padding:6px; justify-content:center;" onclick="open3DFullScreen('./${encodeURIComponent(m.file)}', '${m.name}')">詳細を表示</button>
                     </div>
                 `);
                 markers.push(marker);
@@ -1022,6 +1038,7 @@
             try {
                 const response = await fetch(CSV_URL);
                 const csvText = await response.text();
+                // ★正規表現エラーを回避するため正しいCSVセパレータパースに補正
                 const rows = csvText.split(/\r?\n/).slice(1);
                 archiveData = rows.filter(row => row.trim() !== "").map((row, index) => {
                     const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1'));
@@ -1165,7 +1182,7 @@
                     const angle = getDirectionAngle(p.direction);
                     const hasDir = angle !== null;
                     const rotateStyle = hasDir ? `transform: rotate(${angle}deg);` : "";
-                    const counterRotateStyle = hasDir ? `transform: rotate(${-angle}deg);` : "";
+                    const counterRotateStyle = hasDir ? `transform: rotate(${-angle - 45}deg);` : "";
 
                     // 濃い紫の輪郭、白いしずく、撮影方角を尖った部分が指し示し、カメラは直立する構造
                     const iconCam = L.divIcon({
@@ -1211,7 +1228,7 @@
                     const angle = getDirectionAngle(p.direction);
                     const hasDir = angle !== null;
                     const rotateStyle = hasDir ? `transform: rotate(${angle}deg);` : "";
-                    const counterRotateStyle = hasDir ? `transform: rotate(${-angle}deg);` : "";
+                    const counterRotateStyle = hasDir ? `transform: rotate(${-angle - 45}deg);` : "";
 
                     const iconCam = L.divIcon({
                         html: `
@@ -1316,6 +1333,7 @@
             }
         }
 
+        // ここから修正版のJSを流し込む
         function applyTextureToggle(mv, isOff) {
             try {
                 if (!mv.model || !mv.model.materials || mv.model.materials.length === 0) return;
@@ -1409,8 +1427,12 @@
             grid.innerHTML = data.map(m => `
                 <div class="photo-card" style="height: 380px; background:#2e2624;" onclick="open3DFullScreen('./${encodeURIComponent(m.file)}', '${m.name}')">
                     <div style="width:100%; height:100%; display:flex; flex-direction:column; padding:15px; box-sizing:border-box;">
-                        <model-viewer src="./${encodeURIComponent(m.file)}" auto-rotate camera-controls style="width:100%; height:200px; background:#131313; border-radius:8px;" onclick="event.stopPropagation()"></model-viewer>
-                        <div style="margin-top:15px;">
+                        <!-- ★ model-viewerを表示せず、画像(サムネイル)プレースホルダーを表示 -->
+                        <div style="width:100%; height:200px; background:#1e1817; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; border: 1px dashed var(--accent-gold); margin-bottom:10px;">
+                            <i class="fa-solid fa-cube" style="font-size:3.5rem; color:#2e7d32; margin-bottom:10px;"></i>
+                            <span style="font-size:0.8rem; color:#aaa; font-family:'Noto Serif JP', serif;">3Dモデル（タップで3D起動）</span>
+                        </div>
+                        <div style="margin-top:5px;">
                             <b style="color:#fff; font-size:1.15rem; display:block; margin-bottom:5px; font-family:'Noto Serif JP', serif;">${m.name}</b>
                             <p style="position:static; padding:0; background:none; font-size:0.85rem; color:var(--accent-light); text-align:left; text-shadow:none;">${m.info}</p>
                         </div>
