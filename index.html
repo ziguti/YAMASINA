@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>山科歴史アーカイブ | Yamashina Historical Archive</title>
     
-    <!-- External CSS -->
+    <!-- 外部ライブラリ (CSS) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
@@ -14,15 +14,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Sawarabi+Mincho&display=swap" rel="stylesheet">
     
-    <!-- External JS -->
+    <!-- 外部ライブラリ (JS) -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-    <!-- Turf.js (For target location intersections & spatial queries) -->
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
     <style>
-        /* 右端などのスクロールバー全体を非表示（スクロール機能は完全に維持） */
         ::-webkit-scrollbar { display: none; width: 0; height: 0; }
         * { -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -36,8 +34,6 @@
             --text-dark: #2c1e1a;
             --text-muted: #6d4c41;
             --white: #ffffff;
-            --map-purple: #4a148c;      /* 濃い紫 */
-            --map-purple-dark: #311b92; /* より深い濃い紫 */
             --shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
             --header-height: 70px;
             --sub-header-height: 60px;
@@ -48,9 +44,9 @@
             margin: 0; padding: 0; background-color: var(--bg-cream);
             font-family: 'Noto Serif JP', 'Sawarabi Mincho', serif;
             color: var(--text-dark); height: 100%; overflow: hidden;
+            overflow-x: hidden; /* 横スクロールによる画面揺れを完全防止 */
         }
 
-        /* 共通閉じるボタン (統一デザイン・右上固定) */
         .close-btn {
             position: absolute; top: 15px; right: 15px; width: 45px; height: 45px;
             background: rgba(255, 255, 255, 0.95); border: 2px solid var(--accent-gold);
@@ -102,13 +98,14 @@
         .dropdown-item:last-child { border-bottom: none; }
         .dropdown-item:hover { background-color: var(--bg-cream); color: var(--text-dark); }
 
-        /* Sub Header */
+        /* Sub Header & Era Slider */
         .sub-header {
             position: fixed; top: var(--header-height); left: 0; width: 100%;
             height: var(--sub-header-height); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px);
             display: flex; align-items: center; padding: 0 20px; z-index: 2500;
             border-bottom: 1px solid #ddd; box-sizing: border-box; gap: 15px;
         }
+        .control-group { display: flex; gap: 10px; }
         .sub-nav-btn {
             background: var(--white); border: 1px solid #ddd; color: var(--text-muted);
             padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit;
@@ -116,26 +113,49 @@
         }
         .sub-nav-btn.active { background: var(--accent-gold); color: var(--white); border-color: var(--accent-gold); }
 
-        .spot-settings-box {
-            display: none; position: fixed; background: var(--white);
-            border: 2px solid var(--accent-gold); box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            padding: 25px; border-radius: 12px; z-index: 4000; 
-            top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 360px; max-width: 90%; max-height: 80vh; overflow-y: auto;
+        .slider-container { flex-grow: 1; display: flex; align-items: center; gap: 10px; max-width: 600px; }
+        .slider-arrow-btn {
+            background: var(--white); border: 1px solid var(--accent-gold); color: var(--primary-brown);
+            width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: var(--transition); font-size: 0.9rem; z-index: 10;
         }
-        .spot-settings-box h3 { margin-top: 0; color: var(--primary-brown); border-bottom: 2px solid var(--accent-light); padding-bottom: 10px; margin-bottom: 20px; }
-        .spot-settings-box label { display: flex; align-items: center; gap: 12px; font-size: 1.05rem; font-weight: 700; margin-bottom: 12px; cursor: pointer; color: var(--text-dark); }
-        .spot-settings-box input[type="checkbox"] { transform: scale(1.3); margin-right: 3px; cursor: pointer; }
-
-        .slider-container { flex-grow: 1; display: flex; align-items: center; gap: 15px; max-width: 600px; }
+        .slider-arrow-btn:hover { background: var(--primary-brown); color: var(--white); }
         #era-slider { flex-grow: 1; height: 6px; background: #e0e0e0; border-radius: 3px; appearance: none; outline: none; }
         #era-slider::-webkit-slider-thumb {
-            appearance: none; width: 20px; height: 20px; background: var(--accent-gold);
+            appearance: none; width: 22px; height: 22px; background: var(--accent-gold);
             border: 3px solid var(--white); border-radius: 50%; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
-        .era-display { font-size: 0.95rem; font-weight: 700; color: var(--primary-brown); min-width: 120px; display: inline-block; }
+        .era-display { font-size: 0.95rem; font-weight: 700; color: var(--primary-brown); min-width: 140px; text-align: right; display: inline-block; }
 
-        /* ページ制御 */
+        /* スポット設定スライドパネル (非モーダル・トグルタブ中央左端配置) */
+        #spot-settings-wrapper {
+            position: fixed; top: calc(var(--header-height) + var(--sub-header-height)); right: 0; bottom: 0;
+            width: 420px; max-width: 90%; z-index: 4000;
+            transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none; /* マップの操作を邪魔しないようにする設定 */
+        }
+        #spot-settings-wrapper.open { transform: translateX(0); }
+        
+        .spot-settings-tab {
+            position: absolute; left: -42px; top: 50%; transform: translateY(-50%);
+            width: 42px; height: 75px; background: var(--white); border: 2px solid var(--accent-gold);
+            border-right: none; border-radius: 8px 0 0 8px; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; color: var(--primary-brown); font-size: 1.3rem;
+            box-shadow: -4px 0 10px rgba(0,0,0,0.15); transition: background-color 0.2s;
+            pointer-events: auto;
+        }
+        .spot-settings-tab:hover { background: var(--bg-cream); }
+
+        .spot-settings-box-content {
+            width: 100%; height: 100%; background: rgba(255, 255, 255, 0.98);
+            border-left: 3px solid var(--accent-gold); box-shadow: -10px 0 35px rgba(0, 0, 0, 0.2);
+            padding: 30px 25px; overflow-y: auto; pointer-events: auto;
+        }
+        .spot-settings-box-content h3 { margin-top: 0; color: var(--primary-brown); border-bottom: 2px solid var(--accent-gold); padding-bottom: 10px; margin-bottom: 20px; font-weight: bold; }
+        .spot-settings-box-content label { display: flex; align-items: center; gap: 12px; font-size: 1.05rem; font-weight: 700; margin-bottom: 12px; cursor: pointer; color: var(--text-dark); }
+        .spot-settings-box-content input[type="checkbox"] { transform: scale(1.3); margin-right: 3px; cursor: pointer; }
+
+        /* Page Layouts */
         .content-wrapper { position: absolute; top: var(--header-height); bottom: 0; width: 100%; }
         .page {
             position: absolute; top: 0; left: 0; height: 100%; width: 100%;
@@ -144,7 +164,7 @@
         }
         .page.active { visibility: visible; opacity: 1; pointer-events: auto; z-index: 10; }
 
-        /* Map */
+        /* Map Main Page */
         #page-map { overflow: hidden; height: calc(100% - var(--sub-header-height)); top: var(--sub-header-height); margin-top: 0; }
         #map { width: 100%; height: 100%; background: #f0f0f0; }
 
@@ -157,64 +177,33 @@
         .leaflet-control-layers-overlays label { display: flex !important; align-items: center; justify-content: space-between; margin-bottom: 12px !important; padding: 5px; font-size: 1.1rem; cursor: pointer; }
         .leaflet-control-layers-selector { transform: scale(1.3); margin-right: 10px !important; }
 
-        /* 紫グラデーションベースのMarkerClusterスタイル */
-        .marker-cluster-photo-custom {
-            background-color: rgba(74, 20, 140, 0.2); 
-            border-radius: 50%;
-        }
+        /* Cluster Icons */
+        .marker-cluster-photo-custom { background-color: rgba(2, 136, 209, 0.2); border-radius: 50%; }
         .marker-cluster-photo-custom div {
-            background: linear-gradient(135deg, rgba(106, 27, 154, 0.8), rgba(74, 20, 140, 0.8));
-            color: #fff;
-            font-family: 'Noto Serif JP', serif;
-            font-weight: bold;
-            font-size: 14px;
-            border-radius: 50%;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            border: 2px solid rgba(255, 255, 255, 0.8);
-            width: 36px;
-            height: 36px;
-            margin-left: 2px;
-            margin-top: 2px;
+            background: linear-gradient(135deg, rgba(3, 155, 229, 0.8), rgba(1, 87, 155, 0.8));
+            color: #fff; font-family: 'Noto Serif JP', serif; font-weight: bold; font-size: 14px;
+            border-radius: 50%; text-align: center; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.155); border: 2px solid rgba(255, 255, 255, 0.8);
+            width: 36px; height: 36px; margin-left: 2px; margin-top: 2px;
         }
-
-        /* クラスタリング（3Dピン用） */
         .marker-cluster-model { background-color: rgba(46, 125, 50, 0.4); }
         .marker-cluster-model div { background-color: rgba(46, 125, 50, 0.85); color: #fff; font-family: 'Noto Serif JP', serif; font-weight: bold; }
         
-        /* 方角付き古写真ピン */
-        .marker-wrapper {
-            position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-        }
+        /* Map Pins */
+        .marker-wrapper { position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
         .marker-photo-pin {
-            background: #ffffff;
-            color: var(--map-purple);
-            width: 32px; height: 32px;
-            border-radius: 0% 50% 50% 50%;
-            transform: rotate(45deg);
+            background: #ffffff; color: #0288d1; width: 32px; height: 32px;
+            border-radius: 0% 50% 50% 50%; transform: rotate(45deg);
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
-            border: 3.5px solid var(--map-purple);
-            z-index: 2;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35); border: 3.5px solid; z-index: 2;
             transition: border-radius 0.2s, transform 0.2s;
         }
-        .marker-wrapper.no-direction .marker-photo-pin {
-            border-radius: 50% !important;
-            transform: none !important;
-        }
-        .marker-photo-pin i {
-            font-size: 14px;
-            transform: rotate(-45deg);
-        }
-        .marker-wrapper.no-direction .marker-photo-pin i {
-            transform: none !important;
-        }
+        .marker-wrapper.no-direction .marker-photo-pin { border-radius: 50% !important; transform: none !important; }
+        .marker-photo-pin i { font-size: 14px; transform: rotate(-45deg); }
+        .marker-wrapper.no-direction .marker-photo-pin i { transform: none !important; }
         .marker-3d-pin { background: #2e7d32; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.4); border: 2px solid white; }
 
-        /* マップポップアップ */
+        /* Popups */
         .map-popup-custom .leaflet-popup-content-wrapper { border-radius: 10px !important; font-family: 'Noto Serif JP', serif !important; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
         .map-popup-custom .leaflet-popup-content { margin: 15px !important; width: 220px !important; overflow: hidden !important; }
         .map-popup-custom div { max-width: 100%; display: flex; flex-direction: column; }
@@ -233,10 +222,8 @@
         }
         .location-btn:hover { background: #f4f4f4; color: var(--accent-gold); }
 
-        /* ------------------ ポータル（トップ） ------------------ */
+        /* Portal Main (Top) */
         .portal-wrapper { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
-
-        /* カルーセルの縦幅を拡張 & 直角デザイン */
         .carousel-container {
             position: relative; width: 100%; height: 620px; border-radius: 0px !important;
             overflow: hidden; margin-bottom: 40px; background: #2a201e; box-shadow: var(--shadow);
@@ -266,12 +253,9 @@
             background: var(--white); padding: 25px 30px; border-radius: 0px !important; box-shadow: var(--shadow);
             border: 1px solid rgba(189, 160, 109, 0.2); margin-bottom: 40px; line-height: 1.8; font-size: 1.05rem;
         }
-
         .portal-section-title { font-size: 1.5rem; color: var(--primary-brown); margin: 40px 0 20px 0; padding-bottom: 10px; border-bottom: 2px solid var(--accent-gold); }
-
         .portal-nav-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; margin-bottom: 50px; }
         
-        /* 角を丸めずに直角に変更 */
         .portal-nav-card {
             background: var(--white); border-radius: 0px !important; overflow: hidden; box-shadow: var(--shadow);
             cursor: pointer; transition: var(--transition); border: 1px solid rgba(189, 160, 109, 0.2);
@@ -284,21 +268,16 @@
         .portal-card-info h3 { margin: 0 0 8px 0; font-size: 1.25rem; color: var(--primary-brown); font-weight: 700; }
         .portal-card-info p { margin: 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
 
-        /* フェードスライドインアニメーション */
         .animate-on-scroll {
-            opacity: 0;
-            transform: translateY(30px);
+            opacity: 0; transform: translateY(30px);
             transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
         }
-        .animate-on-scroll.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        .animate-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
 
-        /* ------------------ 古写真DB画面 & 検索UI ------------------ */
+        /* Databases Common Grid */
         .scroll-container { height: 100%; overflow-y: auto; padding-bottom: 50px; }
         .db-hero-section {
-            background: linear-gradient(135deg, rgba(78,52,46,0.9), rgba(189,160,109,0.7)), url('https://cyberjapandata.gsi.go.jp/xyz/ort/12/3649/1628.jpg');
+            background: linear-gradient(135deg, rgba(78,52,46,0.9), rgba(189,160,109,0.7));
             background-size: cover; background-position: center; padding: 60px 20px; text-align: center; color: var(--white);
         }
         .db-hero-title { font-size: 2.2rem; margin: 0 0 10px 0; font-family: 'Noto Serif JP', serif; letter-spacing: 2px; text-shadow: 2px 2px 4px rgba(0,0,0,0.6); }
@@ -318,8 +297,6 @@
         .category-tab.active { background: var(--primary-brown); color: var(--white); }
 
         .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; max-width: 1400px; margin: 0 auto; padding: 0 20px; }
-        
-        /* 古写真カード直角設定 */
         .photo-card {
             position: relative; background: var(--white); border-radius: 0px !important; overflow: hidden;
             cursor: pointer; transition: var(--transition); box-shadow: 0 4px 12px rgba(0,0,0,0.08); height: 280px;
@@ -340,78 +317,105 @@
         }
         .map-focus-btn:hover { background: var(--primary-light); transform: translateY(-2px); }
 
-        /* ------------------ ★古写真詳細モーダル (レイアウト完全復元) ------------------ */
+        /* 統合詳細モーダル & 折りたたみシステム */
         #detail-modal {
             display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85);
             z-index: 10000; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;
         }
         .modal-content {
-            background: #fff;
-            width: 95%; max-width: 1100px; height: 85vh; /* 高さを固定 */
+            background: #fff; width: 95%; max-width: 1150px; height: 85vh;
             border-radius: 0px !important; position: relative; overflow: hidden;
             display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
         .modal-body-container {
-            display: flex; flex-direction: row; flex: 1; min-height: 0; overflow: hidden; /* コンテナ自体はスクロールしない */
+            display: flex; flex-direction: row; flex: 1; min-height: 0; overflow: hidden; position: relative;
         }
         .modal-image-section {
-            flex: 1; /* 左半分 */
-            background: #1a1a1a; display: flex; align-items: center; justify-content: center; overflow: hidden;
+            flex: 1; background: #1a1a1a; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;
         }
-        .modal-image-section img {
-            width: 100%; height: 100%; object-fit: contain; display: block;
+        .modal-image-section img { width: 100%; height: 100%; object-fit: contain; display: block; }
+        
+        /* info-section-wrapper で安全にトグルボタンとスクロールパネルを包む */
+        .info-section-wrapper {
+            position: relative; display: flex; height: 100%;
+            width: 440px; min-width: 440px;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--white);
         }
         .modal-info-section {
-            flex: 1; /* 右半分 */
-            display: flex; flex-direction: column; padding: 35px; background: var(--white);
-            overflow-y: auto; /* 右側だけスクロール可能にする */
+            width: 100%; height: 100%; display: flex; flex-direction: column; padding: 35px; background: var(--white);
+            overflow-y: auto; transition: opacity 0.3s ease; opacity: 1;
+            border-left: 1px solid rgba(189, 160, 109, 0.2);
         }
-        .modal-info-section h2 { margin-top: 0; font-size: 1.6rem; color: var(--primary-brown); border-bottom: 2px solid var(--accent-gold); padding-bottom: 12px; margin-bottom: 15px; flex-shrink: 0; }
         
-        .meta-info-list {
-            flex: 1; padding-right: 5px;
+        /* 左右情報パネルのトグルスイッチ（中央左端配置・完全修復） */
+        .modal-pane-toggle {
+            position: absolute; left: -32px; top: 50%; transform: translateY(-50%);
+            width: 32px; height: 75px; background: var(--white); border: 2px solid var(--accent-gold);
+            border-right: none; border-radius: 8px 0 0 8px; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; color: var(--primary-brown); font-size: 1.2rem;
+            box-shadow: -4px 0 10px rgba(0,0,0,0.15); z-index: 1000;
         }
+        
+        /* モーダル折りたたみ状態スタイル */
+        .info-section-wrapper.collapsed {
+            width: 0px !important; min-width: 0px !important;
+        }
+        .info-section-wrapper.collapsed .modal-info-section {
+            opacity: 0; overflow: hidden; pointer-events: none; border-left: none !important;
+        }
+        .info-section-wrapper.collapsed .modal-pane-toggle {
+            left: -32px; /* 位置固定。width 0になっても親の左端（境界）にピタッと張り付く */
+            border-right: 2px solid var(--accent-gold); border-radius: 8px 0 0 8px;
+        }
+
+        .modal-info-section h2 { margin-top: 0; font-size: 1.6rem; color: var(--primary-brown); border-bottom: 2px solid var(--accent-gold); padding-bottom: 12px; margin-bottom: 15px; flex-shrink: 0; }
+        .meta-info-list { flex: 1; padding-right: 5px; }
         .meta-item { display: flex; padding: 10px 0; border-bottom: 1px dotted #ddd; font-size: 0.95rem; word-break: break-all; }
-        .meta-label { flex: 0 0 110px; font-weight: 700; color: var(--text-muted); }
+        .meta-label { flex: 0 0 115px; font-weight: 700; color: var(--text-muted); }
         .meta-value { flex: 1; color: var(--text-dark); line-height: 1.5; }
 
         .clickable-image { cursor: pointer; transition: 0.3s; }
         .clickable-image:hover { opacity: 0.8; }
+        .modal-map-container { width: 100%; height: 220px; border: 2px solid var(--accent-gold); border-radius: 8px; margin-top: 15px; margin-bottom: 10px; overflow: hidden; flex-shrink: 0; position: relative; }
 
-        /* 詳細モーダル内のインラインマップスタイル */
-        .modal-map-container {
-            width: 100%; height: 220px; border: 2px solid var(--accent-gold);
-            border-radius: 8px; margin-top: 15px; margin-bottom: 10px; overflow: hidden; flex-shrink: 0;
-            position: relative;
+        /* 新・石造物刻銘（北東南西）3対1統合図表・動的拡張・横スクロール・天地左右中央揃えデザイン */
+        .kokumei-flex-container {
+            display: flex; gap: 0; justify-content: flex-start; margin-bottom: 25px;
+            background: #f7f5f0; padding: 15px; border: 2px solid var(--accent-light); border-radius: 8px;
+            flex-shrink: 0; overflow-x: auto; /* 長文時に美しく横スクロール可能に */
+            -webkit-overflow-scrolling: touch;
+        }
+        .kokumei-cell-wrapper {
+            display: flex; flex-direction: column; align-items: center; flex-shrink: 0; min-width: 73px;
+        }
+        .kokumei-heading {
+            font-size: 0.8rem; font-weight: bold; margin-bottom: 6px; color: var(--primary-brown); text-shadow: 1px 1px 1px rgba(255,255,255,0.8);
+        }
+        .kokumei-box-3to1 {
+            writing-mode: vertical-rl; text-orientation: upright;
+            height: 220px; /* 固定高さ */
+            min-width: 73px; /* 基本3:1比率幅 */
+            width: auto; /* 長文や列数増に応じて横に自動拡張 */
+            display: inline-flex; flex-direction: column;
+            align-items: center; justify-content: center; /* 天地左右完全に中央揃え */
+            border: 1px solid #c9c5b9; border-left: none; background-color: #f1efea;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05); padding: 12px 16px;
+            box-sizing: border-box;
+        }
+        .kokumei-cell-wrapper:first-child .kokumei-box-3to1 {
+            border-left: 1px solid #c9c5b9; /* 先頭のみ左枠線を閉じることで隙間なく結合 */
+        }
+        .kokumei-text-vert {
+            font-family: "Sawarabi Mincho", serif; font-size: 0.85rem; line-height: 1.6;
+            color: var(--text-dark); white-space: pre-wrap; /* 複数列リスト改行を完全に表現 */
+            text-align: center;
         }
 
-        /* 全画面画像オーバーレイ */
+        /* 全画面画像ズーム */
         .image-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 20000; justify-content: center; align-items: center; cursor: zoom-out; touch-action: none; overflow: hidden; }
         #full-screen-img { max-width: 95%; max-height: 95%; object-fit: contain; transform-origin: center center; cursor: grab; transition: transform 0.15s ease-out; }
         #full-screen-img:active { cursor: grabbing; }
-
-        /* 3Dモーダル */
-        .modal-3d { position: fixed; inset: 0; background: #111; z-index: 15000; }
-        .td-viewer-layout { display: flex; width: 100%; height: 100%; position: relative; flex-direction: row; }
-        .td-canvas-area { flex: 1.2; height: 100%; background: radial-gradient(#3c3532, #181514); position: relative; }
-        
-        .td-sidebar-panel {
-            width: 380px; height: 100%; background: var(--white); border-left: 3px solid var(--accent-gold);
-            transition: transform 0.4s; display: flex; flex-direction: column; z-index: 100; position: relative;
-        }
-        .td-sidebar-panel.collapsed { transform: translateX(380px); position: absolute; right: 0; }
-        
-        .td-sidebar-toggle {
-            position: absolute; top: 50%; left: -60px; transform: translateY(-50%);
-            width: 60px; height: 140px; background: var(--white); border: 3px solid var(--accent-gold);
-            border-right: none; border-radius: 20px 0 0 20px; cursor: pointer; display: flex;
-            align-items: center; justify-content: center; color: var(--primary-brown); font-size: 2.5rem;
-            box-shadow: -6px 0 20px rgba(0,0,0,0.3); z-index: 101; transition: background 0.2s;
-        }
-        .td-sidebar-toggle:hover { background: var(--bg-cream); }
-        
-        .td-sidebar-header { padding: 25px 30px 15px 30px; border-bottom: 1px solid rgba(189,160,109,0.15); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-        .td-sidebar-content { padding: 25px 30px; overflow-y: auto; flex-grow: 1; font-size: 0.95rem; line-height: 1.7; color: var(--text-dark); }
 
         .toast {
             position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(100px);
@@ -420,11 +424,7 @@
         }
         .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-        /* ページネーション用CSS */
-        .pagination-container {
-            display: flex; justify-content: center; align-items: center; gap: 8px;
-            margin: 25px auto 10px auto; flex-wrap: wrap; max-width: 1400px; padding: 0 20px;
-        }
+        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 8px; margin: 25px auto 10px auto; flex-wrap: wrap; max-width: 1400px; padding: 0 20px; }
         .pagination-btn {
             background: var(--white); border: 1px solid var(--accent-gold); color: var(--primary-brown);
             padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: var(--transition);
@@ -432,7 +432,7 @@
         .pagination-btn.active { background: var(--primary-brown); color: var(--white); border-color: var(--primary-brown); }
         .pagination-btn:hover:not(.active) { background: var(--bg-cream); }
 
-        /* Mobile Responsive */
+        /* スマホ向けレスポンシブ */
         @media (max-width: 768px) {
             .archive-title { font-size: 1.1rem; letter-spacing: 0; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
             .archive-subtitle { display: none; }
@@ -444,7 +444,11 @@
             
             #page-map, #page-db { height: calc(100% - var(--sub-header-height)); top: var(--sub-header-height); }
             
-            /* スマホ版カルーセル */
+            /* スライダーのスマホフル幅対応 */
+            .slider-container { width: 100%; max-width: 100%; justify-content: space-between; gap: 15px; }
+            #era-slider { flex-grow: 1; }
+            .era-display { text-align: right; min-width: 90px; font-size: 0.85rem; }
+
             .carousel-container { height: 450px; }
             .carousel-text h3 { font-size: 1.4rem; }
             
@@ -455,16 +459,17 @@
             .portal-card-info h3 { font-size: 0.95rem; margin-bottom: 5px; }
             .portal-card-info p { font-size: 0.75rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
-            /* スマホでの詳細モーダル（上が画像、下がテキスト） */
+            /* モーダルのスマホ縦並び */
             #detail-modal { align-items: flex-start; padding: 10px; }
             .modal-content { height: 95vh; max-height: none; }
-            .modal-body-container { flex-direction: column; overflow-y: auto; /* 全体をスクロール */ }
+            .modal-body-container { flex-direction: column; overflow-y: auto; }
             .modal-image-section { flex: none; height: 40vh; }
             .modal-image-section img { max-height: 40vh; }
-            .modal-info-section { flex: none; overflow-y: visible; padding: 20px; }
+            .info-section-wrapper { flex-direction: column !important; width: 100% !important; min-width: 100% !important; height: auto !important; }
+            .modal-info-section { flex: none; width: 100% !important; min-width: 100% !important; overflow-y: visible !important; padding: 20px; border-left: none; }
+            .modal-pane-toggle { display: none !important; }
 
-            .td-sidebar-panel { width: 290px; }
-            .td-sidebar-panel.collapsed { transform: translateX(290px); }
+            .spot-settings-box { top: 120px; }
         }
     </style>
 </head>
@@ -514,53 +519,87 @@
         </div>
         
         <div id="slider-box" class="slider-container" style="display:none;">
+            <button class="slider-arrow-btn" onclick="stepEra(-1)" title="前の年代へ"><i class="fa-solid fa-chevron-left"></i></button>
             <input type="range" id="era-slider" min="0" max="13" step="1" value="0">
+            <button class="slider-arrow-btn" onclick="stepEra(1)" title="次の年代へ"><i class="fa-solid fa-chevron-right"></i></button>
             <div id="era-label-container"><span id="era-label" class="era-display">1884年</span></div>
         </div>
     </div>
 
     <main class="content-wrapper">
         
-        <!-- スポット表示設定 (フィルタ機能追加) -->
-        <div id="spot-settings-panel" class="spot-settings-box">
-            <button class="close-btn-spot" onclick="toggleSpotSettings()" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.8rem; cursor:pointer; color:var(--primary-brown);">&times;</button>
-            <h3>スポット表示設定</h3>
-            <label><input type="checkbox" id="chk-photo-pins" checked onchange="toggleMapPins('photo')"> 古写真ピンを表示</label>
-            <label><input type="checkbox" id="chk-3d-pins" checked onchange="toggleMapPins('3d')"> 3Dデータピンを表示</label>
-            
-            <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--accent-light);">
-            
-            <!-- 被写地点から絞り込み -->
-            <h4 style="font-size: 0.95rem; color: var(--primary-brown); margin-bottom: 8px; font-weight: bold;"><i class="fa-solid fa-crosshairs"></i> 被写地点から絞り込み</h4>
-            <div style="margin-bottom: 15px;">
-                <button id="btn-spatial-filter" class="nav-btn" style="width:100%; justify-content:center; padding: 6px 12px; font-size:0.85rem;" onclick="toggleSpatialFilterMode()">
-                    <i class="fa-solid fa-map-pin"></i> <span>被写地点を指定 (無効)</span>
-                </button>
-                <p id="spatial-status" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; line-height: 1.4;">地図上をクリックしてピンを立て、その地点を視野に収めている古写真のみを表示します。</p>
+        <!-- スポット表示設定 (右側半分引き出し型：非モーダル・中央トグルタブ完全配置) -->
+        <div id="spot-settings-wrapper">
+            <div class="spot-settings-tab" onclick="toggleSpotSettings()">
+                <i class="fa-solid fa-chevron-left" id="spot-tab-icon"></i>
             </div>
-            
-            <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--accent-light);">
-            
-            <!-- 年代から絞り込み -->
-            <h4 style="font-size: 0.95rem; color: var(--primary-brown); margin-bottom: 8px; font-weight: bold;"><i class="fa-solid fa-calendar-days"></i> 年代から絞り込み</h4>
-            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <input type="number" id="filter-year-start" placeholder="開始年" class="filter-input" style="padding: 4px 8px; font-size:0.85rem; width: 85px; border: 1px solid var(--accent-light);" oninput="applyMapFilters()">
-                    <span>年 〜</span>
-                    <input type="number" id="filter-year-end" placeholder="終了年" class="filter-input" style="padding: 4px 8px; font-size:0.85rem; width: 85px; border: 1px solid var(--accent-light);" oninput="applyMapFilters()">
-                    <span>年</span>
+            <div id="spot-settings-panel" class="spot-settings-box-content">
+                <h3>マップ表示・絞り込み</h3>
+                
+                <!-- 古写真ピン表示 -->
+                <label><input type="checkbox" id="chk-photo-pins" checked onchange="toggleMapPins('photo')"> 古写真ピンを表示</label>
+                
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--accent-light);">
+                
+                <!-- 被写地点からの絞り込み -->
+                <h4 style="font-size: 0.95rem; color: var(--primary-brown); margin-bottom: 8px; font-weight: bold;"><i class="fa-solid fa-crosshairs text-blue-500"></i> 被写地点から絞り込み</h4>
+                <div style="margin-bottom: 20px;">
+                    <button id="btn-spatial-filter" class="nav-btn" style="width:100%; justify-content:center; padding: 8px 12px; font-size:0.9rem;" onclick="toggleSpatialFilterMode()">
+                        <i class="fa-solid fa-map-pin"></i> <span>被写地点を指定 (無効)</span>
+                    </button>
+                    <p id="spatial-status" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">地図上をクリックしてターゲットピンを立て、その地点を視野扇形に収めている古写真のみを厳密に抽出します。</p>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                    <label style="font-size:0.85rem; font-weight:normal; margin-bottom:0; display:flex; align-items:center; gap:5px;"><input type="checkbox" class="chk-era-filter" value="明治" checked onchange="applyMapFilters()"> 明治</label>
-                    <label style="font-size:0.85rem; font-weight:normal; margin-bottom:0; display:flex; align-items:center; gap:5px;"><input type="checkbox" class="chk-era-filter" value="大正" checked onchange="applyMapFilters()"> 大正</label>
-                    <label style="font-size:0.85rem; font-weight:normal; margin-bottom:0; display:flex; align-items:center; gap:5px;"><input type="checkbox" class="chk-era-filter" value="昭和" checked onchange="applyMapFilters()"> 昭和</label>
-                    <label style="font-size:0.85rem; font-weight:normal; margin-bottom:0; display:flex; align-items:center; gap:5px;"><input type="checkbox" class="chk-era-filter" value="平成" checked onchange="applyMapFilters()"> 平成</label>
+                
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--accent-light);">
+                
+                <!-- 見通し距離から絞り込み -->
+                <h4 style="font-size: 0.95rem; color: var(--primary-brown); margin-bottom: 8px; font-weight: bold;"><i class="fa-solid fa-eye text-blue-500"></i> 見通し距離から絞り込み</h4>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 6px; margin-bottom: 10px; font-size: 0.9rem;">
+                    <label style="font-weight:normal; margin-bottom:0; display:flex; align-items:center; gap:5px;"><input type="checkbox" class="chk-dist-filter" value="5-15" checked onchange="applyMapFilters()"> 近景 (5-15m)</label>
+                    <label style="font-weight:normal; margin-bottom:0; display:flex; align-items:center; gap:5px;"><input type="checkbox" class="chk-dist-filter" value="30-50" checked onchange="applyMapFilters()"> 中景 (30-50m)</label>
+                    <label style="font-weight:normal; margin-bottom:0; display:flex; align-items:center; gap:5px;"><input type="checkbox" class="chk-dist-filter" value="200-600" checked onchange="applyMapFilters()"> 遠景 (200-600m)</label>
+                    <label style="font-weight:normal; margin-bottom:0; display:flex; align-items:center; gap:5px;"><input type="checkbox" class="chk-dist-filter" value="1000-2000" checked onchange="applyMapFilters()"> 超遠景 (1-2km)</label>
+                    <label style="font-weight:normal; margin-bottom:0; display:flex; align-items:center; gap:5px;"><input type="checkbox" class="chk-dist-filter" value="4000" checked onchange="applyMapFilters()"> 広角・空撮 (4km〜)</label>
                 </div>
+                
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--accent-light);">
+                
+                <!-- 3D遺産分類での絞り込み（動的分類連動） -->
+                <h4 style="font-size: 0.95rem; color: var(--primary-brown); margin-bottom: 8px; font-weight: bold;"><i class="fa-solid fa-cube text-emerald-600"></i> 3D遺産分類で絞り込み</h4>
+                <div style="margin-bottom: 20px;">
+                    <select id="spot-3d-category-filter" class="filter-input" onchange="applyMapFilters()" style="width:100%; padding: 8px; border: 1px solid var(--accent-light);">
+                        <option value="">全ての分類</option>
+                    </select>
+                </div>
+                
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--accent-light);">
+                
+                <!-- 年代から絞り込み -->
+                <h4 style="font-size: 0.95rem; color: var(--primary-brown); margin-bottom: 8px; font-weight: bold;"><i class="fa-solid fa-calendar-days text-blue-500"></i> 年代から絞り込み</h4>
+                <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.9rem; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="number" id="filter-year-start" placeholder="開始年" class="filter-input" style="padding: 6px; width: 100px; border: 1px solid var(--accent-light);" oninput="applyMapFilters()">
+                        <span>年 〜</span>
+                        <input type="number" id="filter-year-end" placeholder="終了年" class="filter-input" style="padding: 6px; width: 100px; border: 1px solid var(--accent-light);" oninput="applyMapFilters()">
+                        <span>年</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px;">
+                        <label style="font-size:0.9rem; font-weight:normal; margin-bottom:0; display:flex; align-items:center; gap:5px;"><input type="checkbox" class="chk-era-filter" value="明治" checked onchange="applyMapFilters()"> 明治</label>
+                        <label style="font-size:0.9rem; font-weight:normal; margin-bottom:0; display:flex; align-items:center; gap:5px;"><input type="checkbox" class="chk-era-filter" value="大正" checked onchange="applyMapFilters()"> 大正</label>
+                        <label style="font-size:0.9rem; font-weight:normal; margin-bottom:0; display:flex; align-items:center; gap:5px;"><input type="checkbox" class="chk-era-filter" value="昭和" checked onchange="applyMapFilters()"> 昭和</label>
+                        <label style="font-size:0.9rem; font-weight:normal; margin-bottom:0; display:flex; align-items:center; gap:5px;"><input type="checkbox" class="chk-era-filter" value="平成" checked onchange="applyMapFilters()"> 平成</label>
+                    </div>
+                </div>
+
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--accent-light);">
+
+                <!-- 3Dピン表示 -->
+                <label><input type="checkbox" id="chk-3d-pins" checked onchange="toggleMapPins('3d')"> 3Dデータピンを表示</label>
             </div>
         </div>
         
+        <!-- Portal Section -->
         <section id="page-portal" class="page active">
-            <!-- カルーセル -->
             <div class="carousel-container animate-on-scroll">
                 <div class="carousel-track" id="carousel-track">
                     <div class="carousel-slide">
@@ -572,7 +611,7 @@
                     <div class="carousel-slide">
                         <img src="https://cyberjapandata.gsi.go.jp/xyz/gazo1/12/3649/1628.jpg" alt="歴史的遺産の3D立体復元" id="slide-img-1">
                         <div class="carousel-overlay"><div class="carousel-text">
-                            <h3 id="slide-title-1">歴史的遺産の3D立体復元</h3><p id="slide-desc-1">失われた大正・戦前モダン建築 of 姿や道標をデジタル空間上に精密復元</p>
+                            <h3 id="slide-title-1">歴史的遺産の3D立体復元</h3><p id="slide-desc-1">失われた大正・戦前モダン建築の姿や道標をデジタル空間上に精密復元</p>
                         </div></div>
                     </div>
                     <div class="carousel-slide">
@@ -668,7 +707,7 @@
                         </div>
                         <div class="portal-card-info">
                             <h3 id="db-title-td">3D遺産データベース</h3>
-                            <p id="db-desc-td">山科各地 of 歴史遺産のフォトグラメトリや、失われた建築構造の立体モデル検索。</p>
+                            <p id="db-desc-td">山科各地の歴史遺産のフォトグラメトリや、失われた建築構造の立体モデル検索。</p>
                         </div>
                     </div>
                 </div>
@@ -721,7 +760,7 @@
                         </div>
                     </div>
 
-                    <button class="map-focus-btn" onclick="executeOmniSearch()"><i class="fa-solid fa-magnifying-glass"></i> NDL風 検索を実行</button>
+                    <button class="map-focus-btn" onclick="executeOmniSearch()"><i class="fa-solid fa-magnifying-glass"></i> 総合検索を実行</button>
                 </div>
             </div>
         </section>
@@ -734,7 +773,6 @@
                 <input type="range" id="opacity-slider" min="0" max="1" step="0.05" value="1.0" style="width:100%; accent-color:var(--accent-gold);">
             </div>
             
-            <!-- 現在地ボタン -->
             <button onclick="requestLocation()" title="現在地へ移動" class="location-btn">
                 <i class="fa-solid fa-location-crosshairs"></i>
             </button>
@@ -767,7 +805,6 @@
                 </div>
 
                 <div id="photo-list" class="photo-grid"></div>
-
                 <div id="pagination-container" class="pagination-container"></div>
                 
                 <div id="search-result-map-container" style="max-width: 1400px; margin: 40px auto; padding: 0 20px; display: none;">
@@ -790,6 +827,7 @@
             </div>
         </section>
 
+        <!-- 文書・史料データベース -->
         <section id="page-doc" class="page">
             <div class="scroll-container" style="max-width: 1200px; margin: 0 auto; padding-top: 20px;">
                 <h2 style="font-size: 1.8rem; color: var(--primary-brown); margin-bottom: 25px; border-bottom: 2px solid var(--accent-gold); padding-bottom: 10px;">文書・史料データベース</h2>
@@ -799,23 +837,74 @@
             </div>
         </section>
         
+        <!-- 3D遺産データベース -->
         <section id="page-td" class="page">
-            <div class="scroll-container" style="max-width: 1200px; margin: 0 auto; padding-top: 20px;">
-                <h2 style="font-size: 1.8rem; color: var(--primary-brown); margin-bottom: 25px; border-bottom: 2px solid var(--accent-gold); padding-bottom: 10px;">3D遺産データベース</h2>
+            <div class="scroll-container" style="padding: 0;">
+                <div class="db-hero-section">
+                    <h2 class="db-hero-title">3D遺産データベース</h2>
+                </div>
+                
+                <!-- 高性能3D検索パネル -->
                 <div class="db-search-panel" style="margin-bottom: 15px;">
-                    <label style="font-weight:bold; color:var(--primary-brown); display:block; margin-bottom:8px;">3Dモデル検索</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="td-search" placeholder="検索..." class="filter-input" style="flex:1;">
-                        <button class="nav-btn active" onclick="filterTD()" style="padding:0 20px;">検索</button>
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-weight:bold; color:var(--primary-brown); display:block; margin-bottom:8px;">総合キーワード検索（全ての解説・属性を曖昧検索）</label>
+                        <input type="text" id="td-search-all" placeholder="歴史解説や分類など全カラムから横断検索..." class="filter-input">
+                    </div>
+                    
+                    <div class="filter-grid-row">
+                        <div class="filter-cell"><label>名称</label><input type="text" id="td-search-name" class="filter-input" placeholder="遺産名、構造体名など"></div>
+                        <div class="filter-cell"><label>刻銘（北東南西すべての面に対応）</label><input type="text" id="td-search-inscription" class="filter-input" placeholder="例：東 京極"></div>
+                        <div class="filter-cell"><label>整理番号</label><input type="text" id="td-search-id" class="filter-input" placeholder="例：3D-01"></div>
+                        <div class="filter-cell">
+                            <label>分類（セレクト型）</label>
+                            <select id="td-search-category" class="filter-input">
+                                <option value="">全ての分類</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-grid-row">
+                        <div class="filter-cell"><label>撮影日</label><input type="text" id="td-search-date" class="filter-input" placeholder="例：2023"></div>
+                        <div class="filter-cell"><label>材質</label><input type="text" id="td-search-material" class="filter-input" placeholder="例：花崗岩"></div>
+                        <div class="filter-cell"><label>状態</label><input type="text" id="td-search-condition" class="filter-input" placeholder="例：良好"></div>
+                        <div class="filter-cell"><label>歴史説明（テキスト検索）</label><input type="text" id="td-search-info" class="filter-input" placeholder="解説内部の文章から部分一致"></div>
+                    </div>
+
+                    <div class="filter-grid-row">
+                        <div class="filter-cell">
+                            <label>年代（スプレッドシートQ列を高度解析）</label>
+                            <select id="td-search-era" class="filter-input">
+                                <option value="">全ての時代</option>
+                                <option value="鎌倉">鎌倉時代</option>
+                                <option value="室町">室町時代</option>
+                                <option value="江戸">江戸時代</option>
+                                <option value="明治">明治時代</option>
+                                <option value="大正">大正時代</option>
+                                <option value="昭和">昭和時代</option>
+                            </select>
+                        </div>
+                        <div class="filter-cell">
+                            <label>西暦範囲検索 (Q列から西暦数値を自動抽出して判定)</label>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <input type="number" id="td-search-year-start" class="filter-input" placeholder="例: 1300">
+                                <span>年 〜</span>
+                                <input type="number" id="td-search-year-end" class="filter-input" placeholder="例: 1950">
+                                <span>年</span>
+                            </div>
+                        </div>
+                        <div class="filter-cell" style="display:flex; align-items:flex-end;">
+                            <button class="map-focus-btn" onclick="filterTD()" style="margin-top:0;"><i class="fa-solid fa-filter"></i> 条件を絞り込んで検索</button>
+                        </div>
                     </div>
                 </div>
-                <div id="td-grid" class="photo-grid" style="padding:0;"></div>
+                
+                <div id="td-grid" class="photo-grid"></div>
             </div>
         </section>
 
     </main>
 
-    <!-- Photo Detail Modal (レイアウト完全修正版) -->
+    <!-- 古写真/3D 共通詳細モーダル -->
     <div id="detail-modal" class="modal" onclick="closeModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <button class="close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -823,22 +912,7 @@
         </div>
     </div>
 
-    <!-- 3D Model Modal -->
-    <div id="3d-modal" class="modal-3d" style="display:none;">
-        <button class="close-btn" onclick="close3DModal()" style="color:#fff;"><i class="fa-solid fa-xmark"></i></button>
-        <div class="td-viewer-layout">
-            <div id="3d-modal-body" class="td-canvas-area"></div>
-            <div id="td-explain" class="td-sidebar-panel">
-                <button class="td-sidebar-toggle" onclick="toggleTDExplain()"><i id="td-toggle-icon" class="fa-solid fa-chevron-right"></i></button>
-                <div class="td-sidebar-header">
-                    <h3 id="td-explain-title"></h3><span style="font-size: 0.8rem; background: var(--accent-gold); color: #fff; padding: 2px 8px; border-radius: 10px;">解説</span>
-                </div>
-                <div class="td-sidebar-content" id="td-explain-text"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Full Screen Image Overlay -->
+    <!-- 全画面画像ズーム -->
     <div id="full-screen-overlay" class="image-overlay" onclick="closeFullScreenImage()">
         <button class="close-btn" onclick="closeFullScreenImage()" style="color:#fff;"><i class="fa-solid fa-xmark"></i></button>
         <img src="" alt="全画面写真" id="full-screen-img" onclick="event.stopPropagation()">
@@ -847,20 +921,18 @@
     <div id="notification-toast" class="toast"></div>
 
     <script>
-        // 設定用スプレッドシートのURL定義
         const CONFIG_SHEET_ID = '1wrMKOuJyWd0vX9rucIbtx61C1m39Y1bveGQnEeM80hA';
         const CONFIG_CSV_URL = `https://docs.google.com/spreadsheets/d/${CONFIG_SHEET_ID}/gviz/tq?tqx=out:csv`;
 
         const SHEET_ID = '1JNOhsD4k1GzEVnUqS2ftN8ytw2GbraXjEFysoxwVl_A';
         const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
 
-        // ★3Dデータ台帳（動的台帳シート）
         const SHEET_3D_ID = '1bHNUXMbosjkH-jggqNM1HDjY2PrqwQCc09Uqbcp8nRA';
         const CSV_3D_URL = `https://docs.google.com/spreadsheets/d/${SHEET_3D_ID}/gviz/tq?tqx=out:csv`;
 
         let map, layerControl;
         let archiveData = [];
-        let models = []; // Dynamic fetched models from ledger
+        let models = []; 
         let layers = {};
         let activeOverlays = []; 
         let userMarker, userCircle;
@@ -871,16 +943,14 @@
         let currentPage = 1;
         const itemsPerPage = 50;
 
-        // メインマップ上の一時的な扇形表示用レイヤー
         let activeSectorLayer = null;
-        
-        // 被写地点空間検索用のターゲットピン状態
         let spatialFilterLatLng = null;
         let spatialFilterMarker = null;
         let isSpatialFilterSelectMode = false;
 
-        const EARTH_RADIUS = 6371.0; // 地球半径(km)
+        const EARTH_RADIUS = 6371.0; 
 
+        // 時代スライダー設定
         const eras = [
             { name: "1884年", url: "./地籍図tile/{z}/{x}/{y}.png", nativeZoom: 18 },
             { name: "1897年", url: "https://ktgis.net/kjmapw/kjtilemap/keihansin/2man/{z}/{x}/{-y}.png", nativeZoom: 16 },
@@ -898,8 +968,39 @@
             { name: "2007年", url: "https://cyberjapandata.gsi.go.jp/xyz/ort/{z}/{x}/{y}.jpg", nativeZoom: 18},
         ];
 
-        // 現在地追従用の状態管理
         let watchPositionId = null;
+        let currentActivePageId = 'portal'; // 遷移元のクリア用トラック変数
+
+        // RFC 4180 準拠の、セル内改行を正しく解釈可能な堅牢なCSVパーサ
+        function parseCSV(text) {
+            let lines = [];
+            let row = [""];
+            let inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+                let c = text[i];
+                let next = text[i+1];
+                if (c === '"') {
+                    if (inQuotes && next === '"') {
+                        row[row.length - 1] += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (c === ',' && !inQuotes) {
+                    row.push('');
+                } else if ((c === '\r' || c === '\n') && !inQuotes) {
+                    if (c === '\r' && next === '\n') { i++; }
+                    lines.push(row);
+                    row = [""];
+                } else {
+                    row[row.length - 1] += c;
+                }
+            }
+            if (row.length > 1 || row[0] !== "") {
+                lines.push(row);
+            }
+            return lines;
+        }
 
         function initMap() {
             map = L.map('map', { 
@@ -920,7 +1021,10 @@
 
             layerControl = L.control.layers(null, layers, { collapsed: true, position: 'topright' }).addTo(map);
             
-            // ★不透明度調整機能の確実な追従のためのレイヤリスナー
+            map.createPane('sectorPane');
+            map.getPane('sectorPane').style.zIndex = 750;
+            map.getPane('sectorPane').style.pointerEvents = 'none';
+
             map.on('overlayadd', (e) => {
                 activeOverlays = activeOverlays.filter(l => l !== e.layer);
                 activeOverlays.push(e.layer);
@@ -933,7 +1037,6 @@
                 updateOpacityUI();
             });
 
-            // 被写地点選択・空間検索用のマップクリックハンドラ
             map.on('click', function(e) {
                 if (isSpatialFilterSelectMode) {
                     setSpatialTarget(e.latlng);
@@ -963,7 +1066,6 @@
             slider.oninput = function() { updateEraUI(this.value); };
             updateEraUI(slider.value);
 
-            // ★不透明度スライダー操作時の完全追従
             document.getElementById('opacity-slider').oninput = function() {
                 if (activeOverlays.length > 0) {
                     const latest = activeOverlays[activeOverlays.length - 1];
@@ -976,7 +1078,16 @@
             startLocationTracking();
         }
 
-        // 現在地常時トラッキング処理
+        // 1ステップ刻みのスライダーボタン切替
+        function stepEra(direction) {
+            const slider = document.getElementById('era-slider');
+            let nextVal = parseInt(slider.value) + direction;
+            if (nextVal >= 0 && nextVal < eras.length) {
+                slider.value = nextVal;
+                updateEraUI(nextVal);
+            }
+        }
+
         function startLocationTracking() {
             if (!("geolocation" in navigator)) return;
             watchPositionId = navigator.geolocation.watchPosition(
@@ -989,7 +1100,6 @@
             );
         }
 
-        // ボタンを押した時だけ現在地へ視点を移動
         function requestLocation() {
             if (!("geolocation" in navigator)) return showNotification("位置情報サービスが利用できません。");
             
@@ -1026,12 +1136,11 @@
             }
         }
 
-        // ポータル画面用スプレッドシートからの動的読み込み
         async function loadPortalConfig() {
             try {
                 const response = await fetch(CONFIG_CSV_URL);
                 const csvText = await response.text();
-                const rows = csvText.split(/\r?\n/).slice(1).map(r => r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1').trim()));
+                const rows = parseCSV(csvText).slice(1);
                 
                 const getImg = (val) => {
                     if(!val) return null;
@@ -1101,7 +1210,7 @@
                 }
 
             } catch (e) {
-                console.warn("ポータル設定用スプレッドシートの読み込みに失敗しました:", e);
+                console.warn("ポータル設定データの取得をスキップまたは失敗:", e);
             }
             initScrollAnimations();
         }
@@ -1148,14 +1257,18 @@
         }
 
         function toggleSpotSettings() {
-            const panel = document.getElementById('spot-settings-panel');
-            const btn = document.getElementById('m-btn-spot');
-            if (panel.style.display === 'block') {
-                panel.style.display = 'none';
-                btn.classList.remove('active');
+            const wrapper = document.getElementById('spot-settings-wrapper');
+            const icon = document.getElementById('spot-tab-icon');
+            const isOpen = wrapper.classList.contains('open');
+            
+            if (isOpen) {
+                wrapper.classList.remove('open');
+                icon.className = "fa-solid fa-chevron-left";
+                document.getElementById('m-btn-spot').classList.remove('active');
             } else {
-                panel.style.display = 'block';
-                btn.classList.add('active');
+                wrapper.classList.add('open');
+                icon.className = "fa-solid fa-chevron-right";
+                document.getElementById('m-btn-spot').classList.add('active');
             }
         }
 
@@ -1167,13 +1280,20 @@
             }
         }
 
-        // ★3Dデータ台帳（スプレッドシート）からの完全動的フェッチ＆マッピング
+        // Q列の文字列情報から西暦数値を自動抽出する正規表現ヘルパー
+        function extractYearFromEraString(eraStr) {
+            if (!eraStr) return null;
+            const match = eraStr.match(/\d{3,4}/);
+            return match ? parseInt(match[0], 10) : null;
+        }
+
+        // 3Dデータ台帳から完全に情報を取得
         async function load3DData() {
             try {
                 const response = await fetch(CSV_3D_URL);
                 const csvText = await response.text();
-                // 1行目のヘッダー行をスキップ
-                const rows = csvText.split(/\r?\n/).slice(1);
+                // 堅牢なRFC 4180パーサーを使用
+                const rows = parseCSV(csvText).slice(1);
                 
                 const getImg = (val) => {
                     if(!val) return null;
@@ -1181,7 +1301,6 @@
                     return match ? `https://lh3.googleusercontent.com/d/${match[0]}=s800` : val;
                 };
 
-                // GitHubの通常のファイルリンクを rawデータ のURLに強制置換
                 const getRawGlbUrl = (url) => {
                     if (!url) return "";
                     if (url.includes("github.com") && url.includes("/blob/")) {
@@ -1190,11 +1309,7 @@
                     return url;
                 };
 
-                models = rows.filter(row => row.trim() !== "").map((row, index) => {
-                    // カンマ区切りのパース（ダブルクォーテーションを考慮）
-                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1').trim());
-                    
-                    // 座標 (G列 - index 6)
+                models = rows.filter(row => row.length > 6 && row[6].trim() !== "").map((cols, index) => {
                     let lat = 0, lng = 0;
                     if (cols[6]) {
                         const coords = cols[6].split(/[\s,]+/);
@@ -1202,37 +1317,73 @@
                         lng = parseFloat(coords[1]);
                     }
 
-                    // GLBモデルURL (B列 - index 1)
-                    const rawGlb = getRawGlbUrl(cols[1]);
-
-                    // P列のサムネ画像URI (P列 - index 15)
-                    const rawThumb = cols[15] || "";
-                    const thumbnail = getImg(rawThumb);
+                    const eraString = cols[16] || ""; // Q列の年代
+                    const parsedYear = extractYearFromEraString(eraString);
 
                     return {
-                        id: cols[0] || `3D-${index}`,
-                        name: cols[2] || "名称未設定",
-                        file: rawGlb,
-                        coords: [lat, lng],
-                        info: cols[14] || "（歴史解説なし）",
-                        thumbnail: thumbnail,
-                        category: cols[3] || "道標"
+                        id: cols[0] || `3D-${index}`,               
+                        file: getRawGlbUrl(cols[1]),                 
+                        name: cols[2] || "名称未設定",               
+                        category: cols[3] || "道標",                 
+                        date: cols[4] || "－",                       
+                        photoCount: cols[5] || "－",                 
+                        coords: [lat, lng],                          
+                        kokumeiBase: cols[7] || "",                  
+                        north: cols[8] || "",                      
+                        east: cols[9] || "",                       
+                        south: cols[10] || "",                     
+                        west: cols[11] || "",                      
+                        material: cols[12] || "－",                  
+                        condition: cols[13] || "－",                 
+                        info: cols[14] || "（歴史解説なし）",         
+                        thumbnail: getImg(cols[15]),                  
+                        eraRaw: eraString,                         
+                        parsedYear: parsedYear                       
                     };
-                }).filter(m => m.coords[Lat = 0] !== 0);
+                }).filter(m => m.coords[0] !== 0);
+
+                // 読み込んだデータからユニークな「分類」を抽出してプルダウンに動的格納
+                populateCategoryDropdown();
 
                 add3DMarkers();
-                renderTDList(models);
+                // 検索する前はデータ一覧を空に保ち、プロンプトを明示
+                document.getElementById('td-grid').innerHTML = `
+                    <div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--text-muted);">
+                        <i class="fa-solid fa-magnifying-glass" style="font-size: 2.5rem; color: var(--accent-gold); margin-bottom: 15px; display: block;"></i>
+                        検索条件を指定し、「条件を絞り込んで検索」ボタンを押してください。
+                    </div>`;
 
             } catch (e) {
-                console.error("3Dデータ台帳の取得に失敗しました。フォールバックデータを使用します:", e);
-                // 通信エラー時等のフォールバック
-                models = [
-                    { id: "3D-1", name: "妙見寺開渠", file: "妙見寺開渠.glb", coords: [34.977573, 135.827704], info: "流路の石組みを実測に基づきデジタル空間に考証復元。", thumbnail: "" },
-                    { id: "3D-2", name: "両御坊道道標", file: "両御坊道道標.glb", coords: [34.985075, 135.823981], info: "追分に位置する貴重な道標をフォトグラメトリ技術で高精細抽出。", thumbnail: "" },
-                    { id: "3D-3", name: "旧井戸跡地", file: "旧井戸跡地.glb", coords: [34.983122, 135.814421], info: "旧集落の共同生活井戸跡。Blenderを用いた精密モデリング。", thumbnail: "" }
-                ];
-                add3DMarkers();
-                renderTDList(models);
+                console.error("3Dデータ台帳の取得失敗:", e);
+            }
+        }
+
+        // 分類選択用のセレクトオプションを動的生成（3Dデータベースとスポット設定フィルタ双方へ適用）
+        function populateCategoryDropdown() {
+            const categories = [...new Set(models.map(m => m.category).filter(Boolean))];
+            
+            // 3D Database ページ用プルダウン
+            const dbSelect = document.getElementById('td-search-category');
+            if (dbSelect) {
+                dbSelect.innerHTML = '<option value="">全ての分類</option>';
+                categories.forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat;
+                    opt.innerText = cat;
+                    dbSelect.appendChild(opt);
+                });
+            }
+
+            // マップ用スポット設定パネル用プルダウン（追加）
+            const spotSelect = document.getElementById('spot-3d-category-filter');
+            if (spotSelect) {
+                spotSelect.innerHTML = '<option value="">全ての分類</option>';
+                categories.forEach(cat => {
+                    const opt = document.createElement('option');
+                    opt.value = cat;
+                    opt.innerText = cat;
+                    spotSelect.appendChild(opt);
+                });
             }
         }
 
@@ -1244,6 +1395,7 @@
                 if(m.coords[0] && m.coords[1]) {
                     const icon3d = L.divIcon({ html: '<div class="marker-3d-pin"><i class="fa-solid fa-cube"></i></div>', className: '', iconSize: [36, 36], iconAnchor: [18, 18] });
                     
+                    // 地図上の3Dピンのポップアップに、サムネイル画像（スプレッドシートP列）を完全に表示
                     const thumbHTML = m.thumbnail ? 
                         `<img src="${m.thumbnail}" style="width:100%; height:130px; object-fit:cover; border-radius:4px; margin-bottom:8px;">` :
                         `<div style="width:100%; height:130px; margin:0 0 8px 0; background:#eee; border-radius:4px; display:flex; flex-direction:column; align-items:center; justify-content:center; border: 1px dashed var(--accent-gold);">
@@ -1255,7 +1407,7 @@
                         <div class="map-popup-custom" onclick="L.DomEvent.stopPropagation(event)">
                             <b>${m.name}</b>
                             ${thumbHTML}
-                            <button class="nav-btn active" style="width:100%; padding:6px; justify-content:center;" onclick="open3DFullScreen('${m.file}', '${m.name}', '${encodeURIComponent(m.info)}')">詳細を表示</button>
+                            <button class="nav-btn active" style="width:100%; padding:6px; justify-content:center;" onclick="open3DDetail('${m.id}')">詳細を表示</button>
                         </div>
                     `);
                     markers.push(marker);
@@ -1264,69 +1416,47 @@
             modelClusterGroup.addLayers(markers);
         }
 
-        // 8方位の和名/英名を度数に変換
-        function getDirectionAngle(dirStr) {
-            if (!dirStr) return null;
-            const num = parseFloat(dirStr);
-            if (!isNaN(num) && isFinite(dirStr)) return num;
-            const dirs = { 
-                '北北東': 22.5, '東北東': 67.5, '東南東': 112.5, '南南東': 157.5, 
-                '南南西': 202.5, '西南西': 247.5, '西北西': 292.5, '北北西': 337.5, 
-                '北東': 45, '南東': 135, '南西': 225, '北西': 315, 
-                '北': 0, '東': 90, '南': 180, '西': 270,
-                'N': 0, 'NE': 45, 'E': 90, 'SE': 135, 'S': 180, 'SW': 225, 'W': 270, 'NW': 315
-            };
-            for (let key in dirs) { if (dirStr.includes(key)) return dirs[key]; }
-            return null;
-        }
-
-        // ★距離に応じた被写視野（扇形）及びマーカーのカラーパレット動的抽出
         function getDistanceColor(distanceRaw) {
-            if (!distanceRaw) return '#4a148c'; // デフォルト：濃い紫
+            if (!distanceRaw) return '#0288d1'; 
             const text = distanceRaw.replace(/ｍ/g, 'm').replace(/～/g, '-').replace(/ /g, '');
-            if (text.includes("5-15")) return '#10b981';     // 【近景】エメラルド（5m〜15m）
-            if (text.includes("30-50")) return '#ff9f1c';    // 【近・中景】オレンジ（30m〜50m）
-            if (text.includes("200-600")) return '#d81b60';  // 【街並み・中遠景】赤ピンク（200m〜600m）
-            if (text.includes("1000-2000")) return '#8e24aa';// 【遠景】パープル（1km〜2km）
-            if (text.includes("4000")) return '#0288d1';     // 【超遠景・空撮】ディープブルー（4km〜）
-            return '#4a148c';
+            if (text.includes("5-15")) return '#4fc3f7';     
+            if (text.includes("30-50")) return '#29b6f6';    
+            if (text.includes("200-600")) return '#0288d1';  
+            if (text.includes("1000-2000")) return '#01579b';
+            if (text.includes("4000")) return '#0d47a1';     
+            return '#0288d1';
         }
 
-        // 見通し距離テキストをキロメートル数値にパース
         function parseDistanceToKm(text) {
-            if (!text) return 0.05; // デフォルト 50m
+            if (!text) return 0.05; 
             text = text.replace(/ｍ/g, 'm').replace(/～/g, '-').replace(/ /g, '');
-            if (text.includes("5-15")) return 0.015;     // 15m
-            if (text.includes("30-50")) return 0.05;    // 50m
-            if (text.includes("200-600")) return 0.6;   // 600m
-            if (text.includes("1000-2000")) return 2.0; // 2km
-            if (text.includes("4000")) return 5.0;      // 5km
+            if (text.includes("5-15")) return 0.015;     
+            if (text.includes("30-50")) return 0.05;    
+            if (text.includes("200-600")) return 0.6;   
+            if (text.includes("1000-2000")) return 2.0; 
+            if (text.includes("4000")) return 5.0;      
             
             const parsed = parseFloat(text);
             if (!isNaN(parsed)) {
                 return text.toLowerCase().includes("km") ? parsed : parsed / 1000.0;
             }
-            return 0.3; // 予備デフォルト 300m
+            return 0.3; 
         }
 
-        // 球面三角法による扇形のポリゴン座標群の生成
         function calculateSectorPoints(lon, lat, bearing, fov, distanceKm, segments = 16) {
             const toRad = deg => deg * Math.PI / 180;
             const toDeg = rad => rad * 180 / Math.PI;
 
             const latRad = toRad(lat);
             const lonRad = toRad(lon);
-            const delta = distanceKm / EARTH_RADIUS; // 弧長比（中心角）
+            const delta = distanceKm / EARTH_RADIUS; 
 
             const startAngle = bearing - (fov / 2);
             const endAngle = bearing + (fov / 2);
 
             const coordinates = [];
-            
-            // 1. 要（撮影位置）
             coordinates.push([lat, lon]);
 
-            // 2. 弧のプロット
             for (let i = 0; i <= segments; i++) {
                 const currentBearing = startAngle + ((endAngle - startAngle) * i / segments);
                 const bearingRad = toRad(currentBearing);
@@ -1341,34 +1471,46 @@
                     Math.cos(delta) - Math.sin(latRad) * Math.sin(targetLatRad)
                 );
 
-                coordinates.push([toDeg(targetLatRad), toDeg(toLonRad = targetLonRad)]);
+                coordinates.push([toDeg(targetLatRad), toDeg(targetLonRad)]);
             }
 
-            // 3. 多角形を閉じるため最初に戻る
             coordinates.push([lat, lon]);
-
             return coordinates;
         }
 
-        // データ読み込み（S列：見通し、T列：画角に対応）
+        // 方位を角度に変換
+        function getDirectionAngle(dirStr) {
+            if (!dirStr) return null;
+            const cleanDir = dirStr.trim().replace(/[左右]/g, "");
+            
+            const compass = {
+                "北": 0, "北北東": 22.5, "北東": 45, "東北東": 67.5,
+                "東": 90, "東南東": 112.5, "南東": 135, "南南東": 157.5,
+                "南": 180, "南南西": 202.5, "南西": 225, "西南西": 247.5,
+                "西": 270, "西北西": 292.5, "北西": 315, "北北西": 337.5
+            };
+            
+            if (compass[cleanDir] !== undefined) return compass[cleanDir];
+            const numMatch = dirStr.match(/\d+/);
+            return numMatch ? parseFloat(numMatch[0]) : null;
+        }
+
+        // 初回読込時：一切の間引きや初期フィルタリングなく、マップ上にピンを全表示
         async function loadPhotoData() {
             try {
                 const response = await fetch(CSV_URL);
                 const csvText = await response.text();
-                const rows = csvText.split(/\r?\n/).slice(1);
-                archiveData = rows.filter(row => row.trim() !== "").map((row, index) => {
-                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"(.*)"$/, '$1').trim());
+                const rows = parseCSV(csvText).slice(1);
+                
+                archiveData = rows.filter(row => row.length > 6 && row[6].trim() !== "").map((cols, index) => {
                     const rawUrl = cols[2] || "";
                     const fileIdMatch = rawUrl.match(/[-\w]{25,}/);
                     
                     let lat = 0, lng = 0;
                     if (cols[6]) { const coords = cols[6].split(/[\s,]+/); lat = parseFloat(coords[0]); lng = parseFloat(coords[1]); }
 
-                    // S列(インデックス18) = 被写範囲見通し距離
                     const rawDistance = cols[18] || "30-50ｍ";
                     const distanceKm = parseDistanceToKm(rawDistance);
-
-                    // T列(インデックス19) = 画角
                     const rawFov = cols[19] || "50°";
                     const fovNum = parseFloat(rawFov.replace(/[^\d\.]/g, '')) || 50;
 
@@ -1389,17 +1531,19 @@
                         rights: cols[13] || "不明", 
                         reprint: cols[14] || "不明", 
                         direction: cols[15] || "不明",
-                        distanceRaw: rawDistance,  // S列そのまま保持
-                        distanceKm: distanceKm,    // kmにパースした値
-                        fov: fovNum                // T列パース画角
+                        distanceRaw: rawDistance,  
+                        distanceKm: distanceKm,    
+                        fov: fovNum                
                     };
                 });
+                
+                // 初回ロードでマップへピンをすべて描画（表示保証）
                 addPhotoMarkersToMainMap(archiveData);
                 document.getElementById('photo-list').innerHTML = `<div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--text-muted);">検索条件を指定し、「検索実行」ボタンを押してください。</div>`;
             } catch (e) { console.error("データ読込失敗:", e); }
         }
 
-        // 古写真データベース検索
+        // 古写真DB検索
         function filterDB() {
             const q = document.getElementById('db-q').value.toLowerCase().trim();
             const era = document.getElementById('db-era').value;
@@ -1474,14 +1618,14 @@
             }
         }
 
-        // メインマップ上への写真マーカー展開
+        // メインマップ上への古写真マーカー＆扇のプロット
         function addPhotoMarkersToMainMap(data) {
             photoClusterGroup.clearLayers();
             const markers = [];
             data.forEach(p => {
                 if (!isNaN(p.lat) && p.lat !== 0) {
                     const angle = getDirectionAngle(p.direction);
-                    const color = getDistanceColor(p.distanceRaw); // 距離に基づくカラーコード
+                    const color = getDistanceColor(p.distanceRaw); 
 
                     const rotateStyle = angle !== null ? `transform: rotate(${angle}deg);` : "";
                     const counterRotateStyle = angle !== null ? `transform: rotate(${-angle - 45}deg);` : "";
@@ -1493,28 +1637,17 @@
                     
                     const marker = L.marker([p.lat, p.lng], { icon: iconCam });
                     
-                    // ポップアップの設定
                     const popupHTML = `
                         <div class="map-popup-custom" onclick="L.DomEvent.stopPropagation(event)">
                             <b>${p.title}</b>
                             <img src="${p.img}" onerror="this.src='./山科を語り継ぐ会 古写真画像データ/${p.refNum}.jpg'; this.onerror=function(){this.src='https://placehold.co/200x150/4e342e/ffffff?text=Loading+Error'};">
-                            <button class="nav-btn active" style="width:100%; padding:6px; justify-content:center; margin-top:5px;" onclick="openDetail(${p.id})">詳細を表示</button>
+                            <button class="nav-btn active" style="width:100%; padding:6px; justify-content:center;" onclick="openDetail(${p.id})">詳細を表示</button>
                         </div>
                     `;
 
-                    // ★「ピンの扇とポップアップが重ならないように、アングルから反対位置を動的計算」
-                    let popupOffset = L.point(0, -15); // デフォルト
-                    if (angle !== null) {
-                        const rad = (angle * Math.PI) / 180;
-                        const dist = 45; // 反対方向へ突き放す距離(px)
-                        const dx = -Math.sin(rad) * dist;
-                        const dy = Math.cos(rad) * dist - 15;
-                        popupOffset = L.point(dx, dy);
-                    }
+                    marker.bindPopup(popupHTML);
 
-                    marker.bindPopup(popupHTML, { offset: popupOffset });
-
-                    // 「ピンをクリックしてポップアップが開いたときだけ」扇形をカラーグラデーションで表示するイベント制御
+                    // 開閉時の連動扇状視野ポリゴン
                     marker.on('popupopen', function() {
                         if (angle !== null) {
                             if (activeSectorLayer) {
@@ -1525,12 +1658,12 @@
                                 color: color,
                                 weight: 1.5,
                                 fillColor: color,
-                                fillOpacity: 0.25
+                                fillOpacity: 0.35,
+                                pane: 'sectorPane'
                             }).addTo(map);
                         }
                     });
 
-                    // ポップアップが閉じたときに扇形を消去
                     marker.on('popupclose', function() {
                         if (activeSectorLayer) {
                             map.removeLayer(activeSectorLayer);
@@ -1544,80 +1677,90 @@
             photoClusterGroup.addLayers(markers);
         }
 
-        // ★スポット設定・空間/年代フィルタリングの適用
+        // スポット設定フィルタ演算（見通し距離のマルチチェックボックス & 3D遺産分類での絞り込み対応）
         function applyMapFilters() {
             const yearStart = parseInt(document.getElementById('filter-year-start').value) || 0;
             const yearEnd = parseInt(document.getElementById('filter-year-end').value) || 9999;
             const activeEras = Array.from(document.querySelectorAll('.chk-era-filter:checked')).map(el => el.value);
+            const activeDists = Array.from(document.querySelectorAll('.chk-dist-filter:checked')).map(el => el.value);
 
-            const filtered = archiveData.filter(p => {
-                // 1. 年代フィルタ（明治・大正・昭和・平成）
-                let matchEra = false;
-                if (p.era === "" || activeEras.some(era => p.era.includes(era))) {
-                    matchEra = true;
-                }
+            // ① 古写真側の絞り込み
+            const filteredPhotos = archiveData.filter(p => {
+                let matchEra = p.era === "" || activeEras.some(era => p.era.includes(era));
 
-                // 2. 西暦年フィルタ
                 let matchYear = true;
                 if (p.year && !isNaN(parseInt(p.year))) {
                     const y = parseInt(p.year);
                     matchYear = (y >= yearStart && y <= yearEnd);
                 } else if (yearStart > 0 || yearEnd < 9999) {
-                    matchYear = false; // 指定範囲があるが、メタデータに西暦がない場合は一旦非表示
+                    matchYear = false; 
                 }
 
-                // 3. 被写地点空間フィルタ（Turf.js空間交差判定）
+                let matchDist = false;
+                if (!p.distanceRaw) {
+                    matchDist = true; 
+                } else {
+                    const rawText = p.distanceRaw.replace(/ｍ/g, 'm').replace(/～/g, '-').replace(/ /g, '');
+                    matchDist = activeDists.some(d => rawText.includes(d));
+                }
+
                 let matchSpatial = true;
                 if (spatialFilterLatLng) {
                     const angle = getDirectionAngle(p.direction);
                     if (angle !== null) {
                         try {
                             const sectorCoords = calculateSectorPoints(p.lng, p.lat, angle, p.fov, p.distanceKm);
-                            // Turf用に座標ペア順を [Lng, Lat] に揃える
                             const turfPolyCoords = sectorCoords.map(pt => [pt[1], pt[0]]);
                             const poly = turf.polygon([turfPolyCoords]);
                             const point = turf.point([spatialFilterLatLng.lng, spatialFilterLatLng.lat]);
                             
                             matchSpatial = turf.booleanPointInPolygon(point, poly);
                         } catch (e) {
-                            console.error("空間包含計算エラー:", e);
+                            console.error("Turf空間計算に失敗:", e);
                             matchSpatial = false;
                         }
                     } else {
-                        // 方角設定がないものは地点絞り込み時に除外
                         matchSpatial = false;
                     }
                 }
 
-                return matchEra && matchYear && matchSpatial;
+                return matchEra && matchYear && matchDist && matchSpatial;
             });
+            addPhotoMarkersToMainMap(filteredPhotos);
 
-            // マップ上の古写真ピン群を完全に再構成
-            addPhotoMarkersToMainMap(filtered);
+            // ② 3D遺産側の分類絞り込み（追加）
+            const spot3dCat = document.getElementById('spot-3d-category-filter').value;
+            const filteredModels = models.filter(m => {
+                return !spot3dCat || m.category === spot3dCat;
+            });
+            add3DMarkersToMap(filteredModels);
         }
 
-        // 被写地点選択（空間フィルタ）モードの切り替え
+        // 空間ターゲット（被写地点）指定モード
         function toggleSpatialFilterMode() {
             const btn = document.getElementById('btn-spatial-filter');
-            const statusText = document.getElementById('spatial-status');
             
             if (isSpatialFilterSelectMode) {
-                // 選択モードを解除
                 isSpatialFilterSelectMode = false;
                 btn.classList.remove('active');
                 btn.querySelector('span').innerText = "被写地点を指定 (無効)";
                 map.getContainer().style.cursor = '';
             } else {
-                // 選択モードを起動
                 isSpatialFilterSelectMode = true;
                 btn.classList.add('active');
                 btn.querySelector('span').innerText = "地図上をクリック...";
                 map.getContainer().style.cursor = 'crosshair';
-                showNotification("地図上で古写真の『被写体（ターゲット）』が入っていると思われる場所をクリックしてください。");
+                
+                // ピン立て動作を邪魔しないようにスポット設定パネルを一旦スライド格納
+                const wrapper = document.getElementById('spot-settings-wrapper');
+                const icon = document.getElementById('spot-tab-icon');
+                wrapper.classList.remove('open');
+                icon.className = "fa-solid fa-chevron-left";
+                
+                showNotification("地図上の任意の地点をクリックしてください。ターゲットが入る扇形を持つ古写真を抽出します。");
             }
         }
 
-        // 被写体ターゲット（空間抽出基準点）をセットする
         function setSpatialTarget(latlng) {
             spatialFilterLatLng = latlng;
             
@@ -1625,38 +1768,28 @@
                 map.removeLayer(spatialFilterMarker);
             }
 
-            // 基準点に目立つグリーンのサークルをプロット
             spatialFilterMarker = L.circleMarker(latlng, {
-                radius: 8,
-                color: '#ffffff',
-                weight: 2,
-                fillColor: '#10b981',
-                fillOpacity: 0.9,
-                zIndexOffset: 5000
+                radius: 8, color: '#ffffff', weight: 2, fillColor: '#10b981', fillOpacity: 0.9, zIndexOffset: 5000
             }).addTo(map);
 
-            // ポップアップを自動付与してキャンセルできるようにする
             spatialFilterMarker.bindPopup(`
                 <div style="font-family:'Noto Serif JP',serif; font-size:11px; text-align:center;">
-                    <b>被写ターゲット地点</b><br>
-                    <button class="nav-btn active" style="padding:2px 8px; font-size:9px; margin-top:5px; width:100%; justify-content:center;" onclick="clearSpatialTarget()">解除する</button>
+                    <b>指定被写地点</b><br>
+                    <button class="nav-btn active" style="padding:2px 8px; font-size:9px; margin-top:5px; width:100%; justify-content:center;" onclick="clearSpatialTarget()">解除</button>
                 </div>
             `).openPopup();
 
-            document.getElementById('spatial-status').innerHTML = `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> 空間抽出中</span><br>緯度: ${latlng.lat.toFixed(5)}, 経度: ${latlng.lng.toFixed(5)}`;
+            document.getElementById('spatial-status').innerHTML = `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> 空間抽出が有効</span>`;
             
-            // 選択モードを自動解除
             isSpatialFilterSelectMode = false;
             const btn = document.getElementById('btn-spatial-filter');
             btn.classList.remove('active');
             btn.querySelector('span').innerText = "被写地点を指定 (有効)";
             map.getContainer().style.cursor = '';
 
-            // 空間フィルタを適用
             applyMapFilters();
         }
 
-        // 被写ターゲットの完全解除
         function clearSpatialTarget() {
             if (spatialFilterMarker) {
                 map.removeLayer(spatialFilterMarker);
@@ -1671,7 +1804,6 @@
             applyMapFilters();
         }
 
-        // DBページ下部の検索結果マップ更新
         function updateResultMap(filteredData) {
             const mapContainer = document.getElementById('search-result-map-container');
             if (filteredData.length === 0) { mapContainer.style.display = 'none'; return; }
@@ -1703,20 +1835,16 @@
                         <div class="map-popup-custom" onclick="L.DomEvent.stopPropagation(event)">
                             <b>${p.title}</b>
                             <img src="${p.img}" onerror="this.src='./山科を語り継ぐ会 古写真画像データ/${p.refNum}.jpg'; this.onerror=function(){this.src='https://placehold.co/200x150/4e342e/ffffff?text=No+Image'};">
-                            <button class="nav-btn active" style="width:100%; padding:6px; justify-content:center; margin-top:5px;" onclick="openDetail(${p.id})">詳細を表示</button>
+                            <button class="nav-btn active" style="width:100%; padding:6px; justify-content:center;" onclick="openDetail(${p.id})">詳細を表示</button>
                         </div>
                     `);
 
-                    // 検索結果マップ上でもポップアップ連動で扇を表示
                     let tempSector = null;
                     m.on('popupopen', function() {
                         if (angle !== null) {
                             const sectorCoords = calculateSectorPoints(p.lng, p.lat, angle, p.fov, p.distanceKm);
                             tempSector = L.polygon(sectorCoords, {
-                                color: color,
-                                weight: 1.5,
-                                fillColor: color,
-                                fillOpacity: 0.25
+                                color: color, weight: 1.5, fillColor: color, fillOpacity: 0.25
                             }).addTo(resultLeafletMap);
                         }
                     });
@@ -1734,7 +1862,7 @@
             setTimeout(() => resultLeafletMap.invalidateSize(), 100);
         }
 
-        // 詳細表示モーダル起動
+        // 詳細表示（古写真）
         function openDetail(id) {
             const p = archiveData.find(x => x.id === id);
             if(!p) return;
@@ -1742,62 +1870,61 @@
             const modal = document.getElementById('detail-modal');
             const body = document.getElementById('modal-body');
             
-            // ★詳細表示モーダル（左側が画像、右側がメタデータ + 新設「視野マップ」）
             body.innerHTML = `
                 <div class="modal-image-section">
                     <img src="${p.img}" class="clickable-image" onclick="openFullScreenImage('${p.img}')" onerror="this.src='./山科を語り継ぐ会 古写真画像データ/${p.refNum}.jpg'; this.onerror=function(){this.src='https://placehold.co/400x300/4e342e/ffffff?text=No+Image'};">
                 </div>
                 
-                <div class="modal-info-section">
-                    <h2 style="color:var(--primary-brown); margin-top:0; margin-bottom:15px; font-size:1.6rem; border-bottom: 2px solid var(--accent-gold); padding-bottom: 12px; flex-shrink: 0;">${p.title}</h2>
-                    
-                    <div class="meta-info-list">
-                        <div class="meta-item"><span class="meta-label">整理番号</span><span class="meta-value">${p.refNum || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">説明</span><span class="meta-value">${p.explanation || '（説明なし）'}</span></div>
-                        <div class="meta-item"><span class="meta-label">字地名</span><span class="meta-value">${p.desc || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">年代</span><span class="meta-value">${p.era || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">撮影年</span><span class="meta-value">${p.year ? p.year + '年' : '不明'}</span></div>
-                        <div class="meta-item"><span class="meta-label">撮影者</span><span class="meta-value">${p.author || '不明'}</span></div>
-                        <div class="meta-item"><span class="meta-label">出典</span><span class="meta-value">${p.source || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">所蔵</span><span class="meta-value">${p.storage || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">権利状態</span><span class="meta-value">${p.rights || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">転載</span><span class="meta-value">${p.reprint || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">撮影方位</span><span class="meta-value">${p.direction || '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">画角(視野幅)</span><span class="meta-value">${p.fov ? p.fov + '°' : '－'}</span></div>
-                        <div class="meta-item"><span class="meta-label">見通し距離</span><span class="meta-value">${p.distanceRaw || '－'}</span></div>
-                        
-                        <!-- モーダル内インライン視野マップ -->
-                        <div class="modal-map-container" id="modal-inline-map"></div>
+                <div class="info-section-wrapper" id="modal-info-wrapper">
+                    <div class="modal-pane-toggle" onclick="toggleModalPanel()" title="情報パネルの表示/非表示">
+                        <i class="fa-solid fa-chevron-right" id="modal-pane-toggle-icon"></i>
                     </div>
-                    
-                    <button class="map-focus-btn" onclick="focusOnMap([${p.lat}, ${p.lng}])" style="flex-shrink:0;">
-                        <i class="fa-solid fa-location-dot"></i> メイン地図で追跡表示
-                    </button>
+                    <div class="modal-info-section" id="modal-info-panel">
+                        <h2>${p.title}</h2>
+                        
+                        <div class="meta-info-list">
+                            <div class="meta-item"><span class="meta-label">整理番号</span><span class="meta-value">${p.refNum || '－'}</span></div>
+                            <div class="meta-item"><span class="meta-label">説明</span><span class="meta-value">${p.explanation || '（説明なし）'}</span></div>
+                            <div class="meta-item"><span class="meta-label">字地名</span><span class="meta-value">${p.desc || '－'}</span></div>
+                            <div class="meta-item"><span class="meta-label">年代</span><span class="meta-value">${p.era || '－'}</span></div>
+                            <div class="meta-item"><span class="meta-label">撮影年</span><span class="meta-value">${p.year ? p.year + '年' : '不明'}</span></div>
+                            <div class="meta-item"><span class="meta-label">撮影者</span><span class="meta-value">${p.author || '不明'}</span></div>
+                            <div class="meta-item"><span class="meta-label">出典</span><span class="meta-value">${p.source || '－'}</span></div>
+                            <div class="meta-item"><span class="meta-label">所蔵</span><span class="meta-value">${p.storage || '－'}</span></div>
+                            <div class="meta-item"><span class="meta-label">権利状態</span><span class="meta-value">${p.rights || '－'}</span></div>
+                            <div class="meta-item"><span class="meta-label">転載</span><span class="meta-value">${p.reprint || '－'}</span></div>
+                            <div class="meta-item"><span class="meta-label">撮影方位</span><span class="meta-value">${p.direction || '－'}</span></div>
+                            <div class="meta-item"><span class="meta-label">画角</span><span class="meta-value">${p.fov ? p.fov + '°' : '－'}</span></div>
+                            <div class="meta-item"><span class="meta-label">見通し距離</span><span class="meta-value">${p.distanceRaw || '－'}</span></div>
+                            
+                            <!-- 位置座標テキスト表示 -->
+                            <div class="meta-item"><span class="meta-label">撮影地座標</span><span class="meta-value">緯度: ${p.lat ? p.lat.toFixed(5) : '－'}, 経度: ${p.lng ? p.lng.toFixed(5) : '－'}</span></div>
+                            
+                            <div class="modal-map-container" id="modal-inline-map"></div>
+                        </div>
+                        
+                        <button class="map-focus-btn" onclick="focusOnMap([${p.lat}, ${p.lng}])" style="flex-shrink:0;">
+                            <i class="fa-solid fa-location-dot"></i> メイン地図で追跡表示
+                        </button>
+                    </div>
                 </div>
             `;
             modal.style.display = 'flex';
 
-            // 詳細表示内のインライン地図を遅延生成して描画
             setTimeout(() => {
                 if (isNaN(p.lat) || p.lat === 0) {
                     document.getElementById('modal-inline-map').innerHTML = `
-                        <div class="w-full h-full flex flex-col justify-center items-center bg-gray-100 text-gray-500 text-xs p-4 text-center">
-                            <i class="fa-solid fa-map-marked-alt text-2xl mb-1 text-gray-400"></i>
-                            位置情報が登録されていません
+                        <div style="width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#eee; color:#666; font-size:0.8rem;">
+                            <i class="fa-solid fa-map-marked-alt" style="font-size:1.8rem; margin-bottom:5px;"></i>
+                            位置情報がありません
                         </div>
                     `;
                     return;
                 }
 
-                // インラインマップの初期化
-                const inlineMap = L.map('modal-inline-map', {
-                    zoomControl: false,
-                    attributionControl: false
-                }).setView([p.lat, p.lng], 15);
-
+                const inlineMap = L.map('modal-inline-map', { zoomControl: false, attributionControl: false }).setView([p.lat, p.lng], 15);
                 L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png').addTo(inlineMap);
 
-                // カメラピンの描画
                 const angle = getDirectionAngle(p.direction);
                 const color = getDistanceColor(p.distanceRaw);
                 const rotateStyle = angle !== null ? `transform: rotate(${angle}deg);` : "";
@@ -1808,24 +1935,133 @@
                 });
                 L.marker([p.lat, p.lng], { icon: iconCam }).addTo(inlineMap);
 
-                // 視野（扇形ポリゴン）を描画
                 if (angle !== null) {
                     const sectorCoords = calculateSectorPoints(p.lng, p.lat, angle, p.fov, p.distanceKm);
-                    L.polygon(sectorCoords, {
-                        color: color,
-                        weight: 1.5,
-                        fillColor: color,
-                        fillOpacity: 0.2
-                    }).addTo(inlineMap);
-                    
+                    L.polygon(sectorCoords, { color: color, weight: 1.5, fillColor: color, fillOpacity: 0.2 }).addTo(inlineMap);
                     const sectorGeoJSON = L.polygon(sectorCoords);
                     inlineMap.fitBounds(sectorGeoJSON.getBounds(), { padding: [10, 10] });
                 } else {
                     inlineMap.setView([p.lat, p.lng], 16);
                 }
-
                 inlineMap.invalidateSize();
             }, 300);
+        }
+
+        // 詳細表示（3Dモデル・道標等）
+        function open3DDetail(id) {
+            const m = models.find(x => x.id === id);
+            if(!m) return;
+            
+            const modal = document.getElementById('detail-modal');
+            const body = document.getElementById('modal-body');
+            
+            // 刻銘表示ロジック
+            // I, J, K, L列のいずれかにデータがあれば3:1横並び隙間なし図表。
+            // なければ、H列（基本刻銘）をそのままテキストで。
+            let kokumeiHTML = "";
+            const hasIJKL = (m.north || m.east || m.south || m.west);
+
+            if (hasIJKL) {
+                kokumeiHTML = `
+                    <div class="kokumei-flex-container">
+                        <div class="kokumei-cell-wrapper">
+                            <span class="kokumei-heading">北面</span>
+                            <div class="kokumei-box-3to1"><div class="kokumei-text-vert">${m.north || "－"}</div></div>
+                        </div>
+                        <div class="kokumei-cell-wrapper">
+                            <span class="kokumei-heading">東面</span>
+                            <div class="kokumei-box-3to1"><div class="kokumei-text-vert">${m.east || "－"}</div></div>
+                        </div>
+                        <div class="kokumei-cell-wrapper">
+                            <span class="kokumei-heading">南面</span>
+                            <div class="kokumei-box-3to1"><div class="kokumei-text-vert">${m.south || "－"}</div></div>
+                        </div>
+                        <div class="kokumei-cell-wrapper">
+                            <span class="kokumei-heading">西面</span>
+                            <div class="kokumei-box-3to1"><div class="kokumei-text-vert">${m.west || "－"}</div></div>
+                        </div>
+                    </div>
+                `;
+            } else if (m.kokumeiBase) {
+                kokumeiHTML = `
+                    <div class="meta-item">
+                        <span class="meta-label">基本刻銘</span>
+                        <span class="meta-value">${m.kokumeiBase}</span>
+                    </div>
+                `;
+            }
+
+            body.innerHTML = `
+                <div class="modal-image-section">
+                    <div style="position:absolute; top:20px; left:20px; z-index:100; background:rgba(255,255,255,0.85); padding:8px 12px; border-radius:4px; border:1px solid var(--accent-gold);">
+                        <label style="font-size:0.85rem; font-weight:bold; color:var(--primary-brown); cursor:pointer; margin-bottom:0; display:flex; align-items:center; gap:8px;">
+                            <input type="checkbox" onchange="toggleTexture(this.checked)" style="transform:scale(1.2); cursor:pointer;"> 形状確認 (テクスチャOFF)
+                        </label>
+                    </div>
+                    <model-viewer id="mv-logic" src="${m.file}" auto-rotate camera-controls style="width:100%; height:100%;"></model-viewer>
+                </div>
+                
+                <div class="info-section-wrapper" id="modal-info-wrapper">
+                    <div class="modal-pane-toggle" onclick="toggleModalPanel()" title="情報パネルの表示/非表示">
+                        <i class="fa-solid fa-chevron-right" id="modal-pane-toggle-icon"></i>
+                    </div>
+                    <div class="modal-info-section" id="modal-info-panel">
+                        <h2>${m.name}</h2>
+                        
+                        ${kokumeiHTML}
+
+                        <div class="meta-info-list">
+                            <div class="meta-item"><span class="meta-label">整理番号</span><span class="meta-value">${m.id}</span></div>
+                            <div class="meta-item"><span class="meta-label">分類</span><span class="meta-value">${m.category}</span></div>
+                            <div class="meta-item"><span class="meta-label">年代</span><span class="meta-value">${m.eraRaw || "－"}</span></div>
+                            <div class="meta-item"><span class="meta-label">撮影日</span><span class="meta-value">${m.date}</span></div>
+                            <div class="meta-item"><span class="meta-label">撮影枚数</span><span class="meta-value">${m.photoCount} 枚</span></div>
+                            <div class="meta-item"><span class="meta-label">材質</span><span class="meta-value">${m.material}</span></div>
+                            <div class="meta-item"><span class="meta-label">状態</span><span class="meta-value">${m.condition}</span></div>
+                            <div class="meta-item"><span class="meta-label">歴史解説</span><span class="meta-value">${m.info}</span></div>
+                            
+                            <!-- 位置座標テキスト表示 -->
+                            <div class="meta-item"><span class="meta-label">設置位置座標</span><span class="meta-value">緯度: ${m.coords[0] ? m.coords[0].toFixed(5) : '－'}, 経度: ${m.coords[1] ? m.coords[1].toFixed(5) : '－'}</span></div>
+                            
+                            <div class="modal-map-container" id="modal-inline-map"></div>
+                        </div>
+                        
+                        <button class="map-focus-btn" onclick="focusOnMap([${m.coords[0]}, ${m.coords[1]}])" style="flex-shrink:0; margin-top: 15px;">
+                            <i class="fa-solid fa-location-dot"></i> メイン地図で追跡表示
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+
+            setTimeout(() => {
+                const inlineMap = L.map('modal-inline-map', { zoomControl: false, attributionControl: false }).setView(m.coords, 17);
+                L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png').addTo(inlineMap);
+
+                const icon3d = L.divIcon({ 
+                    html: '<div class="marker-3d-pin" style="width:28px; height:28px; font-size:14px;"><i class="fa-solid fa-cube"></i></div>', 
+                    className: '', iconSize: [28, 28], iconAnchor: [14, 14] 
+                });
+                
+                L.marker(m.coords, { icon: icon3d }).addTo(inlineMap);
+                inlineMap.invalidateSize();
+            }, 300);
+        }
+
+        // 左右情報パネルの折りたたみトグル（中央左端配置・フルスクリーン拡張）
+        function toggleModalPanel() {
+            const wrapper = document.getElementById('modal-info-wrapper');
+            const icon = document.getElementById('modal-pane-toggle-icon');
+            const isCollapsed = wrapper.classList.contains('collapsed');
+            
+            if (isCollapsed) {
+                wrapper.classList.remove('collapsed');
+                icon.className = "fa-solid fa-chevron-right";
+            } else {
+                wrapper.classList.add('collapsed');
+                icon.className = "fa-solid fa-chevron-left";
+            }
         }
 
         function closeModal() { document.getElementById('detail-modal').style.display = 'none'; }
@@ -1835,7 +2071,6 @@
             showPage('map'); 
             map.flyTo(coords, 18, { animate: true, duration: 1.2 }); 
             
-            // 地図上のピンを探索して強制的にポップアップ（とポップアップ内の扇形）を起動
             setTimeout(() => {
                 photoClusterGroup.eachLayer(layer => {
                     const latlng = layer.getLatLng();
@@ -1843,33 +2078,14 @@
                         layer.openPopup();
                     }
                 });
+                modelClusterGroup.eachLayer(layer => {
+                    const latlng = layer.getLatLng();
+                    if (Math.abs(latlng.lat - coords[0]) < 0.0001 && Math.abs(latlng.lng - coords[1]) < 0.0001) {
+                        layer.openPopup();
+                    }
+                });
             }, 1400);
         }
-
-        function open3DFullScreen(url, title, rawInfo) {
-            const modal = document.getElementById('3d-modal');
-            const infoText = decodeURIComponent(rawInfo);
-            
-            document.getElementById('td-explain-title').innerText = title;
-            document.getElementById('td-explain-text').innerText = infoText;
-
-            document.getElementById('3d-modal-body').innerHTML = `
-                <div style="width:100%; height:100%; position:relative;">
-                    <div style="position:absolute; top:25px; left:25px; color:#fff; font-size:1.3rem; font-weight:bold; z-index:100; text-shadow:1px 1px 4px rgba(0,0,0,0.8); pointer-events:none;">
-                        ${title} <span style="font-size:0.8rem; font-weight:normal; background:var(--accent-gold); color:var(--primary-brown); padding:2px 8px; border-radius:12px; margin-left:10px; vertical-align:middle;">3D全画面表示</span>
-                    </div>
-                    <model-viewer id="mv-logic" src="${url}" auto-rotate camera-controls style="width:100%; height:100%; background:#131313; display:block;"></model-viewer>
-                    <div style="position:absolute; bottom:30px; left:25px; background:rgba(0,0,0,0.8); border:1px solid var(--accent-gold); padding:14px 20px; border-radius:8px; z-index:100; box-shadow:0 4px 15px rgba(0,0,0,0.5);">
-                        <label style="font-size:0.9rem; color:#fff; cursor:pointer; display:flex; align-items:center; gap:10px; font-family:'Sawarabi Mincho', serif;">
-                            <input type="checkbox" id="texture-toggle" onchange="toggleTexture(this.checked)" style="transform:scale(1.3); cursor:pointer;"> 形状確認モード (テクスチャOFF)
-                        </label>
-                    </div>
-                </div>`;
-            document.getElementById('td-explain').classList.remove('collapsed');
-            modal.style.display = 'flex';
-        }
-        function close3DModal() { document.getElementById('3d-modal').style.display = 'none'; document.getElementById('3d-modal-body').innerHTML = ''; }
-        function toggleTDExplain() { document.getElementById('td-explain').classList.toggle('collapsed'); }
 
         async function toggleTexture(isOff) {
             const mv = document.querySelector('#mv-logic');
@@ -1894,10 +2110,10 @@
                         } else mv.src = mv.src;
                     }
                 });
-            } catch (e) { console.error("テクスチャエラー:", e); }
+            } catch (e) { console.error("テクスチャON/OFFエラー:", e); }
         }
 
-        // ★ブラウザ標準のズーム・Pan操作に準拠した高精度ビューエンジン
+        // 高画質全画面ズームオーバーレイ
         const overlay = document.getElementById('full-screen-overlay');
         const fullImg = document.getElementById('full-screen-img');
         let zoomScale = 1, startX = 0, startY = 0, translateX = 0, translateY = 0, initialPinchDistance = 0, isDragging = false;
@@ -1909,83 +2125,38 @@
         function closeFullScreenImage() { overlay.style.display = 'none'; }
         function updateImageTransform() { fullImg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${zoomScale})`; }
 
-        // マウスクリックおよびタッチ開始（標準ブラウザ型Pan/Zoom挙動）
-        overlay.addEventListener('mousedown', (e) => { 
-            if(e.target === fullImg) { 
-                isDragging = true; startX = e.clientX - translateX; startY = e.clientY - translateY; 
-                fullImg.style.transition = 'none';
-            } 
-        });
-        overlay.addEventListener('mousemove', (e) => { 
-            if(isDragging && zoomScale > 1) { 
-                translateX = e.clientX - startX; translateY = e.clientY - startY; updateImageTransform(); 
-            } 
-        });
-        window.addEventListener('mouseup', () => { isDragging = false; if(fullImg) fullImg.style.transition = 'transform 0.1s ease-out'; });
-        
-        // ダブルクリックで標準ズームトグル
-        fullImg.addEventListener('dblclick', (e) => {
-            if (zoomScale > 1) {
-                zoomScale = 1; translateX = 0; translateY = 0;
-            } else {
-                zoomScale = 2.5;
-                // ダブルクリックしたカーソル位置にゆるやかにズーム
-                const rect = fullImg.getBoundingClientRect();
-                const offsetX = e.clientX - (rect.left + rect.width/2);
-                const offsetY = e.clientY - (rect.top + rect.height/2);
-                translateX = -offsetX * 1.5;
-                translateY = -offsetY * 1.5;
-            }
-            updateImageTransform();
-        });
+        overlay.addEventListener('mousedown', (e) => { if(e.target === fullImg || e.target === overlay) { isDragging = true; startX = e.clientX - translateX; startY = e.clientY - translateY; } });
+        overlay.addEventListener('mousemove', (e) => { if(isDragging) { translateX = e.clientX - startX; translateY = e.clientY - startY; updateImageTransform(); } });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        overlay.addEventListener('touchstart', (e) => { if (e.touches.length === 1) { isDragging = true; startX = e.touches[0].clientX - translateX; startY = e.touches[0].clientY - translateY; } else if (e.touches.length === 2) { isDragging = false; initialPinchDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); } });
+        overlay.addEventListener('touchmove', (e) => { e.preventDefault(); if (isDragging && e.touches.length === 1) { translateX = e.touches[0].clientX - startX; translateY = e.touches[0].clientY - startY; updateImageTransform(); } else if (e.touches.length === 2) { const currentDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); const factor = currentDistance / initialPinchDistance; zoomScale = Math.min(Math.max(1, zoomScale * factor), 5); initialPinchDistance = currentDistance; updateImageTransform(); } }, { passive: false });
+        overlay.addEventListener('touchend', () => { isDragging = false; });
+        overlay.addEventListener('wheel', (e) => { e.preventDefault(); zoomScale = Math.min(Math.max(1, zoomScale * (e.deltaY < 0 ? 1.1 : 0.9)), 5); updateImageTransform(); }, { passive: false });
 
-        overlay.addEventListener('touchstart', (e) => { 
-            if (e.touches.length === 1 && e.target === fullImg) { 
-                isDragging = true; startX = e.touches[0].clientX - translateX; startY = e.touches[0].clientY - translateY; 
-                fullImg.style.transition = 'none';
-            } else if (e.touches.length === 2) { 
-                isDragging = false; 
-                initialPinchDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); 
-            } 
-        });
-        overlay.addEventListener('touchmove', (e) => { 
-            e.preventDefault(); 
-            if (isDragging && e.touches.length === 1 && zoomScale > 1) { 
-                translateX = e.touches[0].clientX - startX; translateY = e.touches[0].clientY - startY; updateImageTransform(); 
-            } else if (e.touches.length === 2) { 
-                const currentDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); 
-                const factor = currentDistance / initialPinchDistance; 
-                zoomScale = Math.min(Math.max(1, zoomScale * factor), 5); 
-                initialPinchDistance = currentDistance; 
-                updateImageTransform(); 
-            } 
-        }, { passive: false });
-        overlay.addEventListener('touchend', () => { isDragging = false; if(fullImg) fullImg.style.transition = 'transform 0.15s ease-out'; });
-        overlay.addEventListener('wheel', (e) => { 
-            e.preventDefault(); 
-            const lastScale = zoomScale;
-            zoomScale = Math.min(Math.max(1, zoomScale * (e.deltaY < 0 ? 1.15 : 0.85)), 5); 
-            if (zoomScale === 1) { translateX = 0; translateY = 0; }
-            updateImageTransform(); 
-        }, { passive: false });
-
-        // 3Dデータカタログレンダリング
+        // 3Dデータグリッド描画
         function renderTDList(data) {
+            if (data.length === 0) {
+                document.getElementById('td-grid').innerHTML = `
+                    <div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--text-muted);">
+                        条件に一致する3D遺産データが見つかりませんでした。
+                    </div>`;
+                return;
+            }
             document.getElementById('td-grid').innerHTML = data.map(m => {
                 const thumbHTML = m.thumbnail ? 
                     `<img src="${m.thumbnail}" style="width:100%; height:200px; object-fit:cover; border-radius:0px; margin-bottom:10px;">` :
                     `<div style="width:100%; height:200px; background:#1e1817; border-radius:0px; display:flex; flex-direction:column; align-items:center; justify-content:center; border: 1px dashed var(--accent-gold); margin-bottom:10px;">
                         <i class="fa-solid fa-cube" style="font-size:3.5rem; color:#2e7d32; margin-bottom:10px;"></i>
-                        <span style="font-size:0.8rem; color:#aaa; font-family:'Noto Serif JP', serif;">3Dモデル（タップで起動）</span>
+                        <span style="font-size:0.8rem; color:#aaa; font-family:'Noto Serif JP', serif;">3Dモデル（タップで表示）</span>
                     </div>`;
 
                 return `
-                    <div class="photo-card" style="height: 380px; background:#2e2624;" onclick="open3DFullScreen('${m.file}', '${m.name}', '${encodeURIComponent(m.info)}')">
+                    <div class="photo-card" style="height: 380px; background:#2e2624;" onclick="open3DDetail('${m.id}')">
                         <div style="width:100%; height:100%; display:flex; flex-direction:column; padding:15px; box-sizing:border-box;">
                             ${thumbHTML}
                             <div style="margin-top:5px;">
                                 <b style="color:#fff; font-size:1.15rem; display:block; margin-bottom:5px; font-family:'Noto Serif JP', serif;">${m.name}</b>
-                                <p style="position:static; padding:0; background:none; font-size:0.85rem; color:var(--accent-light); text-align:left; text-shadow:none;">${m.info.length > 50 ? m.info.substring(0, 50) + "..." : m.info}</p>
+                                <p style="position:static; padding:0; background:none; font-size:0.85rem; color:var(--accent-light); text-align:left; text-shadow:none;">${m.info.length > 45 ? m.info.substring(0, 45) + "..." : m.info}</p>
                             </div>
                         </div>
                     </div>
@@ -1993,9 +2164,141 @@
             }).join('');
         }
 
+        // 3D詳細メタデータ検索
         function filterTD() {
-            const q = document.getElementById('td-search').value.toLowerCase().trim();
-            renderTDList(models.filter(m => m.name.toLowerCase().includes(q) || m.info.toLowerCase().includes(q) || m.category.toLowerCase().includes(q)));
+            const searchAll = document.getElementById('td-search-all').value.toLowerCase().trim();
+            const searchName = document.getElementById('td-search-name').value.toLowerCase().trim();
+            const searchInsc = document.getElementById('td-search-inscription').value.toLowerCase().trim();
+            const searchId = document.getElementById('td-search-id').value.toLowerCase().trim();
+            const searchCat = document.getElementById('td-search-category').value;
+            const searchDate = document.getElementById('td-search-date').value.toLowerCase().trim();
+            const searchMat = document.getElementById('td-search-material').value.toLowerCase().trim();
+            const searchCond = document.getElementById('td-search-condition').value.toLowerCase().trim();
+            const searchInfo = document.getElementById('td-search-info').value.toLowerCase().trim();
+            const searchEra = document.getElementById('td-search-era').value;
+            const searchYearStart = parseInt(document.getElementById('td-search-year-start').value, 10) || 0;
+            const searchYearEnd = parseInt(document.getElementById('td-search-year-end').value, 10) || 9999;
+
+            const filtered = models.filter(m => {
+                // 総合キーワード（全メタデータ横断曖昧検索）
+                const fullText = [
+                    m.name, m.category, m.material, m.condition, m.info, m.id, m.eraRaw,
+                    m.kokumeiBase, m.north, m.east, m.south, m.west
+                ].join(' ').toLowerCase();
+                const matchAll = !searchAll || fullText.includes(searchAll);
+
+                // 個別部分一致
+                const matchName = !searchName || m.name.toLowerCase().includes(searchName);
+                
+                // 刻銘検索
+                const matchInsc = !searchInsc || [
+                    m.kokumeiBase, m.north, m.east, m.south, m.west
+                ].join(' ').toLowerCase().includes(searchInsc);
+
+                const matchId = !searchId || m.id.toLowerCase().includes(searchId);
+                const matchCat = !searchCat || m.category === searchCat;
+                const matchDate = !searchDate || m.date.toLowerCase().includes(searchDate);
+                const matchMat = !searchMat || m.material.toLowerCase().includes(searchMat);
+                const matchCond = !searchCond || m.condition.toLowerCase().includes(searchCond);
+                const matchInfo = !searchInfo || m.info.toLowerCase().includes(searchInfo);
+
+                // 年代 (ドロップダウン部分一致、室町、江戸など)
+                const matchEra = !searchEra || m.eraRaw.includes(searchEra);
+
+                // 西暦 (Q列西暦範囲検索)
+                let matchYear = true;
+                if (searchYearStart > 0 || searchYearEnd < 9999) {
+                    if (m.parsedYear !== null) {
+                        matchYear = (m.parsedYear >= searchYearStart && m.parsedYear <= searchYearEnd);
+                    } else {
+                        matchYear = false; 
+                    }
+                }
+
+                return matchAll && matchName && matchInsc && matchId && matchCat && matchDate && matchMat && matchCond && matchInfo && matchEra && matchYear;
+            });
+
+            renderTDList(filtered);
+            add3DMarkersToMap(filtered);
+        }
+
+        // 3Dフィルタ結果を地図上に再プロット
+        function add3DMarkersToMap(filteredModels) {
+            modelClusterGroup.clearLayers();
+            const markers = [];
+            filteredModels.forEach(m => {
+                const icon3d = L.divIcon({ html: '<div class="marker-3d-pin"><i class="fa-solid fa-cube"></i></div>', className: '', iconSize: [36, 36], iconAnchor: [18, 18] });
+                
+                const thumbHTML = m.thumbnail ? 
+                    `<img src="${m.thumbnail}" style="width:100%; height:130px; object-fit:cover; border-radius:4px; margin-bottom:8px;">` :
+                    `<div style="width:100%; height:130px; margin:0 0 8px 0; background:#eee; border-radius:4px; display:flex; flex-direction:column; align-items:center; justify-content:center; border: 1px dashed var(--accent-gold);">
+                        <i class="fa-solid fa-cube" style="font-size:2rem; color:#2e7d32; margin-bottom:5px;"></i>
+                        <span style="font-size:0.75rem; color:#666; font-family:'Noto Serif JP', serif;">3Dモデル画像（準備中）</span>
+                    </div>`;
+
+                const marker = L.marker(m.coords, { icon: icon3d }).bindPopup(`
+                    <div class="map-popup-custom" onclick="L.DomEvent.stopPropagation(event)">
+                        <b>${m.name}</b>
+                        ${thumbHTML}
+                        <button class="nav-btn active" style="width:100%; padding:6px; justify-content:center;" onclick="open3DDetail('${m.id}')">詳細を表示</button>
+                    </div>
+                `);
+                markers.push(marker);
+            });
+            modelClusterGroup.addLayers(markers);
+        }
+
+        // 画面切り替え時に以前アクティブだった画面の入力、結果、フィルターなどのステート（キャッシュ）を完全クリア
+        function clearPageCache(prevPageId) {
+            if (prevPageId === 'db') {
+                document.getElementById('db-seiri').value = '';
+                document.getElementById('db-q').value = '';
+                document.getElementById('db-era').value = '';
+                document.getElementById('db-place').value = '';
+                document.getElementById('db-year-start').value = '';
+                document.getElementById('db-year-end').value = '';
+                document.getElementById('db-author').value = '';
+                document.getElementById('db-storage').value = '';
+                pagedFilteredData = [];
+                document.getElementById('photo-list').innerHTML = `
+                    <div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--text-muted);">
+                        検索条件を指定し、「検索実行」ボタンを押してください。
+                    </div>`;
+                document.getElementById('pagination-container').innerHTML = "";
+                document.getElementById('search-result-map-container').style.display = 'none';
+            } else if (prevPageId === 'td') {
+                document.getElementById('td-search-all').value = '';
+                document.getElementById('td-search-name').value = '';
+                document.getElementById('td-search-inscription').value = '';
+                document.getElementById('td-search-id').value = '';
+                document.getElementById('td-search-category').value = '';
+                document.getElementById('td-search-date').value = '';
+                document.getElementById('td-search-material').value = '';
+                document.getElementById('td-search-condition').value = '';
+                document.getElementById('td-search-info').value = '';
+                document.getElementById('td-search-era').value = '';
+                document.getElementById('td-search-year-start').value = '';
+                document.getElementById('td-search-year-end').value = '';
+                document.getElementById('td-grid').innerHTML = `
+                    <div style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--text-muted);">
+                        <i class="fa-solid fa-magnifying-glass" style="font-size: 2.5rem; color: var(--accent-gold); margin-bottom: 15px; display: block;"></i>
+                        検索条件を指定し、「条件を絞り込んで検索」ボタンを押してください。
+                    </div>`;
+                add3DMarkers(); // 3Dマップピン側も全件表示状態にリセット
+            } else if (prevPageId === 'omni') {
+                document.getElementById('omni-q-simple').value = '';
+                document.getElementById('omni-era-simple').value = '';
+                document.getElementById('omni-title').value = '';
+                document.getElementById('omni-q-detail').value = '';
+                document.getElementById('omni-era-detail').value = '';
+            } else if (prevPageId === 'map') {
+                clearSpatialTarget();
+                if (activeSectorLayer) {
+                    map.removeLayer(activeSectorLayer);
+                    activeSectorLayer = null;
+                }
+                map.closePopup();
+            }
         }
 
         function toggleOmniMode(mode) {
@@ -2013,12 +2316,22 @@
         }
 
         function showPage(pageId) {
+            if (currentActivePageId !== pageId) {
+                clearPageCache(currentActivePageId);
+            }
+            currentActivePageId = pageId;
+
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('header .nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('page-' + pageId).classList.add('active');
-            if (pageId === 'portal' || pageId === 'map') document.getElementById('btn-' + pageId).classList.add('active');
+            
+            const targetPage = document.getElementById('page-' + pageId);
+            if (targetPage) targetPage.classList.add('active');
+            
+            const mainBtn = document.getElementById('btn-' + pageId);
+            if (mainBtn) mainBtn.classList.add('active');
+            
             document.getElementById('map-ui').style.display = (pageId === 'map') ? 'flex' : 'none';
-            document.getElementById('spot-settings-panel').style.display = 'none'; 
+            document.getElementById('spot-settings-wrapper').classList.remove('open'); 
             if (pageId === 'map' && map) setTimeout(() => map.invalidateSize(), 200);
         }
 
@@ -2050,14 +2363,14 @@
 
         window.openDetail = openDetail; window.closeModal = closeModal;
         window.openFullScreenImage = openFullScreenImage; window.closeFullScreenImage = closeFullScreenImage;
-        window.open3DFullScreen = open3DFullScreen; window.close3DModal = close3DModal;
-        window.toggleTDExplain = toggleTDExplain; window.showPage = showPage;
+        window.showPage = showPage;
         window.requestLocation = requestLocation;
+        window.open3DDetail = open3DDetail;
 
         window.onload = () => {
             initMap();
             loadPhotoData();
-            load3DData(); // ★動的3Dデータ台帳フェッチ処理
+            load3DData(); 
             loadPortalConfig();
             initCarousel();
         };
